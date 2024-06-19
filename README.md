@@ -24,6 +24,8 @@ To run the program, use the next steps:
 2. Open the HTML file(Directly in Chrome) of the BP program ran
 *In any case you want to start over, you will need to restart the Backend(main_with_external), and then refresh your page
 
+*You can find recording videos of the client server in the repo
+
     
 
 
