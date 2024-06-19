@@ -1,0 +1,135 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: space-around;
+    padding: 20px;
+    background-color: #f4f4f4;
+}
+
+.coffee-machine {
+    width: 200px;
+    background: #eee;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.machine-header {
+    height: 40px;
+    background: lightgray;
+    border-radius: 8px 8px 0 0;
+}
+
+.leds {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+}
+
+.led {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 5px;
+}
+
+.red {
+    background-color: #ff0000;
+}
+
+.green {
+    background-color: #00ff00;
+}
+
+.coffee-selection button, input[type=range] {
+    width: 90%;
+    margin: 5px 0;
+}
+
+input[type="range"] {
+    cursor: pointer; /* makes the slider thumb easier to grab */
+}
+
+.machine-body {
+    background: white;
+    border-radius: 0 0 8px 8px;
+}
+
+.coffee-output {
+    height: 200px;
+    position: relative;
+}
+
+
+
+.display {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    background-color: #ddd;
+    border-radius: 5px;
+    padding: 5px;
+}
+.sugar-container {
+    margin-top: 10px;
+}
+
+.sugar-container label, .sugar-container span {
+    display: block;
+    text-align: center;
+    margin: 5px 0;
+}
+.coin-slot {
+    margin: 20px 0;
+    position: relative;
+    height: 50px;
+    background: #ccc;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.coin-slot-receiver {
+    width: 25px;
+    height: 25px;
+    background-color: #888;
+    border-radius: 50%;
+    position: absolute;
+    left: 10px;
+    top: 12.5px;
+}
+
+.coin-button {
+    margin-top: 15px;
+}
+
+.coin-animation {
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background-color: gold;
+    position: absolute;
+    left: 10px;
+    top: 20px;
+    opacity: 0;
+    transition: all 0.5s linear;
+}
+.coffee-cup {
+    width: 80px; /* Adjust size as needed */
+    position: relative;
+    bottom: -80px;
+    left: 21%;
+    transform: translateX(-50%);
+}
+
+.pouring-coffee {
+    width: 3px;
+    height: 20;
+    background-color: brown;
+    position: relative;
+    bottom: 83px; /* Position above the cup */
+    left: 50%;
+    transform: translateX(-1.5px);
+    transition: height 1s ease-in;
+}

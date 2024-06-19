@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coffee Vending Machines</title>
+    <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+<audio id="ringtone" src="ringtone.mp3" type="audio/mpeg"></audio>
+<div class="coffee-machine" id="italianMachine1">
+    <div class="machine-header">
+        <div class="leds">
+            <div class="led red"></div>
+            <!-- add a text between the two LEDs -->
+            <div class="led-text">Italian</div>
+            <div class="led green"></div>
+        </div>
+    </div>
+    <div class="coin-slot">
+        <div class="coin-slot-receiver"></div>
+        <button class="coin-button" onclick="insertCoin('italianMachine1')">Press to Insert Coin</button>
+        <div class="coin-animation" id="coin-animation1"></div>
+    </div>
+    <div class="coffee-selection">
+        <button onclick="selectCoffee('Espresso', 'italianMachine1')">Espresso</button>
+        <button onclick="selectCoffee('Latte', 'italianMachine1')">Latte</button>
+        <button onclick="selectCoffee('Cappuccino', 'italianMachine1')">Cappuccino</button>
+    </div>
+    <div id="sugar-container1" class="sugar-container" style="display: none;">
+        <label for="sugar1">Sugar amount:</label>
+        <input type="range" id="sugar1" min="0" max="5" value="2" oninput="updateSugarLevel('italianMachine1')">
+        <span id="sugar-level-display1">2</span>
+        <button id="confirm-sugar-level-button1">Confirm Sugar Level</button>
+    </div>
+    <div class="machine-body">
+        <div class="coffee-output">
+<!--            <div class="pouring-coffee" id="pouring-coffee1"></div>-->
+
+            <img src="cup.jpeg" alt="Coffee Cup" class="coffee-cup">
+            <div class="pouring-coffee" id="pouring-coffee1"></div>
+            <div class="display" id="display1">Select a beverage...</div>
+        </div>
+    </div>
+</div>
+
+<div class="coffee-machine" id="britishMachine2">
+    <div class="machine-header">
+        <div class="leds">
+            <div class="led red"></div>
+            <div class="led-text">British</div>
+            <div class="led green"></div>
+        </div>
+    </div>
+    <div class="coin-slot">
+        <div class="coin-slot-receiver"></div>
+        <button class="coin-button" onclick="insertCoin('britishMachine2')">Press to Insert Coin</button>
+        <div class="coin-animation" id="coin-animation2"></div>
+    </div>
+    <div class="coffee-selection">
+        <button onclick="selectCoffee('Espresso', 'britishMachine2')">Espresso</button>
+        <button onclick="selectCoffee('Latte', 'britishMachine2')">Latte</button>
+        <button onclick="selectCoffee('Cappuccino', 'britishMachine2')">Cappuccino</button>
+    </div>
+    <div id="sugar-container2" class="sugar-container" style="display: none;">
+        <label for="sugar2">Sugar amount:</label>
+        <input type="range" id="sugar2" min="0" max="5" value="2" oninput="updateSugarLevel('britishMachine2')">
+        <span id="sugar-level-display2">2</span>
+        <button id="confirm-sugar-level-button2">Confirm Sugar Level</button>
+
+    </div>
+    <div class="machine-body">
+        <div class="coffee-output">
+            <img src="cup.jpeg" id="coffee-cup-2" alt="Coffee Cup" class="coffee-cup">
+            <div class="pouring-coffee" id="pouring-coffee2"></div>
+            <div class="display" id="display2">Select a beverage...</div>        </div>
+    </div>
+
+
+
+</div>
+
+<script src="coffeeMachineScript.js"></script>
+</body>
+</html>
+
