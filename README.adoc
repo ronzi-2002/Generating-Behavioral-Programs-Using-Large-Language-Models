@@ -11,6 +11,7 @@ endif::[]
 
 # BP_code_generation
 The directory contains folders for each stable version of instructions.
+The Model used is gpt4-turbo with 0 temp
 Each Folder(V<versionNumber>) is built out of 3 folders:
                                                     1. Instructions: Contains 3 instruction files for the different phases
                                                     2. RequirementDocs: Contains requirement formatted for our process(dividing the 3                                                            phases)
