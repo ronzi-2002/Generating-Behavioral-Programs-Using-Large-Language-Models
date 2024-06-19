@@ -10,6 +10,10 @@ Each Folder(V\<versionNumber\>) is built out of 3 folders:
 2. RequirementDocs: Contains requirements formatted for our process(dividing the 3 phases)
 3. Results: Contains results generated using this version of instructions
 
+* V11 is a more tested version of the instructions, and the results are more accurate
+* V13 is the latest version of the instructions, it supports non-context based instructions, seems to be more accurate, but needs more testing
+
+
 # main_client_server_java:
 The files inside this directory support the client-server model with BP. A BP program runs in the backend, sending events from the BP program and receiving events from the client, passing them to the BP program.
 For each BP program, there is a corresponding "frontend" consisting of a HTML. 
