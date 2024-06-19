@@ -8,23 +8,24 @@ ifdef::env-github[]
 :tip-caption: :bulb:
 :warning-caption: :warning:
 endif::[]
-# SampleBPjsProject
 
-A sample maven project using BPjs. Clone or fork this project to easily start your own prject using BPjs. This project has two files:
+# BP_code_generation
+The directory contains folders for each stable version of instructions.
+Each Folder(V<versionNumber>) is built out of 3 folders:
+                                                    1. Instructions: Contains 3 instruction files for the different phases
+                                                    2. RequirementDocs: Contains requirement formatted for our process(dividing the 3                                                            phases)
+                                                    3. Results: Contains results generated using this version of instructions
 
-* link:src/main/resources/HelloBPjsWorld.js[BPjs "hello world" program].
-* link:src/main/java/il/ac/bgu/cs/bp/samplebpjsproject/HelloWorld.java[Simple "main" class for running `HelloBPjsWorld.js` and emitting its events to stdout].
+# main_client_server_java:
+The files inside this directory support the client-server model with BP. A BP program runs in the backend, sending events from the BP program and receiving events from the client, passing them to the BP program.
+For each BP program, there is a corresponding "frontend" consisting of a HTML. 
 
+To run the program, use the next steps:
+    1. Run main_with_external (This is the file you will run to initiate the server and the bp program)
+        *Before running use the variable of the system you want to run
+    2. Open the HTML file(Directly in Chrome) of the BP program ran
+*In any case you want to start over, you will need to restart the Backend(main_with_external), and then refresh your page
 
-To make the project runnable from the commandline, add this to the `<properties>` node of the `pom.xml` file:
+    
 
-    <exec.mainClass>package.name.goes.here.and.then.ClassName</exec.mainClass>
-
-Then run the application by typing:
-
-    mvn exec:java
-
-## Please keep these:
-* This project uses https://github.com/bThink-BGU/BPjs[BPjs].
-* BPjs uses the Mozilla Rhino Javascript engine. See https://developer.mozilla.org/en-US/docs/Mozilla/Projects/Rhino[project page and source code].
 
