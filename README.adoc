@@ -9,6 +9,8 @@ ifdef::env-github[]
 :warning-caption: :warning:
 endif::[]
 
+*In the Src Folder
+
 # BP_code_generation
 The directory contains folders for each stable version of instructions.
 The Model used is gpt4-turbo with 0 temp
