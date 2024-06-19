@@ -1,13 +1,3 @@
-ifndef::env-github[:icons: font]
-ifdef::env-github[]
-:status:
-:outfilesuffix: .adoc
-:caution-caption: :fire:
-:important-caption: :exclamation:
-:note-caption: :page_with_curl:
-:tip-caption: :bulb:
-:warning-caption: :warning:
-endif::[]
 
 *In the Src Folder
 
