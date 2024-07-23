@@ -3,6 +3,8 @@ package il.ac.bgu.cs.bp.samplebpproject.UIs;
 import il.ac.bgu.cs.bp.bpjs.context.ContextBProgram;
 import il.ac.bgu.cs.bp.bpjs.execution.BProgramRunner;
 import il.ac.bgu.cs.bp.bpjs.model.BProgram;
+import il.ac.bgu.cs.bp.samplebpproject.UIs.Server;
+import il.ac.bgu.cs.bp.samplebpproject.UIs.ServerListner;
 
 import java.io.IOException;
 
@@ -20,7 +22,9 @@ public class main_with_external{
 
 
 //            String [] files = new String[]{coffeeMachine,handleExternalEvents};
-            String [] files = new String[]{tests};
+//            String [] files = new String[]{tests};
+            String [] files = new String[]{spaceFraction,handleExternalEvents};
+
             final BProgram bprog = new ContextBProgram(files);
 
             bprog.setWaitForExternalEvents(true);//We allow external events, for reacting to the incoming events from the client to the server.
