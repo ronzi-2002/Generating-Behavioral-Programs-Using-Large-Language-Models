@@ -6,6 +6,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="Generating-Behavioral-Programs-Using-Large-Language-Models" />
         <module name="SampleBPProject" />
         <module name="ronzi-2002Generating-Behavioral-Programs-Using-Large-Language-Models" />
       </profile>

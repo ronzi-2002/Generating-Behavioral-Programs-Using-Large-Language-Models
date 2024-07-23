@@ -19,10 +19,10 @@ The files inside this directory support the client-server model with BP. A BP pr
 For each BP program, there is a corresponding "frontend" consisting of a HTML. 
 
 To run the program, use the next steps:
-1. Run main_with_external (This is the file you will run to initiate the server and the bp program)
+1. Run il.ac.bgu.cs.bp.samplebpproject.UIs.main_with_external (This is the file you will run to initiate the server and the bp program)
         *Before running use the variable of the system you want to run
 2. Open the HTML file(Directly in Chrome) of the BP program ran
-*In any case you want to start over, you will need to restart the Backend(main_with_external), and then refresh your page
+*In any case you want to start over, you will need to restart the Backend(il.ac.bgu.cs.bp.samplebpproject.UIs.main_with_external), and then refresh your page
 
 *You can find recording videos of the client server in the repo
 

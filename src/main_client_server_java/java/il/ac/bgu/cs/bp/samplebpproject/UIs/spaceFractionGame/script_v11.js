@@ -3,12 +3,15 @@ document.getElementById('start-button').addEventListener('click', function() {
     name: 'startButtonClickEvent',
   };
   socket.send(JSON.stringify(gameData));
+  document.getElementById('footerSent').textContent = "Sent: startButtonClickEvent";
+
 });
 
 document.getElementById('end-movie-button').addEventListener('click', function() {
   socket.send(JSON.stringify({
     name: 'mouseClickEvent',
   }));
+  document.getElementById('footerSent').textContent = "Sent: mouseClickEvent";
 });
 var moviePlayer = document.getElementById('movie-player');
 
@@ -16,17 +19,20 @@ moviePlayer.addEventListener('ended', function() {
   socket.send(JSON.stringify({
     name: 'movieCompleteEvent',
   }));
+    document.getElementById('footerSent').textContent = "Sent: movieCompleteEvent";
 });
 document.getElementById('go-to-website-button').addEventListener('click', function() {
   socket.send(JSON.stringify({
     name: 'denominatorsWebPageButtonEvent',
   }));
+    document.getElementById('footerSent').textContent = "Sent: denominatorsWebPageButtonEvent";
 });
 
 document.getElementById('start-game-button').addEventListener('click', function() {
   socket.send(JSON.stringify({
     name: 'gameSequenceButtonEvent',
   }));
+    document.getElementById('footerSent').textContent = "Sent: gameSequenceButtonEvent";
 });
 var optionButtons = [
   document.getElementById('option-1'),
@@ -45,6 +51,7 @@ optionButtons.forEach(function(button, index) {
       }
     };
     socket.send(JSON.stringify(answerData));
+    document.getElementById('footerSent').textContent = "Sent: answerSelectedEvent, index:"+ index;
   });
 });
 var currentQuestionId = "q1";
@@ -73,6 +80,16 @@ socket.onmessage = function(event) {
   var eventData = JSON.parse(event.data);
   //print the event data
   console.log(eventData);
+  //set the footer text to the event
+  if (eventData.name != "getEntityByIdEventResponse" && eventData.name != "changePhaseEvent" && eventData.name != "startButtonClickEvent" && eventData.name != "startMovieEvent" && eventData.name != "mouseClickEvent" && eventData.name != "answerSelectedEvent") {
+    //Show two last eventData.name
+    // document.getElementById('footerRec').textContent = "Received: "+eventData.name;
+    if (document.getElementById('footerRec').textContent.includes("Received:"))
+      document.getElementById('footerRec').textContent = document.getElementById('footerRec').textContent + ", " + eventData.name;
+    else
+      document.getElementById('footerRec').textContent = "Received: " + eventData.name;
+
+  }
 
   if (eventData.name === 'startMovieEvent') {
     document.getElementById('start-screen').style.display = 'none';
