@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Start Screen</title>
+    <style>
+        #movie-player {
+            width: 100%;
+            max-width: 600px; /* Adjust the maximum width as needed */
+            height: auto; /* Maintain aspect ratio */
+            max-height: 400px; /* Adjust the maximum height as needed */
+        }
+        #footerRec {
+            position: fixed;
+            bottom: 60px; /* Adjusted to make space for the second footer */
+            width: 100%;
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+        #footerSent {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #444;
+            color: white;
+            text-align: center;
+            padding: 10px 0;
+        }
+    </style>
+</head>
+<body>
+<div id="start-screen">
+    <h1>Welcome to the Game</h1>
+    <button id="start-button">Start Game</button>
+</div>
+
+<div id="movie-screen" style="display: none;">
+    <h1>Loading Movie...</h1>
+    <video id="movie-player" controls>
+        <source src="Playing%20Cards%20-%20Flying%20Loop.mp4" type="video/mp4">
+    </video>
+    <button id="end-movie-button">End Movie</button>
+
+</div>
+<div id="main-menu-screen" style="display: none;">
+    <h1>Main Menu</h1>
+    <button id="go-to-website-button">Go to Website</button>
+    <button id="start-game-button">Start Game</button>
+</div>
+<div id="game-screen" style="display: none;">
+    <h1>Game Screen</h1>
+    <p id="question"></p>
+    <button id="option-1"></button>
+    <button id="option-2"></button>
+    <button id="option-3"></button>
+    <button id="option-4"></button>
+</div>
+<div id="end-screen" style="display: none;">
+    <h1>Game Over</h1>
+    <p id="end-message"></p>
+</div>
+<div id="footerRec">
+    <p>This will show received events</p>
+</div>
+<div id="footerSent">
+    <p>This will show sent events</p>
+</div>
+
+<script src="script_v11.js"></script>
+</body>
+</html>
