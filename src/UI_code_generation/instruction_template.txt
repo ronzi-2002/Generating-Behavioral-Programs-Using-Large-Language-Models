@@ -1,0 +1,112 @@
+Your job is to create a UI  component (using html and js) for a backend system. 
+the system is based on events. Your job is to communicate with the backend using these events. You will send events to the backend, and reacte to events recieved from the backend.
+
+The events you can send and listen to are detailed at the end of the file. You don't have to sent or listen to all of them.
+
+Example for sending an event:
+Given an event: 
+ {
+        "EventName": "openRoom",
+        "parameters": {
+            "roomId": "roomid"
+        }
+}
+//Requirment: When user presses a room, it is opened:
+//Output:
+
+document.getElementById('room-1-button').addEventListener('click', function() {
+  var event= {
+      name: 'openRoom',
+      data: {
+        roomId: 1,
+      }
+    };
+    socket.send(JSON.stringify(answerData));
+});
+
+If an event doesn't have any data, send:
+
+socket.send(JSON.stringify({
+    name: 'openRoom',
+  }));
+
+
+
+To listen to events, add functionality to the socket.onmessage function.
+The var event holds an event that has a name field and might have a "data" field, depends on the events.
+
+socket.onmessage = function(eventMessage) {
+  console.log('Received: ' + eventMessage.data);
+  var event = JSON.parse(eventMessage.data);
+  //print the event
+  console.log(event);
+
+  if (event.name === 'doSomething') {
+     //Frontend actions
+  }
+}
+* You should use the events, do update the backend with the events happening on the frontend side, such as user actions or system actions(like a audio player that finishes playing)
+
+* Do not add any additional explanation, just purely provide the implementation 
+* Implement the system fully. If not stated explicitly, don't use placeholders
+* If you want to receive an entity by its id, sent an event as follows:
+socket.send(JSON.stringify({
+    name: 'getEntityByIdEvent',
+    data:{
+        entityId:  <id value>
+}
+  }));
+
+then make sure you wait for the answer, and use it as part of a socket message:
+socket.onmessage = function(eventMessage) {
+  console.log('Received: ' + eventMessage.data);
+  var event = JSON.parse(eventMessage.data);
+ 
+if (event.name === 'getEntityByIdResponse') {
+     //JSON.parse(event.data.entity) is the entity by the id you asked, now use it to display the asked entity
+  }
+}
+
+The relevant entities are:
+question(id, content, options, rightOptionIndex)
+  question('q1', 'Who was the first President of the United States?', ['George Washington', 'Thomas Jefferson', 'Abraham Lincoln', 'Theodore Roosevelt'], 0), 
+  question('q2', 'What year did the American Civil War begin?', ['1850', '1861', '1877', '1845'], 1),
+  question('q3', 'Which document declared the independence of the United States from Britain?', ['The Constitution', 'The Bill of Rights', 'The Declaration of Independence', 'The Federalist Papers'], 2),
+  question('q4', 'Who was the president during the Louisiana Purchase?', ['John Adams', 'Andrew Jackson', 'James Monroe', 'Thomas Jefferson'], 3)
+
+
+Events You need to send:
+startGameButtonClickEvent {}
+selectGameSequenceButtonEvent {}
+selectDenominatorsWebPageButtonEvent {}
+selectQuestionUpdaterButtonEvent {}
+selectMathUmbrellaButtonEvent {}
+userAnswerEvent {'questionId': 'questionId', 'selectedOptionIndex': 'selectedOptionIndex'}
+selectReturnToMainMenuEvent {}
+selectExitGameEvent {}
+submitNewQuestionEvent {'questionId': 'questionId', 'content': 'content', 'options': 'options', 'rightOptionIndex': 
+'rightOptionIndex'}
+userClicksLinkEvent {'linkUrl': 'linkUrl'}
+
+Events you need to react to and cant never send:
+moveToMovieComponentEvent {}
+playIntroMovieEvent {}
+moveToMainMenuComponentEvent {}
+moveToGameSequenceComponentEvent {}
+navigateToDenominatorsWebPageEvent {}
+moveToQuestionUpdaterComponentEvent {}
+moveToMathUmbrellaComponentEvent {}
+displayQuestionEvent {'questionId': 'questionId'}
+correctAnswerMessageEvent {}
+incorrectAnswerMessageEvent {}
+moveToNextQuestionEvent {}
+moveToEndingSceneComponentEvent {}
+updateScoreEvent {}
+moveToMainMenuComponentEvent {}
+exitGameEvent {}
+addQuestionToDatabaseEvent {'questionId': 'questionId', 'content': 'content', 'options': 'options', 'rightOptionIndex': 'rightOptionIndex'}
+followLinkEvent {'linkUrl': 'linkUrl'}
+
+
+Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:
+terminateMovieEvent {}
