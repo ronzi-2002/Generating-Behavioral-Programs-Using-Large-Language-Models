@@ -59,48 +59,53 @@ def extract_events(file_path):
                 if event['EventName'] == event_name:
                     event['waitedFor'] = True
 
+
     return events
 
+
+def get_division_by_status(events):
+    waitedEvents = []
+    requestedEvents = []
+    requestedAndWaitedEvents = []
+    for event in events:
+        if event['waitedFor'] and event['requested']:
+            requestedAndWaitedEvents.append(event)
+        elif event['waitedFor']:
+            waitedEvents.append(event)
+        elif event['requested']:
+            requestedEvents.append(event)
+    return waitedEvents, requestedEvents, requestedAndWaitedEvents
 # Example usage
 
+if __name__ == "__main__":
 
+    # os.getcwd() + "/src/main/BotInstructions/v_13/Entity Bot Instructions"
+    file_path = 'src\main\BotInstructions\\v_13\Results\space_fraction.js'
+    # file_path = 'EventsTemplate.js'
+    file_path =file_path.replace('\\', '/')
+    events = extract_events(file_path)
+    print(json.dumps(events, indent=4))
+    #given the events array, create three arrays, one for only waited events, one for only requested events, and one for both requested and waited events.
+    waitedEvents, requestedEvents, requestedAndWaitedEvents = get_division_by_status(events)
+    #print all waited events
+    print("Waited events:")
+    for event in waitedEvents:
+        print(event['EventName'], event['parameters'])
 
-# os.getcwd() + "/src/main/BotInstructions/v_13/Entity Bot Instructions"
-file_path = 'src\main\BotInstructions\\v_13\Results\space_fraction.js'
-# file_path = 'EventsTemplate.js'
-file_path =file_path.replace('\\', '/')
-events = extract_events(file_path)
-print(json.dumps(events, indent=4))
-#given the events array, create three arrays, one for only waited events, one for only requested events, and one for both requested and waited events.
-waitedEvents = []
-requestedEvents = []
-requestedAndWaitedEvents = []
-for event in events:
-    if event['waitedFor'] and event['requested']:
-        requestedAndWaitedEvents.append(event)
-    elif event['waitedFor']:
-        waitedEvents.append(event)
-    elif event['requested']:
-        requestedEvents.append(event)
-#print all waited events
-print("Waited events:")
-for event in waitedEvents:
-    print(event['EventName'], event['parameters'])
+    print("\n\n")
+    #print all requested events
+    print("Requested events:")
+    for event in requestedEvents:
+        print(event['EventName'], event['parameters'])
 
-print("\n\n")
-#print all requested events
-print("Requested events:")
-for event in requestedEvents:
-    print(event['EventName'], event['parameters'])
+    print("\n\n")
+    #print all requested and waited events
+    print("Requested and waited events:")
+    for event in requestedAndWaitedEvents:
+        print(event['EventName'], event['parameters'])
 
-print("\n\n")
-#print all requested and waited events
-print("Requested and waited events:")
-for event in requestedAndWaitedEvents:
-    print(event['EventName'], event['parameters'])
-
-print("\n\n")
-#print all events and their parameters
-print("All events:")
-for event in events:
-    print(event['EventName'], event['parameters'])
+    print("\n\n")
+    #print all events and their parameters
+    print("All events:")
+    for event in events:
+        print(event['EventName'], event['parameters'])

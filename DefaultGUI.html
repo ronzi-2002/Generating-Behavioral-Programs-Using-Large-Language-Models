@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>This page will hold A simple general GUI</title>
+</head>
+<body>
+    <!-- Your HTML content goes here -->
+    <input type="text" id="myInput">
+    <button id="sendButton">Send Event</button>
+    <label id="receivedEventLabel">Received events</label>
+    <label id="statusLabel" style="position: fixed; bottom: 0;">Status: </label>
+</body>
+
+    <script>
+        document.getElementById('sendButton').addEventListener('click', function() {
+            socket.send(document.getElementById('myInput').value);
+        });
+
+        var socket = new WebSocket('ws://localhost:8001');
+
+        socket.onopen = function(event) {
+            console.log('WebSocket connection opened');
+            document.getElementById('statusLabel').innerHTML = 'Status: Connected';
+        };
+
+        socket.onmessage = function(RecMessage) {
+            console.log('Received: ' + RecMessage.data);
+
+            var event = JSON.parse(RecMessage.data);
+            //print the event data
+            console.log(event);
+            //append the event to the label
+            document.getElementById('receivedEventLabel').innerHTML += '<br>' + event;
+            
+            
+        };
+
+        socket.onerror = function(error) {
+            console.error('WebSocket Error: ' + error);
+            document.getElementById('statusLabel').innerHTML = 'Status: Error, Try running the BP program again and refresh the page';
+        };
+
+        socket.onclose = function(event) {
+            console.log('WebSocket connection closed');
+            document.getElementById('statusLabel').innerHTML = 'Status: Disconnected';
+        };
+       
+    </script>
+</html>

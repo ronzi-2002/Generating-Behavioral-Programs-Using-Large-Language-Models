@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Interface</title>
+    <style>
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Home Screen -->
+    <div id="homeScreen">
+        <button id="startGameButton">Start Game</button>
+    </div>
+
+    <!-- Movie Screen -->
+    <div id="movieScreen" class="hidden">
+        <video id="introMovie" width="320" height="240" controls>
+            <source src="movie.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <button id="endMovieButton">End Movie</button>
+    </div>
+
+    <!-- Main Menu Screen -->
+    <div id="mainMenuScreen" class="hidden">
+        <button id="gameSequenceButton">Game Sequence</button>
+        <button id="denominatorsWebPageButton">Denominators Web Page</button>
+        <button id="questionUpdaterButton">Question Updater</button>
+        <button id="mathUmbrellaButton">Math Umbrella</button>
+    </div>
+
+    <!-- Game Sequence Screen -->
+    <div id="gameSequenceScreen" class="hidden">
+        <div id="questionDisplay"></div>
+        <div id="optionsContainer"></div>
+    </div>
+
+    <!-- Ending Scene Screen -->
+    <div id="endingSceneScreen" class="hidden">
+        <button id="returnToMainMenuButton">Return to Main Menu</button>
+        <button id="exitGameButton">Exit Game</button>
+    </div>
+
+    <!-- Question Updater Screen -->
+    <div id="questionUpdaterScreen" class="hidden">
+    </div>
+
+    <!-- Math Umbrella Screen -->
+    <div id="mathUmbrellaScreen" class="hidden">
+    </div>
+
+
+    <script>
+        const socket = new WebSocket('ws://localhost:8001');
+    
+        socket.onopen = function() {
+            console.log('WebSocket connection established');
+        };
+    
+        socket.onmessage = function(eventMessage) {
+            const event = JSON.parse(eventMessage.data);
+            console.log('Received:', event);
+    
+            switch (event.name) {
+                case 'moveToMovieComponentEvent':
+                    moveToScreen('movieScreen');
+                    break;
+                case 'playIntroMovieEvent':
+                    document.getElementById('introMovie').play();
+                    break;
+                case 'moveToMainMenuComponentEvent':
+                    moveToScreen('mainMenuScreen');
+                    break;
+                case 'moveToGameSequenceComponentEvent':
+                    moveToScreen('gameSequenceScreen');
+                    break;
+                case 'navigateToDenominatorsWebPageEvent':
+                    window.location.href = event.data.linkUrl;
+                    break;
+                case 'moveToQuestionUpdaterComponentEvent':
+                    moveToScreen('questionUpdaterScreen');
+                    break;
+                case 'moveToMathUmbrellaComponentEvent':
+                    moveToScreen('mathUmbrellaScreen');
+                    break;
+                case 'displayQuestionEvent':
+                    displayQuestion(event.data.questionId);
+                    break;
+                case 'correctAnswerMessageEvent':
+                    alert('Correct Answer!');
+                    break;
+                case 'incorrectAnswerMessageEvent':
+                    alert('Incorrect Answer!');
+                    break;
+                case 'moveToNextQuestionEvent':
+                    moveToNextQuestion();
+                    break;
+                case 'moveToEndingSceneComponentEvent':
+                    moveToScreen('endingSceneScreen');
+                    break;
+                case 'exitGameEvent':
+                    window.close();
+                    break;
+                case 'getEntityByIdResponse':
+                    updateQuestionDisplay(JSON.parse(event.data.entity) );
+                    break;
+            }
+        };
+    
+        document.getElementById('startGameButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ name: 'startGameButtonClickEvent' }));
+        });
+    
+        document.getElementById('endMovieButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ name: 'terminateMovieEvent' }));
+        });
+    
+        document.getElementById('gameSequenceButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ name: 'selectGameSequenceButtonEvent' }));
+        });
+    
+        document.getElementById('denominatorsWebPageButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ name: 'selectDenominatorsWebPageButtonEvent' }));
+        });
+    
+        document.getElementById('questionUpdaterButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ name: 'selectQuestionUpdaterButtonEvent' }));
+        });
+    
+        document.getElementById('mathUmbrellaButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ name: 'selectMathUmbrellaButtonEvent' }));
+        });
+    
+        document.getElementById('returnToMainMenuButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ name: 'selectReturnToMainMenuEvent' }));
+        });
+    
+        document.getElementById('exitGameButton').addEventListener('click', function() {
+            socket.send(JSON.stringify({ name: 'selectExitGameEvent' }));
+        });
+    
+        function moveToScreen(screenId) {
+            document.querySelectorAll('div').forEach(div => div.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+    
+        function displayQuestion(questionId) {
+            socket.send(JSON.stringify({
+                name: 'getEntityByIdEvent',
+                data: { entityId: questionId }
+            }));
+        }
+    
+        function updateQuestionDisplay(question) {
+            console.log('Question:', question);
+            const questionDisplay = document.getElementById('questionDisplay');
+            const optionsContainer = document.getElementById('optionsContainer');
+            //unhide the question display and options container
+            questionDisplay.classList.remove('hidden');
+            optionsContainer.classList.remove('hidden');
+    
+            questionDisplay.textContent = question.content;
+            optionsContainer.innerHTML = '';
+    
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.addEventListener('click', () => {
+                    socket.send(JSON.stringify({
+                        name: 'userAnswerEvent',
+                        data: { questionId: question.id, selectedOptionIndex: index }
+                    }));
+                });
+                optionsContainer.appendChild(button);
+            });
+        }
+    
+        function moveToNextQuestion() {
+            // Logic to move to the next question
+        }
+    </script>

@@ -151,7 +151,8 @@ public class Server {
             } else if (value instanceof Boolean) {
                 jsonObjectBuilder.add(entry.getKey(), (Boolean) value);
             } else {
-                jsonObjectBuilder.add(entry.getKey(), value.toString());
+                if(value != null)
+                    jsonObjectBuilder.add(entry.getKey(), value.toString());
             }
 //            else {
 //                // Handle other data types if necessary

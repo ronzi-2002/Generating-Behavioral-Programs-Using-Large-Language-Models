@@ -8,6 +8,9 @@ import il.ac.bgu.cs.bp.samplebpproject.UIs.ServerListner;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Scanner;
 
 /**
  * Simple class running a BPjs program that selects "hello world" events.
@@ -28,13 +31,18 @@ public class main_with_external{
             // String [] files = new String[]{spaceFraction,handleExternalEvents};
             // Create a list of files that the BPjs program will use
             List<String> filesList = new ArrayList<>();
-            filesList.add("handleExternalEvents.js");
-            Scanner scanner = new Scanner(System.in);
-            System.out.print("Enter the name of the file(s) you want to run (separated by commas): ");
-            String fileNames = scanner.nextLine();
-            String[] fileNameArray = fileNames.split(",");
-            filesList.addAll(Arrays.asList(fileNameArray));
-            String[] files = filesList.toArray(new String[0]);
+            filesList.add("HandleExternalEvents.js");
+            //If no arguments are given, the user will be asked to enter the names of the files he wants to run.
+            if (args.length == 0) {
+                Scanner scanner = new Scanner(System.in);
+                System.out.print("Enter the name of the file(s) you want to run (separated by commas): ");
+                String fileNames = scanner.nextLine();
+                String[] fileNameArray = fileNames.split(",");
+                filesList.addAll(Arrays.asList(fileNameArray));
+            } else {
+                filesList.addAll(Arrays.asList(args));
+            }
+            
 
             
 

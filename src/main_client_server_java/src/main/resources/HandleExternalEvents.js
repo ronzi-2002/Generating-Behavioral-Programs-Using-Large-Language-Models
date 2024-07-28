@@ -14,8 +14,9 @@ ctx.bthread('Handle external events', function () {
         let obj = JSON.parse(event.data);
         let entityId = obj.data.entityId;
         let requestId = obj.data.requestId;
+
         let entity = ctx.getEntityById(entityId);
-        sync({request: [Event("getEntityByIdEventResponse", {entity: JSON.stringify(entity), requestId: requestId})]});
+        sync({request: [Event("getEntityByIdResponse", {entity: JSON.stringify(entity), requestId: requestId})]});
       }
       else {
         let eventData = obj.data;
@@ -48,4 +49,11 @@ function anyEventNameWithData(eventName, data) {
     }
     return e.name === eventName// && e.data === data;//TODO: check if this is the correct way to compare objects, maybe use JSON.stringify or compare each field
   });
+}
+function getEntities(type) {
+  //entity => entity.type == 'phase' && entity.currentComponent == 'ending_scene');
+  let query = (type) => {
+    return entity => entity.type == type;
+  }
+  return ctx.runQuery(query(type));
 }
