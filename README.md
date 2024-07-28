@@ -1,3 +1,17 @@
+# The End-to-End System for Generating Code from Natural Language Instructions
+
+ For using our system, run the UseSystem.py file in the main directory. 
+ The system supports:
+        1. Generating code from natural language instructions**
+                1.1 Generating BP code from a requirements document
+                1.2 Generating UI code from a requirements document(+and bp code)
+        2. Running the generated code
+                2.1. Running the code in the backend
+                2.2. Running a default frontend(Generated on the fly) for the code together with the backend
+                2.3 Running a specific frontend for the code together with the backend
+        
+**Not supported yet    
+
 
 
 *In the Src Folder
