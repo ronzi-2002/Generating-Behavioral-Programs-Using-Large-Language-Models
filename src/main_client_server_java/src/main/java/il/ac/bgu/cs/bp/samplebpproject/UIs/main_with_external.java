@@ -7,6 +7,7 @@ import il.ac.bgu.cs.bp.samplebpproject.UIs.Server;
 import il.ac.bgu.cs.bp.samplebpproject.UIs.ServerListner;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * Simple class running a BPjs program that selects "hello world" events.
@@ -23,7 +24,13 @@ public class main_with_external{
 
 //            String [] files = new String[]{coffeeMachine,handleExternalEvents};
 //            String [] files = new String[]{tests};
+//            String [] files = new String[]{spaceFraction,handleExternalEvents};
             String [] files = new String[]{spaceFraction,handleExternalEvents};
+            //Create a list of files that the BPjs program will use, the first file will be "handleExternalEvents.js" and than ask the user to enter the name of the file he wants to run.
+
+
+
+
 
             final BProgram bprog = new ContextBProgram(files);
 
