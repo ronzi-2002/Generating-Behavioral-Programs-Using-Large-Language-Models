@@ -25,14 +25,23 @@ public class main_with_external{
 //            String [] files = new String[]{coffeeMachine,handleExternalEvents};
 //            String [] files = new String[]{tests};
 //            String [] files = new String[]{spaceFraction,handleExternalEvents};
-            String [] files = new String[]{spaceFraction,handleExternalEvents};
-            //Create a list of files that the BPjs program will use, the first file will be "handleExternalEvents.js" and than ask the user to enter the name of the file he wants to run.
+            // String [] files = new String[]{spaceFraction,handleExternalEvents};
+            // Create a list of files that the BPjs program will use
+            List<String> filesList = new ArrayList<>();
+            filesList.add("handleExternalEvents.js");
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter the name of the file(s) you want to run (separated by commas): ");
+            String fileNames = scanner.nextLine();
+            String[] fileNameArray = fileNames.split(",");
+            filesList.addAll(Arrays.asList(fileNameArray));
+            String[] files = filesList.toArray(new String[0]);
+
+            
 
 
 
 
-
-            final BProgram bprog = new ContextBProgram(files);
+            final BProgram bprog = new ContextBProgram(filesList);
 
             bprog.setWaitForExternalEvents(true);//We allow external events, for reacting to the incoming events from the client to the server.
             BProgramRunner rnr = new BProgramRunner(bprog);
