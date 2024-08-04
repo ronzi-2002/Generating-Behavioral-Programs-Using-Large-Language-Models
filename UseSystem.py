@@ -22,6 +22,14 @@ class Menu:
             print(f"    {index + 1}. {item.name}")
 
     def select_item(self, index):
+        if index == "M":
+            return MainMenu()
+        #if int is not a number, print invalid menu item
+        try:
+            index = int(index)
+        except:
+            print("Invalid menu item!")
+            return self
         if index >= 1 and index <= len(self.menu_items):
             item = self.menu_items[index - 1]
             return item.function()
@@ -37,18 +45,28 @@ class MainMenu(Menu):
 class BPLLMMenu(Menu):
     def __init__(self):
         super().__init__("BPLLM Menu. Still in development")
+        
 
 class BPProgramMenu(Menu):
     def __init__(self):
         #At first get the user to select a file
         import os
         optionalFiles = os.listdir("src/main_client_server_java/src/main/resources")
-        file_name = input("Enter the bpSystem name(or enter h to get all optional files): ")
+        file_name = input("Enter the bpSystem name(or enter h to get all optional files currently in resources): ")
+        #TODO we can support external files just by copying them to the resources folder
         while file_name == "h" or not file_name in optionalFiles:
             print("Optional files: ")
             #print all the files in src\main_client_server_java\src\main\resources
-            print(os.listdir("src/main_client_server_java/src/main/resources"))
-            file_name = input("Enter the file name: ")
+            optionalFiles = os.listdir("src/main_client_server_java/src/main/resources")
+            for index, file in enumerate(optionalFiles):
+                print(f"    {index + 1}. {file}")
+            file_name = input("Enter the file name or its index: ")
+            try:
+                file_name = int(file_name)
+                file_name = optionalFiles[file_name - 1]
+            except:
+                pass
+
         #check if there is a gui for this file. The gui file should be named the same as the file with .html instead of .js 
         self.GUIFile = "DefaultGUI_"+file_name.replace(".js", ".html")
         optionalFiles = os.listdir("src/main_client_server_java/src/main/UI_Resources")
@@ -61,7 +79,7 @@ class BPProgramMenu(Menu):
             events = exctracting_events.extract_events(file_path)
             waitedEvents, requestedEvents, requestedAndWaitedEvents = exctracting_events.get_division_by_status(events)
             eventsForGUI= {}
-            for event in waitedEvents:
+            for event in waitedEvents + requestedAndWaitedEvents:
                 
                 event_name = event['EventName']
                 params_keys = event['parameters'].keys()
@@ -114,7 +132,7 @@ def main():
         choice = input("Enter menu item number: ")
         if choice == "q":
             break
-        ret_val = current_menu.select_item(int(choice))
+        ret_val = current_menu.select_item(choice)
         #if ret_val is a menu, then we need to update current_menu
         if isinstance(ret_val, Menu):
             current_menu = ret_val

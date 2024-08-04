@@ -20,6 +20,7 @@
 <option value="selectBeverageEvent">selectBeverageEvent</option>
 <option value="selectSugarEvent">selectSugarEvent</option>
 <option value="beverageTakenEvent">beverageTakenEvent</option>
+<option value="deliverBeverageEvent">deliverBeverageEvent</option>
 
         </select>
 
@@ -42,7 +43,7 @@
                 const resultLabel = document.getElementById('resultLabel');
                 resultLabel.textContent += JSON.stringify(event) +"\n";
             };
-            const eventParameters = {"insertCoinEvent": ["machineId"], "selectBeverageEvent": ["machineId", "beverage"], "selectSugarEvent": ["machineId", "sugarAmount"], "beverageTakenEvent": ["machineId"]};
+            const eventParameters = {"insertCoinEvent": ["machineId"], "selectBeverageEvent": ["machineId", "beverage"], "selectSugarEvent": ["machineId", "sugarAmount"], "beverageTakenEvent": ["machineId"], "deliverBeverageEvent": ["machineId", "beverage"]};
 
             function updateParameters() {
                 const eventSelector = document.getElementById('eventSelector');
