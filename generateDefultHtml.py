@@ -36,7 +36,20 @@ def generate(events, outputFilePath):
         <p id="resultLabel">Received: </p>
 
         <script>
-            const socket = new WebSocket('ws://localhost:8001');
+            let socket = new WebSocket('ws://localhost:8001');
+            //If connection failed, the server is not running yet. Try again every 1 second for 10 times.
+            let connectionAttempts = 0;
+            const interval = setInterval(() => {{
+                if (socket.readyState === WebSocket.OPEN) {{
+                    clearInterval(interval);
+                }} else if (connectionAttempts >= 10) {{
+                    clearInterval(interval);
+                    alert('Failed to connect to the server. Please make sure the server is running.');
+                }} else {{
+                    connectionAttempts++;
+                    socket = new WebSocket('ws://localhost:8001');
+                }}
+            }}, 1000);
         
             socket.onopen = function() {{
                 console.log('WebSocket connection established');
