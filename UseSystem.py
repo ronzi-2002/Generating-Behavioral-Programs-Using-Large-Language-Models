@@ -58,14 +58,20 @@ class BPLLMMenu(Menu):
     def set_openai_api_key(self):
         key = input("Enter your OpenAI API key: ")
         #switch the value of the key in the .env file
-        with open(".env", "r") as file:
-            lines = file.readlines()
-        with open(".env", "w") as file:
-            for line in lines:
-                if line.startswith("OPENAI_API_KEY="):
-                    file.write(f"OPENAI_API_KEY={key}\n")
-                else:
-                    file.write(line)
+        #if env file does not exist, create it
+        try:
+            with open(".env", "r") as file:
+                lines = file.readlines()
+            with open(".env", "w") as file:
+                for line in lines:
+                    if line.startswith("OPENAI_API_KEY="):
+                        file.write(f"OPENAI_API_KEY={key}\n")
+                    else:
+                        file.write(line)
+        except:
+            with open(".env", "w") as file:
+                file.write(f"OPENAI_API_KEY={key}\n")
+
         print("API key has been set successfully")
         return self
         
