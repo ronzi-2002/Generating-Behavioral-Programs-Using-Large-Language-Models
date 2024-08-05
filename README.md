@@ -3,7 +3,7 @@
  For using our system, run the UseSystem.py file in the main directory. 
  The system supports:
 1. Generating code from natural language instructions
-   1. Generating BP code from a requirements document (Please look at the examples in [RequirementDocs](bp_code_generation/RequirementsDocs))
+   1. Generating BP code from a requirements document (Please look at the examples in [RequirementDocs](src/BP_code_generation/RequirementDocs))
    2. Generating UI code from a requirements document(+and bp code)**
    3. Setting your API key for the OpenAI API(You can also set the API key manually in .env file)
 2. Running the generated code
