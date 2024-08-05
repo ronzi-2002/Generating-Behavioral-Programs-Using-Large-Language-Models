@@ -169,6 +169,7 @@ class BPProgramMenu(Menu):
 
 def main():
     current_menu = MainMenu()
+    print("You Can Always Go Back To The Main Menu By Entering M")
     while True:
         current_menu.display()
         choice = input("Enter menu item number: ")
