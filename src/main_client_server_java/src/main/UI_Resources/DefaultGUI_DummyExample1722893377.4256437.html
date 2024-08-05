@@ -1,0 +1,126 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Event Selector</title>
+        <style>
+            .hidden {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Event Selector</h1>
+        <label for="eventSelector">Select Event:</label>
+        <select id="eventSelector" onchange="updateParameters()">
+            <option value="">--Select an Event--</option>
+            <option value="motionDetectedEvent">motionDetectedEvent</option>
+
+        </select>
+
+        <div id="parameters" class="hidden">
+            <!-- Parameters will be dynamically added here -->
+        </div>
+
+        <button id="invokeButton" onclick="invokeEvent()">Invoke</button>
+        <p id="resultLabel">Received: </p>
+        <label id="statusLabel" style="position: fixed; bottom: 0;">Status: </label>
+
+
+        <script>
+            let socket = new WebSocket('ws://localhost:8001');
+            //If connection failed, the server is not running yet. Try again every 1 second for 10 times.
+            let connectionAttempts = 0;
+            const interval = setInterval(() => {
+                if (socket.readyState === WebSocket.OPEN) {
+                    clearInterval(interval);
+                } else if (connectionAttempts >= 10) {
+                    clearInterval(interval);
+                    alert('Failed to connect to the server. Please make sure the server is running.');
+                } else {
+                    connectionAttempts++;
+                    socket = new WebSocket('ws://localhost:8001');
+                }
+            }, 1000);
+        
+            socket.onopen = function() {
+                console.log('WebSocket connection established');
+                document.getElementById('statusLabel').innerHTML = 'Status: Connected';
+
+            };
+            socket.onmessage = function(eventMessage) {
+                const event = JSON.parse(eventMessage.data);
+                console.log('Received:', event);
+                const resultLabel = document.getElementById('resultLabel');
+                resultLabel.textContent += JSON.stringify(event) +"\n";
+            };
+            const eventParameters = {"motionDetectedEvent": []};
+
+            function updateParameters() {
+                const eventSelector = document.getElementById('eventSelector');
+                const selectedEvent = eventSelector.value;
+                const parametersDiv = document.getElementById('parameters');
+                parametersDiv.innerHTML = '';
+
+                if (eventParameters[selectedEvent]) {
+                    eventParameters[selectedEvent].forEach(param => {
+                        const label = document.createElement('label');
+                        label.textContent = param + ": ";
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.id = param;
+                        parametersDiv.appendChild(label);
+                        parametersDiv.appendChild(input);
+                        parametersDiv.appendChild(document.createElement('br'));
+                    });
+                    parametersDiv.classList.remove('hidden');
+                } else {
+                    parametersDiv.classList.add('hidden');
+                }
+            }
+            
+            function invokeEvent() {
+                const eventSelector = document.getElementById('eventSelector');
+                const selectedEvent = eventSelector.value;
+                if (!selectedEvent) {
+                    alert('Please select an event');
+                    return;
+                }
+
+                let params = {};
+                if (eventParameters[selectedEvent]) {
+                    eventParameters[selectedEvent].forEach(param => {
+                        const value = document.getElementById(param).value;
+                        if (!value) {
+                            alert(`Please fill in the parameter: ${param}`);
+                            return;
+                        }
+                        params[param] = value;
+                    });
+                }
+                if (Object.keys(params).length === 0) {
+                socket.send(JSON.stringify({ name: selectedEvent }));
+                console.log(selectedEvent);
+                }
+                else{
+                    socket.send(JSON.stringify({ name: selectedEvent, data: params }));
+                    console.log(`${selectedEvent} ${JSON.stringify(params)}`);
+                }
+                
+            }
+            socket.onerror = function(error) {
+            console.error('WebSocket Error: ' + error);
+            document.getElementById('statusLabel').innerHTML = 'Status: Error, Try running the BP program again and refresh the page';
+            };
+
+            socket.onclose = function(event) {
+                console.log('WebSocket connection closed');
+                document.getElementById('statusLabel').innerHTML = 'Status: Disconnected';
+            };
+       
+        </script>
+    </body>
+    </html>
+    

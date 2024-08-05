@@ -19,7 +19,7 @@ function room(id,subtype) {
     return ctx.Entity(id, 'room', {subtype: subtype, isOcupied: false})
 }
 
-2. (if specific values are provided ) Next, we create the actual entities and add them to the context:
+2. (if specific values are provided or its in a singular form(an item)) Next, we create the actual entities and add them to the context:
 ctx.populateContext([room('bathroom1','bathroom'),room('kitchen1','kitchen'),room('masterBedroom1','bedroom')]);
 *This can be used also in the future to add more entities.
 

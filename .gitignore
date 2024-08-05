@@ -2,3 +2,5 @@
 /target/
 #ignore .env file
 .env
+# exclude any directory named "target"
+**/target/

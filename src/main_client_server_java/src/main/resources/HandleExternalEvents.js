@@ -57,3 +57,10 @@ function getEntities(type) {
   }
   return ctx.runQuery(query(type));
 }
+
+function Sleep(milliseconds) {
+  for (let i = 0; i < milliseconds/60000; i++) {
+    sync({waitFor: Event("MinutePassed")});
+  }
+}
+

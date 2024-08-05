@@ -129,7 +129,7 @@ public class Server {
         if (bpEvent.maybeData instanceof Number) {
             JsonObject json = Json.createObjectBuilder()
                     .add("name", bpEvent.name)
-                    .add("data", (JsonValue) bpEvent.maybeData)
+                    .add("data", (Integer) bpEvent.maybeData)
                     .build();
             return json.toString();
         }
