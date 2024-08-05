@@ -34,6 +34,8 @@ def generate(events, outputFilePath):
 
         <button id="invokeButton" onclick="invokeEvent()">Invoke</button>
         <p id="resultLabel">Received: </p>
+        <label id="statusLabel" style="position: fixed; bottom: 0;">Status: </label>
+
 
         <script>
             let socket = new WebSocket('ws://localhost:8001');
@@ -53,6 +55,8 @@ def generate(events, outputFilePath):
         
             socket.onopen = function() {{
                 console.log('WebSocket connection established');
+                document.getElementById('statusLabel').innerHTML = 'Status: Connected';
+
             }};
             socket.onmessage = function(eventMessage) {{
                 const event = JSON.parse(eventMessage.data);
@@ -114,6 +118,16 @@ def generate(events, outputFilePath):
                 }}
                 
             }}
+            socket.onerror = function(error) {{
+            console.error('WebSocket Error: ' + error);
+            document.getElementById('statusLabel').innerHTML = 'Status: Error, Try running the BP program again and refresh the page';
+            }};
+
+            socket.onclose = function(event) {{
+                console.log('WebSocket connection closed');
+                document.getElementById('statusLabel').innerHTML = 'Status: Disconnected';
+            }};
+       
         </script>
     </body>
     </html>

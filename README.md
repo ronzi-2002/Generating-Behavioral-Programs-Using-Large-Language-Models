@@ -8,7 +8,7 @@
    3. Setting your API key for the OpenAI API(You can also set the API key manually in .env file)
 2. Running the generated code
    1. Running the code in the backend
-   2. Running a default frontend(Generated on the fly) for the code together with the backend
+   2. Running a default frontend(Generated on the fly) for the code together with the backend. Notice that this frontend also indicates the status of the connection (at the bottom of the page). If connection isn't successful, try and refresh the page. 
    3. Running a specific frontend for the code together with the backend
         
 **Not supported yet    
