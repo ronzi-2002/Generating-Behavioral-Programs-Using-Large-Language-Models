@@ -1,0 +1,15 @@
+Entity INSTRUCTIONS:
+
+There is a smart light bulb(which can be on and off)
+
+Query INSTRUCTIONS:
+
+Needed queries:
+ 2. lights On
+
+
+Behavior INSTRUCTIONS:
+
+When motion is detected, the light bulb turns on
+
+While the light bulb is on, the house cannot be exited

@@ -1,4 +1,5 @@
 import src.UI_code_generation.exctracting_events as exctracting_events
+import src.BP_code_generation.myOpenAiApi as myOpenAiApi
 import generateDefultHtml 
 class MenuItem:
     def __init__(self, name, function):
@@ -45,6 +46,22 @@ class MainMenu(Menu):
 class BPLLMMenu(Menu):
     def __init__(self):
         super().__init__("BPLLM Menu. Still in development")
+        self.add_item("Generate BP Code", lambda: myOpenAiApi.main())
+        self.add_item("Set OpenAI API Key", lambda: self.set_openai_api_key())
+                      
+    def set_openai_api_key(self):
+        key = input("Enter your OpenAI API key: ")
+        #switch the value of the key in the .env file
+        with open(".env", "r") as file:
+            lines = file.readlines()
+        with open(".env", "w") as file:
+            for line in lines:
+                if line.startswith("OPENAI_API_KEY="):
+                    file.write(f"OPENAI_API_KEY={key}\n")
+                else:
+                    file.write(line)
+        print("API key has been set successfully")
+        return self
         
 
 class BPProgramMenu(Menu):
@@ -54,7 +71,8 @@ class BPProgramMenu(Menu):
         optionalFiles = os.listdir("src/main_client_server_java/src/main/resources")
         file_name = input("Enter the bpSystem name(or enter h to get all optional files currently in resources): ")
         #TODO we can support external files just by copying them to the resources folder
-        while file_name == "h" or not file_name in optionalFiles:
+        #Check if file exists
+        while file_name == "h" or (not file_name in optionalFiles and not os.path.isfile(file_name)): 
             print("Optional files: ")
             #print all the files in src\main_client_server_java\src\main\resources
             optionalFiles = os.listdir("src/main_client_server_java/src/main/resources")
@@ -66,6 +84,16 @@ class BPProgramMenu(Menu):
                 file_name = optionalFiles[file_name - 1]
             except:
                 pass
+        if(not file_name in optionalFiles):#the file is not in the resources folder, copy it to the resources folder
+            file_path = file_name
+            #the file name is the last part of the path(can be a full path seperated by / or \\)
+            file_name = file_name.split("/")[-1]
+            file_name = file_name.split("\\")[-1]
+            
+             
+
+            import shutil
+            print(shutil.copy(file_path, "src/main_client_server_java/src/main/resources"))
 
         #check if there is a gui for this file. The gui file should be named the same as the file with .html instead of .js 
         self.GUIFile = "DefaultGUI_"+file_name.replace(".js", ".html")
