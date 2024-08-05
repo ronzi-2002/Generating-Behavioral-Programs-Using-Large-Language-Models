@@ -148,6 +148,7 @@ class MyOpenAIApi:
             file.write(string_to_write)
             file.close()
             print("code has been exported to " + directory +"/" + file_name)
+            return directory +"/" + file_name
         return string_to_write
     def get_pretty_response_string(self, response_index):#TODO this is a bit weird, it is because the bot functions are not part of the class, I will fix it
         string_to_write = ""
@@ -288,7 +289,7 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
         temp_file.flush()
     if output_directory:
         currTime = time.time()
-        myOpenAIApi.export_to_code(directory=output_directory, file_name=file_name + str(currTime)+".js")
+        generated_code_path = myOpenAIApi.export_to_code(directory=output_directory, file_name=file_name + str(currTime)+".js")
         if ambiguity_test:
             
             #copy temp file to the output directory+file_name+Amb
@@ -301,7 +302,8 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
 
 
     else:
-        myOpenAIApi.export_to_code()
+       generated_code_path= myOpenAIApi.export_to_code()
+    return generated_code_path
 #incase your inputs are in a file, notice this limits each input to one line
 def file_to_array(file_path):
     # an input can be more than one line, it is just that each input is separated by blank line
@@ -391,7 +393,7 @@ def main():
         entity_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Entity Bot Instructions"
         query_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Query Bot Instructions"
         behavior_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions"
-        bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path)
+        return bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path)
 
 if __name__ == "__main__":
     main()

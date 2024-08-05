@@ -45,10 +45,16 @@ class MainMenu(Menu):
         self.add_item("Run BPProgram Menu", lambda: BPProgramMenu())
 class BPLLMMenu(Menu):
     def __init__(self):
-        super().__init__("BPLLM Menu. Still in development")
-        self.add_item("Generate BP Code", lambda: myOpenAiApi.main())
+        super().__init__("BPLLM Menu")
+        self.file_path_of_last_generated_code = None
+        self.add_item("Generate BP Code", lambda: self.generate_BP_code())
         self.add_item("Set OpenAI API Key", lambda: self.set_openai_api_key())
-                      
+        self.add_item("Generate UI Code", lambda: print("Not implemented yet"))
+    def generate_BP_code(self):
+        self.file_path_of_last_generated_code = myOpenAiApi.main()
+        self.add_item("Move to BPProgram Menu With Generated Code", lambda: BPProgramMenu(file_name=self.file_path_of_last_generated_code))
+        return self
+
     def set_openai_api_key(self):
         key = input("Enter your OpenAI API key: ")
         #switch the value of the key in the .env file
@@ -65,12 +71,12 @@ class BPLLMMenu(Menu):
         
 
 class BPProgramMenu(Menu):
-    def __init__(self):
+    def __init__(self, file_name = None):
         #At first get the user to select a file
         import os
         optionalFiles = os.listdir("src/main_client_server_java/src/main/resources")
-        file_name = input("Enter the bpSystem name(or enter h to get all optional files currently in resources): ")
-        #TODO we can support external files just by copying them to the resources folder
+        if file_name == None:
+            file_name = input("Enter the bpSystem name(or enter h to get all optional files currently in resources): ")
         #Check if file exists
         while file_name == "h" or (not file_name in optionalFiles and not os.path.isfile(file_name)): 
             print("Optional files: ")
@@ -96,10 +102,12 @@ class BPProgramMenu(Menu):
             print(shutil.copy(file_path, "src/main_client_server_java/src/main/resources"))
 
         #check if there is a gui for this file. The gui file should be named the same as the file with .html instead of .js 
-        self.GUIFile = "DefaultGUI_"+file_name.replace(".js", ".html")
+        self.GUIFile_path =str(os.getcwd())+ "/src/main_client_server_java/src/main/UI_Resources/DefaultGUI_"+file_name.replace(".js", ".html")
         optionalFiles = os.listdir("src/main_client_server_java/src/main/UI_Resources")
         if file_name.replace(".js", ".html") in optionalFiles:
-            self.GUIFile = str(os.getcwd())+"/src/main_client_server_java/src/main/UI_Resources/"+file_name.replace(".js", ".html")
+            self.GUIFile_path = str(os.getcwd())+"/src/main_client_server_java/src/main/UI_Resources/"+file_name.replace(".js", ".html")
+        elif  "DefaultGUI_"+file_name.replace(".js", ".html") in optionalFiles:
+            self.GUIFile_path = str(os.getcwd())+"/src/main_client_server_java/src/main/UI_Resources/DefaultGUI_"+file_name.replace(".js", ".html")
         else:
             #We need to create a GUI file for this file
             file_path = str(os.getcwd()) + "/src/main_client_server_java/src/main/resources/" + file_name
@@ -117,7 +125,7 @@ class BPProgramMenu(Menu):
                     params.append(str(key))
 
                 eventsForGUI[event_name] = params            #create the GUI file
-            generateDefultHtml.generate(eventsForGUI, self.GUIFile)
+            generateDefultHtml.generate(eventsForGUI, self.GUIFile_path)
 
 
         super().__init__("BPProgram Menu For " + file_name)
@@ -147,7 +155,7 @@ class BPProgramMenu(Menu):
         bp_thread.start()
         import webbrowser
 
-        webbrowser.open(self.GUIFile)
+        webbrowser.open(self.GUIFile_path)
         print("Opening GUI in browser\n\n\n\n\n\n\nn\n\n\n")
 
 

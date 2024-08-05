@@ -104,8 +104,15 @@ def generate(events, outputFilePath):
                         params[param] = value;
                     }});
                 }}
-                socket.send(JSON.stringify({{ name: selectedEvent, data: params }}));
-                console.log(`${{selectedEvent}} ${{JSON.stringify(params)}}`);
+                if (Object.keys(params).length === 0) {{
+                socket.send(JSON.stringify({{ name: selectedEvent }}));
+                console.log(selectedEvent);
+                }}
+                else{{
+                    socket.send(JSON.stringify({{ name: selectedEvent, data: params }}));
+                    console.log(`${{selectedEvent}} ${{JSON.stringify(params)}}`);
+                }}
+                
             }}
         </script>
     </body>

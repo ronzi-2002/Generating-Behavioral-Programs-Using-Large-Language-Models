@@ -5,7 +5,8 @@ There is a smart light bulb(which can be on and off)
 Query INSTRUCTIONS:
 
 Needed queries:
- 2. lights On
+ 1. light
+ 2. light On
 
 
 Behavior INSTRUCTIONS:
