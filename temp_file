@@ -1,14 +1,12 @@
-\\There is a smart light bulb(which can be on and off)function lightBulb(id, status) {
-    return ctx.Entity(id, 'lightBulb', {status: status});
+\\There is a smart light bulb(which can be on and off)function lightBulb(id) {
+    return ctx.Entity(id, 'lightBulb', {isOn: false});
 }
-
-ctx.populateContext([lightBulb('lightBulb1', 'off')]);
 
 \\Needed queries:
  1. light
  2. light Onctx.registerQuery('light', entity => entity.type == 'lightBulb');
 
-ctx.registerQuery('lightOn', entity => entity.type == 'lightBulb' && entity.status == 'on');
+ctx.registerQuery('lightOn', entity => entity.type == 'lightBulb' && entity.isOn);
 
 \\When motion is detected, the light bulb turns onfunction motionDetectedEvent() {
     return Event("motionDetectedEvent");
@@ -20,7 +18,7 @@ function turnOnLightEvent(lightBulbId) {
 
 ctx.registerEffect('turnOnLightEvent', function (data) {
     let lightBulb = ctx.getEntityById(data.lightBulbId);
-    lightBulb.status = 'on';
+    lightBulb.isOn = true;
 });
 
 ctx.bthread('When motion is detected, the light bulb turns on', 'light', function (light) {
@@ -46,7 +44,7 @@ ctx.bthread('While the light bulb is on, the door cannot be opened', 'lightOn', 
 
 ctx.registerEffect('turnOffLightEvent', function (data) {
     let lightBulb = ctx.getEntityById(data.lightBulbId);
-    lightBulb.status = 'off';
+    lightBulb.isOn = false;
 });
 
 ctx.bthread('Light bulb turns off after 5 minutes', 'lightOn', function (lightOn) {

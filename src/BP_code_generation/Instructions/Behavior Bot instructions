@@ -88,6 +88,11 @@ sync({block: [eventA_WeBlockUntilEventB()], waitFor: [EventB()]})
 
 - For timed events, you can use the Sleep function. The Sleep function will pause the thread for a certain amount of time. For example:
     Sleep(10000) will pause the thread for 10 seconds.
+- For waiting for a specific Hour, you can use the time function. For example:
+    Time(10) will return an event that happens when the hour is 10.
+    so we can use it like this:
+    sync({waitFor: [Time(10)]})
+
 Popular templates are:(dont forget to declare the events and effects before using them)
     1. Wait for an event and then request another event:
         sync({waitFor: [A()]})
@@ -122,13 +127,19 @@ Popular templates are:(dont forget to declare the events and effects before usin
             sync({request: [A()]})
             Sleep(10000)
         }
-    10. Wait for A for 10 seconds and if A happened, request B
-        let event= sync({waitFor: [A()], timeout: 10000})
+    10. Wait for the hour to be 10, then request A
+        while(true){
+            sync({waitFor: [Time(10)]})
+            sync({request: [A()]})
+        }
+    11. Wait for A for 10 seconds and if A happened, request B
+        let event = Timeout({waitFor: [A()], timeout: 10000})
         if(event != null){
             sync({request: [B()]})
         }
-    11. If no A happens in 10 seconds, request B
-        let event= sync({waitFor: [A()], timeout: 10000})
+    12. If no A happens in 10 seconds, request B
+        let event = Timeout({waitFor: [A()], timeout: 10000})
+
         if(event == null){
             sync({request: [B()]})
         }
@@ -247,7 +258,7 @@ function changeCapacity(roomId, newCapacity) {
     return Event("changeCapacityEvent", {roomId: roomId, newCapacity: newCapacity})
 }
 
-ctx.bthread('when capacity is changed, a temperature check should be done', 'room', function (room) {
+ctx.bthread('when capacity is changed to higher than 5, a temperature check should be done', 'room', function (room) {
     while(true){
         sync({waitFor: anyEventNameWithData("changeCapacityEvent", {roomId: room.id, newCapacity: (newCapacity) => newCapacity > 5})});
         sync({request: [temperatureCheckEvent(room.id)]});
@@ -306,7 +317,7 @@ ctx.registerEffect('closeRoomEvent', function (data) {
 })
 ctx.bthread('If a room doesnt close after 10 minutes, the system should close it automatically','room', function (room) {
     while(true){
-        let event = sync({waitFor: [closeRoomEvent(room.id)], timeout: 600000});
+        let event = Timeout({waitFor: [closeRoomEvent(room.id)], timeout: 600000});
         if(event == null){
             sync({request: [closeRoomEvent(room.id)]});
         }
@@ -325,7 +336,7 @@ function systemShutDownEvent() {
 ctx.registerQuery('car', entity => entity.type == 'car');
 ctx.bthread('If car is not moving for 10 minutes, the system should shut down','car', function (car) {
     while(true){
-        let event = sync({waitFor: [carMovingEvent(car.id)], timeout: 600000});
+        let event = Timeout({waitFor: [carMovingEvent(car.id)], timeout: 600000});
         if(event == null){
             sync({request: [systemShutDownEvent()]});
         }
