@@ -1,11 +1,13 @@
 //Handle external events
-ctx.bthread('Handle external events', function () {
+bthread('Handle external events', function () {
   let event = null;
   while (true) {
+    bp.log.setLevel("Fine");
+    // bp.log.info("Waiting for external event");
     event = sync({waitFor: bp.all});
     if (event.name === 'ExternalEvent') {
       //The event is external, it is a json object with the following structures: name and data, trigger the event
-      bp.log.setLevel("Fine");
+      
       bp.log.info("External event received: " + event.data);
       let obj = JSON.parse(event.data);
       let eventName = obj.name;
@@ -50,7 +52,7 @@ function anyEventNameWithData(eventName, data) {
     return e.name === eventName// && e.data === data;//TODO: check if this is the correct way to compare objects, maybe use JSON.stringify or compare each field
   });
 }
-function getEntities(type) {
+function getEntitiesByType(type) {
   //entity => entity.type == 'phase' && entity.currentComponent == 'ending_scene');
   let query = (type) => {
     return entity => entity.type == type;
@@ -62,5 +64,9 @@ function Sleep(milliseconds) {
   for (let i = 0; i < milliseconds/60000; i++) {
     sync({waitFor: Event("MinutePassed")});
   }
+}
+function TimeToBe(hour, minute) {
+  bp.log.info("Time to be: " + hour + ":" + minute);
+  return Event("TimeToBe", hour+":"+minute);
 }
 

@@ -1,56 +1,59 @@
-\\There is a smart light bulb(which can be on and off)function lightBulb(id) {
-    return ctx.Entity(id, 'lightBulb', {isOn: false});
+\\There is a smart light bulb(which can be on and off)function smartLightBulb(id) {
+    return ctx.Entity(id, 'smartLightBulb', {isOn: false});
 }
+
+ctx.populateContext([smartLightBulb('smartLightBulb1')]);
 
 \\Needed queries:
  1. light
- 2. light Onctx.registerQuery('light', entity => entity.type == 'lightBulb');
+ 2. light Onctx.registerQuery('light', entity => entity.type == 'smartLightBulb');
 
-ctx.registerQuery('lightOn', entity => entity.type == 'lightBulb' && entity.isOn);
+ctx.registerQuery('lightOn', entity => entity.type == 'smartLightBulb' && entity.isOn);
 
 \\When motion is detected, the light bulb turns onfunction motionDetectedEvent() {
     return Event("motionDetectedEvent");
 }
 
-function turnOnLightEvent(lightBulbId) {
-    return Event("turnOnLightEvent", {lightBulbId: lightBulbId});
+function turnOnLightEvent(lightId) {
+    return Event("turnOnLightEvent", {lightId: lightId});
 }
 
 ctx.registerEffect('turnOnLightEvent', function (data) {
-    let lightBulb = ctx.getEntityById(data.lightBulbId);
-    lightBulb.isOn = true;
+    let light = ctx.getEntityById(data.lightId);
+    light.isOn = true;
 });
 
-ctx.bthread('When motion is detected, the light bulb turns on', 'light', function (light) {
+ctx.bthread('Turn on light when motion is detected', 'light', function (light) {
     while(true){
         sync({waitFor: [motionDetectedEvent()]});
         sync({request: [turnOnLightEvent(light.id)]});
     }
 });
 
-\\While the light bulb is on, the door cannot be openedfunction openDoorEvent() {
-    return Event("openDoorEvent");
+\\While the light bulb is on, the doors cannot be openedfunction doorOpenedEvent(doorId) {
+    return Event("doorOpenedEvent", {doorId: doorId});
 }
 
-ctx.bthread('While the light bulb is on, the door cannot be opened', 'lightOn', function (lightOn) {
+ctx.bthread('While the light bulb is on, doors cannot be opened', 'lightOn', function (light) {
     while(true){
-        sync({block: [openDoorEvent()]});
+        sync({block: [anyEventNameWithData("doorOpenedEvent")]});
     }
 });
 
-\\Light bulb turns off after 5 minutesfunction turnOffLightEvent(lightBulbId) {
-    return Event("turnOffLightEvent", {lightBulbId: lightBulbId});
+\\Light bulb turns off after 5 minutesfunction turnOffLightEvent(lightId) {
+    return Event("turnOffLightEvent", {lightId: lightId});
 }
 
 ctx.registerEffect('turnOffLightEvent', function (data) {
-    let lightBulb = ctx.getEntityById(data.lightBulbId);
-    lightBulb.isOn = false;
+    let light = ctx.getEntityById(data.lightId);
+    light.isOn = false;
 });
 
-ctx.bthread('Light bulb turns off after 5 minutes', 'lightOn', function (lightOn) {
+ctx.bthread('Turn off light after 5 minutes', 'lightOn', function (light) {
     while(true){
-        Sleep(300000); // 5 minutes in milliseconds
-        sync({request: [turnOffLightEvent(lightOn.id)]});
+        let waitTill = new Date().getTime() + 300000; // 5 minutes
+        sync({waitFor: [TimeToBe(new Date(waitTill).getHours(), new Date(waitTill).getMinutes())]});
+        sync({request: [turnOffLightEvent(light.id)]});
     }
 });
 

@@ -102,49 +102,78 @@ public class main_with_external{
             });
             bpthread.start();//starting the BPjs program
 
-            if (sleep){
-                Thread timedEvents = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        final long sleepingTime = 60000/finalSpeedingFactor;
-                        while (true) {
-                            try {
+            // if (sleep){
+            //     //TODO THis is not super accurate because it doesn't take into account the real time, it just sleeps for 1 minute. 
+            //     Thread timedEvents = new Thread(new Runnable() {
+            //         @Override
+            //         public void run() {
+            //             final long sleepingTime = 60000/finalSpeedingFactor;
+            //             while (true) {
+            //                 try {
                                 
-                                Thread.sleep(sleepingTime);//sleep for 1 minute
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            bprog.enqueueExternalEvent(new BEvent("MinutePassed"));
-                        }
-                    }
-                });
-                timedEvents.start();
-            }
-            if(time){
-                System.out.println("Hour now: " + LocalDateTime.now());
+            //                     Thread.sleep(sleepingTime);//sleep for 1 minute
+            //                 } catch (InterruptedException e) {
+            //                     e.printStackTrace();
+            //                 }
+            //                 LocalDateTime now = LocalDateTime.now();
+            //                 bprog.enqueueExternalEvent(new BEvent("TimeToBe",now.getHour()+"," +now.getMinute()));
+            //             }
+            //         }
+            //     });
+            //     timedEvents.start();
+            // }
+            // if(time){
+            //     System.out.println("Hour now: " + LocalDateTime.now());
+            //     //For updating the time every hour
+            //     //Every time the hour changes, the server will send a message to the client.
+            //     ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+            //     Runnable logTask = () -> {
+            //         LocalDateTime now = LocalDateTime.now();
+            //         System.out.println("Hour changed: " + now);
+            //         bprog.enqueueExternalEvent(new BEvent("Hour Changed", now.getHour()));
+            //     };
+
+            //     long initialDelay = (computeInitialDelay())/finalSpeedingFactor; // initial delay of 1 hour
+            //     long period = 1*3600/finalSpeedingFactor; // period of 1 hour in seconds
+                
+            //     scheduler.scheduleAtFixedRate(logTask, initialDelay, period, TimeUnit.SECONDS);
+            // }
+            if(time)
+            {
+                System.out.println("Minute now: " + LocalDateTime.now());
                 //For updating the time every hour
                 //Every time the hour changes, the server will send a message to the client.
                 ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+                LocalDateTime simulateDateTime = LocalDateTime.now();
+                LocalDateTime[] simulatedTime = { LocalDateTime.now() }; // Use an array to allow modification within the lambda
 
                 Runnable logTask = () -> {
-                    LocalDateTime now = LocalDateTime.now();
-                    System.out.println("Hour changed: " + now);
-                    bprog.enqueueExternalEvent(new BEvent("Hour Changed", now.getHour()));
+                    // LocalDateTime now = LocalDateTime.now();
+                    System.out.println("\n\n\n\nMinute changed: " + simulatedTime[0]);
+
+                    bprog.enqueueExternalEvent(new BEvent("TimeToBe",simulatedTime[0].getHour()+":" +simulatedTime[0].getMinute()));
+                    simulateDateTime.plusMinutes(1);
+                    simulatedTime[0] = simulatedTime[0].plusMinutes(1);
                 };
 
-                long initialDelay = (computeInitialDelay())/finalSpeedingFactor; // initial delay of 1 hour
-                long period = 1*3600/finalSpeedingFactor; // period of 1 hour in seconds
+                long initialDelay = (computeInitialDelayMinutes())/finalSpeedingFactor; // initial delay of 1 hour
+                long period = 1*60/finalSpeedingFactor; // period of 1 minute in seconds
                 
                 scheduler.scheduleAtFixedRate(logTask, initialDelay, period, TimeUnit.SECONDS);
-    
 
             }
         }
     }
-    private static long computeInitialDelay() {
+    private static long computeInitialDelayHours() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime nextHour = now.plusHours(1).truncatedTo(ChronoUnit.HOURS);
         return ChronoUnit.SECONDS.between(now, nextHour);
+    }
+    private static long computeInitialDelayMinutes() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime nextMinute = now.plusMinutes(1).truncatedTo(ChronoUnit.MINUTES);
+        return ChronoUnit.SECONDS.between(now, nextMinute);
     }
 }
 

@@ -148,7 +148,7 @@ class BPProgramMenu(Menu):
         if compile:
             os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pom.xml")
         #TODO: Make the special events(time) happen only when needed, and ask user for acceleration factor
-        os.system(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -t -s -speedFactor 60")
+        os.system(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -t -s -speedFactor 1")
         #if there is a GUI system, open 
     def run_BPProgramWithGUI(self, file_name):
         #open the GUI file in the chrome browser

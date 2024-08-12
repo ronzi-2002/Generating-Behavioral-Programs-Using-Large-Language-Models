@@ -38,6 +38,7 @@ public class Server {
                     json = reader.readObject();
                 } catch (Exception e) {
                     e.printStackTrace();
+                    System.out.println("Invalid JSON: " + message);
                     return;
                 }
 

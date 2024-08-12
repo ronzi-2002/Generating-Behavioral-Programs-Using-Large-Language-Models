@@ -1,0 +1,59 @@
+Please analyze the requirement above based on the next topics, please answer each one of them separately. only with the final answer. Do that in a comment and then implement(After adding //Implementation)
+### Is there a time aspect involved?
+If there is, check what it is exactly referring to out of the next options, and provide the right action.
+ 1. **The duration of one of the queries?**
+    action: You TIME inside the bthread
+ 2. **The length(in time) of an event?**
+    action: Declare a new specific event(name the event) and don't use TIme for this manner.
+ 3. **A time limit for an event to happen?
+    action: sync(waitFor:[TIME(), event] and check the output
+ 4.**Waiting for a specific hour to request an event?** (Lets say you need to open car at 2 pm)
+    action: Use WaitFor[Time(Hour, Minute) and then request. 
+ 5. **your action is dependent on the actual Hour** (Mostly needed when the word "Between" is used)
+   if you need to act in a certain way if an event happens after/before/between a specific hour, 
+   action: Wait for the event and then check the time using an if statement. simply use new Date().get... and compare to it.
+
+
+### Are there many events requested at once? If so
+**If all need to happen,action:  use Request all**
+**If one of them happening is enough, action: use regular sync({request:})**
+
+###Effects
+**Is there an effect involved with events?(do they need to change the state of an entity, Given the existing entities?)
+  What entities are relevant?(Only from the existing ones, don't assume any other). Tell me the effect only if there is an according entity. 
+  What is the event with the effect?
+
+###Bthread Context
+Is there a specific context for the asked bthread, or does it apply to all entities of a query(like car.moving)? which one of the queries is it(out of: ) . Give the exact name
+**Give it only if it's relevant to the whole requirement. For example, if a behavior is dependent on a context(that can be true or false) or some global event (or time event) happening, return that "No specific query needed" or a query that is surely correct as the bthread can't be dependent on the query. 
+
+For example: "Close the car if it is moving or there was an alert". 
+Then the context is not! car.moving because this requirement is also relevant when there is an alert(even if the car isn't moving). In such case the right query is "car" or "no query" 
+Finally answer what is the query you would use.
+
+However, if the requirement applies only to a specific context, return the context and the query.
+
+###Are you waiting for a 
+**a specific event 
+**a set of events 
+** An event without the exact data(for example waiting for eventA but not for exact data values?) or with a non exact condition on the data(Data value above, below, between)
+In such case use anyEventNameWithData specifying only the data you know.
+**Notice that if the event is refers to the same thing as the Context, you don't need to mention it. For example if the context is "car.moving" dont mention "car to be moving" as an event to wait for.
+
+
+###Does Your Loop has some sync it will surely meet? don't create an infinite loop that doesn't have any unconditional sync. If not, create an event to wait for.
+
+###Which Events are needed? 
+**From the needed events, Which of them already exist(from the list below). your answer should be: "Needed Events: <List Of Events>. Dont Declare the Events: <List of events from the needed events> because they already exist
+For New events, they should get a parameter only if there is an according entity. (For example: dont pass a parameter of engine.id if there is no engine entity)
+Existing events:
+<add the existing events here>(if there are no existing events, just write "No existing events")
+
+
+
+Format your answers as follow:
+In a comment:
+index. <Subject>:
+      your answer(keep it very short), you must mention the action.
+
+Then put //implementation and your implementation.

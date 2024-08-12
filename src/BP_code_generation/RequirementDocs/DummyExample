@@ -13,6 +13,6 @@ Behavior INSTRUCTIONS:
 
 When motion is detected, the light bulb turns on
 
-While the light bulb is on, the door cannot be opened
+While the light bulb is on, the doors cannot be opened
 
 Light bulb turns off after 5 minutes

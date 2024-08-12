@@ -6,7 +6,18 @@ import openai
 from openai import OpenAI
 from dotenv import load_dotenv
 from src.BP_code_generation.post_process import post_process
+from enum import Enum
+import src.UI_code_generation.exctracting_events as exctracting_events
+class Methodology(Enum):
+    STANDARD = "standard"
+    PREPROCESS_AS_PART_OF_PROMPT = "preprocess_as_part_of_prompt"
+    PREPROCESS_AS_PART_BEFORE_PROMPT = "preprocess_as_part_before_prompt"
 
+class InstructionPhase(Enum):
+    ENTITY_INSTRUCTIONS = "Entity INSTRUCTIONS:"
+    QUERY_INSTRUCTIONS = "Query INSTRUCTIONS:"
+    BEHAVIOR_INSTRUCTIONS = "Behavior INSTRUCTIONS:"
+    ORIGINAL_REQUIREMENTS = "Original Requirements:"
 
 class MyOpenAIApi:
     def __init__(self, model= "gpt-3.5-turbo",api_key=None, instructions= None, temp=0.5, post_process_function=None):#todo add temperature actual default, max_tokens, top_p, frequency_penalty, presence_penalty, stop, and other parameters
@@ -25,6 +36,7 @@ class MyOpenAIApi:
         # if temp:
         self.temp = temp
         self.post_process_function = post_process_function
+        self.original_History  = []
     
     def reset_history(self):
         self.history = []
@@ -55,7 +67,7 @@ class MyOpenAIApi:
         )
         return response.choices[0].message.content
     
-    def chat_with_gpt_cumulative(self,new_message):
+    def chat_with_gpt_cumulative(self,new_message, method=Methodology.STANDARD):
         """
         Chat with GPT-3.5-turbo model using OpenAI API.
 
@@ -77,35 +89,99 @@ class MyOpenAIApi:
         response, history = chat_with_gpt_cumulative("What was my last message?", history)
         print("ChatGPT:", response)#will print: "What is the capital of France?"
         """
-        self.history.append({"role": "user", "content": new_message})
-        response = self.client.chat.completions.create(
-            model=self.model,  # You can use any model you prefer
-            messages=self.history,
-            temperature = self.temp
-        )
-        if self.post_process_function:
-            post_process_answer = self.post_process_function(response.choices[0].message.content)
-            if post_process_answer != None:
-                pass#some work needs to be done here before returning the response and updating the history
-        post_process_answer = post_process(js_code= self.export_to_code(exportToFile=False), last_resp=response.choices[0].message.content)
-        if post_process_answer == "":#No corrections needed
-            self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-        else:
-            self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-
-            new_response = self.chat_with_gpt_cumulative(post_process_answer)
-            #pre last assistant message is the one that needs to be corrected
-            self.history.pop(-3)
-            #remove last user message
-            self.history.pop(-2)
+        if method == Methodology.STANDARD:
+            self.history.append({"role": "user", "content": new_message})
+            self.original_History.append({"role": "user", "content": new_message})
+            response = self.client.chat.completions.create(
+                model=self.model,  # You can use any model you prefer
+                messages=self.history,
+                temperature = self.temp
+            )
+            if self.post_process_function:
+                post_process_answer = self.post_process_function(js_code= self.export_to_code(exportToFile=False), last_resp=response.choices[0].message.content)
+                if post_process_answer == "":#No corrections needed
+                    self.history.append({"role": "assistant", "content": response.choices[0].message.content})
+                    self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+                else:#TODO make sure it doesnt get stuck in the recursive loop
+                    self.history.append({"role": "assistant", "content": response.choices[0].message.content})
+                    self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+                    new_response = self.chat_with_gpt_cumulative(post_process_answer)
+                    #pre last assistant message is the one that needs to be corrected
+                    self.history.pop(-3)
+                    #remove last user message
+                    self.history.pop(-2)
+                    
+                    return new_response
+            else:
+                self.history.append({"role": "assistant", "content": response.choices[0].message.content})
+                self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+        elif method == Methodology.PREPROCESS_AS_PART_OF_PROMPT:
+            allEvents= exctracting_events.extract_events(code=self.export_to_code(exportToFile=False))
+            preProcessString = ""
+            with open("src/BP_code_generation/Pre_Process_text.txt", "r") as file:
+                preProcessString = file.read()
+            #In the file, there is a line that says "<add the existing events here>(if there are no existing events, just write "No existing events")"
+            #Add existing events in the format of
+            #-EventA(parameters)
+            #-EventB(parameters)
+            #and so on
+            if len(allEvents) == 0:
+                #delete the line that starts with "###Which Events are needed?" and delete the two lines after it 
+                lines = preProcessString.split("\n")
+                for i, line in enumerate(lines):
+                    if line.startswith("###Which Events are needed?"):
+                        del lines[i:i+5]
+                        break
+                preProcessString = "\n".join(lines)
+            else:
+                preProcessString = "\n\n\n"+preProcessString.replace("<add the existing events here>(if there are no existing events, just write \"No existing events\")", "\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in allEvents]))
             
-            return new_response
+            #In the preProcessString, there is a line that says Is there a specific context for the asked bthread? which one of the queries is it(out of: ) . Give the exact name
+            #add the existing queries in the parenthesis, in the format of queryA, queryB, queryC
+            existingQueries = exctracting_events.extract_Queries(code=self.export_to_code(exportToFile=False))
+            if len(existingQueries) == 0:#TODO
+                pass
+            else:
+                preProcessString = preProcessString.replace("which one of the queries is it(out of: )", "which one of the queries is it(out of: "", ".join(existingQueries)+")")
+
+            
+            
+            print(new_message + preProcessString)
+            self.history.append({"role": "user", "content": new_message + preProcessString})
+            self.original_History.append({"role": "user", "content": new_message})
+            response = self.client.chat.completions.create(
+                model=self.model,  # You can use any model you prefer
+                messages=self.history,
+                temperature = self.temp
+            )
+            #Now we need to do 2 things, we need to change the user message to the original message, removing the preProcessString. In addition in the assistant message, we need to remove all text before /implementation
+            self.history[-1]["content"] = new_message
+            assistant_response = response.choices[0].message.content
+            print("\n\n\n\n\n\n assistant_response", assistant_response)
+            if assistant_response.startswith("```javascript"):
+                assistant_response = assistant_response[13:]
+                assistant_response = assistant_response[:-3]
+            print("\n\n\n\n\n\n assistant_response after javascript", assistant_response)
+            
+            assistant_response = assistant_response[assistant_response.lower().find("implementation"):].replace("implementation", "").replace("Implementation", "")
+            print("\n\n\n\n\n\n FINAL RESPONSE", assistant_response)
+
+            self.history.append({"role": "assistant", "content": assistant_response})
+            self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+            return response.choices[0].message.content
+
+
+            
+            #add to the user message: 
+            
         # self.history.append({"role": "assistant", "content": response.choices[0].message.content})
         return response.choices[0].message.content
     def add_to_history_gptResponse(self, message):
         self.history.append({"role": "assistant", "content": message})
+        self.original_History.append({"role": "assistant", "content": message})
     def add_to_history_userMessage(self, message):
         self.history.append({"role": "user", "content": message})
+        self.original_History.append({"role": "user", "content": message})
     def set_instructions(self, instructions):
         #if the assistant already has a system message in the history, replace it with the new instructions
         if self.history and self.history[0]["role"] == "system":
@@ -117,7 +193,7 @@ class MyOpenAIApi:
     def export_to_code(self, directory=os.getcwd(), file_name=None,exportToFile=True):
         #create a js file, where each user message is in a comment, and the assistant's response as is.
         string_to_write = ""
-        for message in self.history:
+        for message in self.original_History:
             if message["role"] == "user":
                 # if there are multiple lines in the message, use multiline comments
                 if "\n" in message["content"]:
@@ -227,35 +303,16 @@ def bot_usage_interactive(instructions= None, instructions_file_path=None):
         print("ChatGPT:", response)
     myOpenAIApi.export_to_code()
 
-def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,query_instructions_file_path=None,behavior_instructions_file_path=None,inputs_array=None, output_directory=None, file_name=None):
-    # Example conversation
+def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,query_instructions_file_path=None,behavior_instructions_file_path=None,inputs_array=None, output_directory=None, file_name=None, methodology=Methodology.STANDARD):
     temp_file= open("temp_file","w")# in case you want to see it updated in real time in a file https://superuser.com/questions/274961/how-to-automatically-reload-modified-files-in-notepad (dont forget to turn monitoring on)
+    current_instruction = None
     if entity_instructions_file_path:
         with open(entity_instructions_file_path, "r") as file:
             instructions = file.read()
     # print(instructions)
     myOpenAIApi = MyOpenAIApi(model="gpt-4-turbo", instructions=instructions, temp=0)
-    ambiguity_test = False
     for input_message in inputs_array:
         if input_message in ["" , "\n"]:
-            continue
-        if ambiguity_test:
-            print("Ambiguity Test")
-            temp_file.write("Ambiguity Test\n")
-
-            print("You: ", input_message)
-
-            for i in range(5):
-                temp_file.write("//" + input_message + "\n")
-                response = myOpenAIApi.chat_with_gpt_cumulative(input_message)
-                print("ChatGPT:", response)
-                # temp_file.write("You: " + input_message + "\n")
-                temp_file.write(myOpenAIApi.get_pretty_response_string(-1))
-                #remove the last response
-                myOpenAIApi.history.pop(-1)
-                temp_file.write("\n")
-                temp_file.flush()
-            myOpenAIApi.history.pop(-1)#remove the last user message
             continue
 
         # if input_message in ["" , "\n"]:
@@ -264,24 +321,28 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
             with open(entity_instructions_file_path, "r") as file:
                 instructions = file.read()
             myOpenAIApi.set_instructions(instructions)
+            current_instruction = InstructionPhase.ENTITY_INSTRUCTIONS
             continue
         elif input_message == "Query INSTRUCTIONS:":
             with open(query_instructions_file_path, "r") as file:
                 instructions = file.read()
             myOpenAIApi.set_instructions(instructions)
+            current_instruction = InstructionPhase.QUERY_INSTRUCTIONS
             continue
         elif input_message == "Behavior INSTRUCTIONS:":
             with open(behavior_instructions_file_path, "r") as file:
                 instructions = file.read()
             myOpenAIApi.set_instructions(instructions)
+            current_instruction = InstructionPhase.BEHAVIOR_INSTRUCTIONS
             continue
         elif input_message == "Original Requirements:":
+            current_instruction = InstructionPhase.ORIGINAL_REQUIREMENTS
             break
-        elif input_message == "Ambiguity Test:":
-            ambiguity_test = True
-            continue    
         temp_file.write("\\\\" + input_message)
-        response = myOpenAIApi.chat_with_gpt_cumulative(input_message)
+        if current_instruction == InstructionPhase.BEHAVIOR_INSTRUCTIONS and methodology != Methodology.STANDARD:#If we need some special treatment here
+            response = myOpenAIApi.chat_with_gpt_cumulative(input_message, method=methodology)
+        else:
+            response = myOpenAIApi.chat_with_gpt_cumulative(input_message)
         print("ChatGPT:", response)
 
         temp_file.write(myOpenAIApi.get_pretty_response_string(-1))
@@ -290,17 +351,6 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
     if output_directory:
         currTime = time.time()
         generated_code_path = myOpenAIApi.export_to_code(directory=output_directory, file_name=file_name + str(currTime)+".js")
-        if ambiguity_test:
-            
-            #copy temp file to the output directory+file_name+Amb
-            temp_file.close()
-            with open("temp_file", "r") as file:
-                instructions = file.read()
-                with open(output_directory + "/" + file_name + str(currTime) + "Amb", "w") as file:
-                    file.write(instructions)
-
-
-
     else:
        generated_code_path= myOpenAIApi.export_to_code()
     return generated_code_path
@@ -364,20 +414,14 @@ def main():
     instructions_file_path = os.getcwd() + "/src/main/BotInstructions/v_10/Bot Instructions"
 
 
-    operation_mode = input("Enter 1 for interactive mode, 2 for array mode")
+    # operation_mode = input("Enter 1 for interactive mode, 2 for array mode")
+    operation_mode = "2"
     if operation_mode == "1":
         print("Currently not supported")
         # bot_usage_interactive(instructions_file_path=instructions_file_path)
 
     else:
-        # example_array = ["//Requirement, There are 3 workers. One manager named Steve and 2 cashiers, Emma and Mark. Steve has 10 years of seniority, Emma has 3 and Mark has 5 "
-        #                 , "//Requirement: Workers with more than 4 years of experience have a \"senior tag\"", "//Requirement: Senior Workers are recive a 100 dollar check when the day ends, while the others recive a 50 dollar one",
-        #                 "//Requirement: After the closing store ring  is rang turn store system off",
-        #                 "Workers cant checkout before the system turns off"]
-        req_array = ["There are 3 workers. One manager named Steve and 2 cashiers, Emma and Mark. Steve has 10 years of seniority, Emma has 3 and Mark has 5 "
-                , "Workers with more than 4 years of experience have a \"senior tag\"", "Senior Workers are recive a 100 dollar check when the day ends, while the others recive a 50 dollar one",
-                "After the closing store ring  is rang turn store system off",
-                "Workers cant checkout before the system turns off"]
+
         
         # ask user for the file name or use the default one
         requirements_file_path = input("Enter the requirements file path(or enter D for default): ")
@@ -393,7 +437,7 @@ def main():
         entity_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Entity Bot Instructions"
         query_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Query Bot Instructions"
         behavior_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions"
-        return bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path)
+        return bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path, methodology=Methodology.STANDARD)
 
 if __name__ == "__main__":
     main()
