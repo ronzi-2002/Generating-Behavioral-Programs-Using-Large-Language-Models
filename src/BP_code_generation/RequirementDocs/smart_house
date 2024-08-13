@@ -1,0 +1,58 @@
+Entity INSTRUCTIONS:
+
+House: The main entity representing the house. Holding the rooms, the alarm and water systems.
+Room: Individual spaces within the house such as living room, kitchen, bedroom, etc. Each have their subtype, "occupied" status, temperature and co2 level. 
+Light: A type of actuator used to control lighting in the house. each light has its brightness level.
+Thermostat: A device for controlling the temperature within the house. each thermostat has its target temperature level.
+Security Camera: A device for monitoring and recording video for security purposes. each camera has its resolution, status(on/off). 
+Door Lock: An actuator controlling access to the house or specific rooms. each door lock has its status (locked/unlocked).
+Window: A component of the house that can be opened or closed. each window has its status (open/closed).
+Blinds: Window coverings that can be adjusted to control light and privacy. each blind has its position (open/closed).
+Alarm System: A system designed to alert users to potential security breaches or emergencies. the has its status (active/inactive).
+Water System: A system designed that controls the waterFlawOf the house. Has its status (active/inactive).
+External Temperature: Holds the external temperature
+Each room also holds an array of( lights, thermostat, security cameras, doorlocks, windows, blinds)
+
+
+Query INSTRUCTIONS:
+
+needed queries:
+    Room
+    Occupied Room
+    Unoccupied Room
+    Restricted Area
+    Living Room  
+    unoccupied house - all rooms are unoccupied 
+
+
+Behavior INSTRUCTIONS:
+
+The system shall automatically adjust the lighting to 300 lux when occupancy is detected in a room 
+
+turn off lights when the room is unoccupied for 10 minutes.
+
+when motion is detected in restricted areas between 10 PM and 6 AM,  the system shall activate security cameras to record in 1080p resolution.
+
+The system shall automatically lock all living room doors at 10 PM and unlock at 6 AM.
+
+The system shall lock doors when the house is detected to be unoccupied for more than 30 minutes. 
+
+ The system shall close blinds when the internal temperature exceeds 24°C (75°F) and open them when it falls below 20°C (68°F).
+
+Windows shall be opened if the indoor CO2 level exceeds 1000 ppm and the external temperature is between 15°C (59°F) and 25°C (77°F).
+
+The system shall shut off the water supply and notify the user if a water leak is detected for more than 30 seconds in any room.
+
+The system shall immediately alert the user via mobile app and trigger house-wide alarms if smoke is detected at concentrations above 150 ppm in the house.
+
+The system shall send notifications and trigger alarms if an unauthorized entry is detected between 10 PM and 6 AM, or when the house is unoccupied.
+
+The system shall notify emergency services in case of  a fire detected for 5 seconds, and provide real-time updates to the user.
+
+The system shall use motion and heat sensors to detect room occupancy. When motion or heat are detected, the room is considered occupied
+
+The room is considered unoccupied if no motion was detected for 5 minutes
+
+The system shall allow users to activate different lighting scenes in any room:
+1. reading will turn lights to  500 lux,
+2. movie night will turn lights to 150 lux

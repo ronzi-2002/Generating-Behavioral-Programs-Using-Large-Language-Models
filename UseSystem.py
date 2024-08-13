@@ -1,6 +1,8 @@
+import subprocess
 import src.UI_code_generation.exctracting_events as exctracting_events
 import src.BP_code_generation.myOpenAiApi as myOpenAiApi
 import generateDefultHtml 
+import threading
 class MenuItem:
     def __init__(self, name, function):
         self.name = name
@@ -51,8 +53,10 @@ class BPLLMMenu(Menu):
         self.add_item("Set OpenAI API Key", lambda: self.set_openai_api_key())
         self.add_item("Generate UI Code", lambda: print("Not implemented yet"))
     def generate_BP_code(self):
-        self.file_path_of_last_generated_code = myOpenAiApi.main()
-        self.add_item("Move to BPProgram Menu With Generated Code", lambda: BPProgramMenu(file_name=self.file_path_of_last_generated_code))
+        self.file_path_of_last_generated_code = myOpenAiApi.main()[0]
+        #if item does not exist, add it
+        if not any(item.name == "Move to BPProgram Menu With Generated Code" for item in self.menu_items):
+            self.add_item("Move to BPProgram Menu With Generated Code", lambda: BPProgramMenu(file_name=self.file_path_of_last_generated_code))
         return self
 
     def set_openai_api_key(self):
@@ -78,6 +82,7 @@ class BPLLMMenu(Menu):
 
 class BPProgramMenu(Menu):
     def __init__(self, file_name = None):
+        self.continue_event = threading.Event()
         #At first get the user to select a file
         import os
         optionalFiles = os.listdir("src/main_client_server_java/src/main/resources")
@@ -106,7 +111,7 @@ class BPProgramMenu(Menu):
 
             import shutil
             print(shutil.copy(file_path, "src/main_client_server_java/src/main/resources"))
-
+        
         #check if there is a gui for this file. The gui file should be named the same as the file with .html instead of .js 
         self.GUIFile_path =str(os.getcwd())+ "/src/main_client_server_java/src/main/UI_Resources/DefaultGUI_"+file_name.replace(".js", ".html")
         optionalFiles = os.listdir("src/main_client_server_java/src/main/UI_Resources")
@@ -133,7 +138,7 @@ class BPProgramMenu(Menu):
                 eventsForGUI[event_name] = params            #create the GUI file
             generateDefultHtml.generate(eventsForGUI, self.GUIFile_path)
 
-
+        self.isTimeInvolved = self.isTimeInvolved(file_name)
         super().__init__("BPProgram Menu For " + file_name)
         self.add_item("Run BPProgram With Server", lambda: self.run_BPProgram(file_name))
         self.add_item("Run BPProgram With GUI", lambda: self.run_BPProgramWithGUI(file_name))
@@ -147,24 +152,31 @@ class BPProgramMenu(Menu):
         import os
         if compile:
             os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pom.xml")
-        #TODO: Make the special events(time) happen only when needed, and ask user for acceleration factor
-        os.system(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -t -s -speedFactor 1")
+        if self.isTimeInvolved:
+            speedFactor = input("You have time events in your file, do you want to speed up the time? (1 for normal speed, 60 for 60 times faster and so on): ")
+            process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -t -s -speedFactor {speedFactor}", shell=True) 
+        else:
+            process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} ", shell=True)
         #if there is a GUI system, open 
     def run_BPProgramWithGUI(self, file_name):
         #open the GUI file in the chrome browser
-        # Create a separate thread to run the BPProgram
-        import os
-        os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pom.xml")
-
-        import threading
-        bp_thread = threading.Thread(target=self.run_BPProgram, args=(file_name,False))
-        bp_thread.start()
+        self.run_BPProgram(file_name, True)
         import webbrowser
-
+       
         webbrowser.open(self.GUIFile_path)
         print("Opening GUI in browser\n\n\n\n\n\n\nn\n\n\n")
+    
 
-
+    def isTimeInvolved(self, file_name):#TODO this is a bit naive.
+        #check if the file has a time event
+        file_path = "src/main_client_server_java/src/main/resources/" + file_name
+        #check if TimeToBe appears in the file
+        with open(file_path, "r") as file:
+            lines = file.readlines()
+        for line in lines:  
+            if "TimeToBe(" in line:
+                return True
+        return False
 
 
 def main():

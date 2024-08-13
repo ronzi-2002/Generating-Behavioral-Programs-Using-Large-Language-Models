@@ -21,17 +21,19 @@ If there is, check what it is exactly referring to out of the next options, and 
 ###Effects
 **Is there an effect involved with events?(do they need to change the state of an entity, Given the existing entities?)
   What entities are relevant?(Only from the existing ones, don't assume any other). Tell me the effect only if there is an according entity. 
-  What is the event with the effect?
+  What is the event with the effect? 
+  *Notice: The effect needs to be for a requested event, if Effects should only be used for requested events. if you want an effect for a waited for event, you should declare a new event that will be requested when the waited for event happens. 
 
 ###Bthread Context
 Is there a specific context for the asked bthread, or does it apply to all entities of a query(like car.moving)? which one of the queries is it(out of: ) . Give the exact name
 **Give it only if it's relevant to the whole requirement. For example, if a behavior is dependent on a context(that can be true or false) or some global event (or time event) happening, return that "No specific query needed" or a query that is surely correct as the bthread can't be dependent on the query. 
 
 For example: "Close the car if it is moving or there was an alert". 
-Then the context is not! car.moving because this requirement is also relevant when there is an alert(even if the car isn't moving). In such case the right query is "car" or "no query" 
+Then the context is not! car.moving because this requirement is also relevant when there is an alert(even if the car isn't moving). In such case the right query is "car" or "no query"
+However, if the requirement applies only to a specific context, return the context and the query.
+
 Finally answer what is the query you would use.
 
-However, if the requirement applies only to a specific context, return the context and the query.
 
 ###Are you waiting for a 
 **a specific event 
@@ -43,7 +45,7 @@ In such case use anyEventNameWithData specifying only the data you know.
 
 ###Does Your Loop has some sync it will surely meet? don't create an infinite loop that doesn't have any unconditional sync. If not, create an event to wait for.
 
-###Which Events are needed? 
+###Which Events are needed? Remeber you need an event for each action you do(Dont write comments of what needs to be done and dont assume, create an event)
 **From the needed events, Which of them already exist(from the list below). your answer should be: "Needed Events: <List Of Events>. Dont Declare the Events: <List of events from the needed events> because they already exist
 For New events, they should get a parameter only if there is an according entity. (For example: dont pass a parameter of engine.id if there is no engine entity)
 Existing events:

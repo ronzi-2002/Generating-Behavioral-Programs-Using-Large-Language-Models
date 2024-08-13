@@ -15,13 +15,14 @@ function entityA(id,data1, data2) {
 }
 
 for example:
-function room(id,subtype) {
-    return ctx.Entity(id, 'room', {subtype: subtype, isOcupied: false})
+function car(id, opened, fuelLevel, airConditioner) {
+    return ctx.Entity(id, 'car', {opened: opened, fuelLevel: fuelLevel, airConditioner: airConditioner})
 }
+*if no default values were given, receive all values as parameters.
 
 2. if specific values are provided or the declaration of the entity is in a singular form("There is a ..."):
 Next, we create the actual entities and add them to the context:
-ctx.populateContext([room('bathroom1','bathroom'),room('kitchen1','kitchen'),room('masterBedroom1','bedroom')]);
+ctx.populateContext([car('car1',false, 60, false), car('car2',true, 40, true)])
 *This can be used also in the future to add more entities.
 
 Your job is to receive a requirement declaring entities from a user and implement it by the rules of COBP and the examples below

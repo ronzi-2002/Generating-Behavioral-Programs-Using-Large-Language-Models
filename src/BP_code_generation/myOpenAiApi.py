@@ -26,8 +26,12 @@ class MyOpenAIApi:
         self.openai = openai
 
         load_dotenv('.env')
-        self.client= OpenAI(organization="org-SkD8EMnX3k2DEFdeuNiRGeDR",api_key=os.getenv("OPENAI_API_KEY"))
-        # self.client= OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        #check if organization is in the env file
+        if os.getenv("OPENAI_ORGANIZATION"):
+            self.client= OpenAI(organization= os.getenv("OPENAI_ORGANIZATION"), api_key=os.getenv("OPENAI_API_KEY"))
+        else:
+            self.client= OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        
         self.history = []
         self.model = model
         self.instructions = instructions
@@ -173,7 +177,9 @@ class MyOpenAIApi:
 
             
             #add to the user message: 
-            
+        else: 
+            print("Methodology not supported "+method)
+            exit()
         # self.history.append({"role": "assistant", "content": response.choices[0].message.content})
         return response.choices[0].message.content
     def add_to_history_gptResponse(self, message):
@@ -430,14 +436,32 @@ def main():
             # src\main\BotInstructions\Requirements\coffee_machine
             req_array = file_to_array(os.getcwd() + "/src/BP_code_generation/RequirementDocs/" + requirements_file_name)
         else:
-            requirements_file_name = requirements_file_path.split("/")[-1]
+            requirements_file_name = requirements_file_path.split("/")[-1].split("\\")[-1]
             req_array = file_to_array(requirements_file_path)
 
         print(req_array)
         entity_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Entity Bot Instructions"
         query_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Query Bot Instructions"
         behavior_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions"
-        return bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path, methodology=Methodology.STANDARD)
+        methodology = input("Select generation methodology: Enter 1 for standard, 2 for preprocess as part of prompt, 3 for preprocess as part before prompt")
+        methodologies = []
+        if methodology == "1":
+            methodology = Methodology.STANDARD
+            methodologies.append(Methodology.STANDARD)
+        elif methodology == "2":
+            methodology = Methodology.PREPROCESS_AS_PART_OF_PROMPT
+            methodologies.append(Methodology.PREPROCESS_AS_PART_OF_PROMPT)
+        elif methodology == "3":
+            methodology = Methodology.PREPROCESS_AS_PART_BEFORE_PROMPT
+            methodologies.append(Methodology.PREPROCESS_AS_PART_BEFORE_PROMPT)
+        else:#try all(currently only first 2 are supported)
+            methodologies.append(Methodology.STANDARD)
+            methodologies.append(Methodology.PREPROCESS_AS_PART_OF_PROMPT)
 
+        retVal = []
+        for methodology in methodologies:
+            
+            retVal.append( bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path, methodology=methodology))
+        return retVal
 if __name__ == "__main__":
     main()

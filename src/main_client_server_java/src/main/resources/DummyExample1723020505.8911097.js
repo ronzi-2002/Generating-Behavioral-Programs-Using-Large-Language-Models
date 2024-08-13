@@ -2,6 +2,7 @@
 function lightBulb(id) {
     return ctx.Entity(id, 'lightBulb', {isOn: false});
 }
+ctx.populateContext([lightBulb('lightBulb1', 'off')]);
 /*
 Needed queries:
  1. light
@@ -52,7 +53,9 @@ ctx.registerEffect('turnOffLightEvent', function (data) {
 
 ctx.bthread('Light bulb turns off after 5 minutes', 'lightOn', function (lightOn) {
     while(true){
-        Sleep(300000); // 5 minutes in milliseconds
+        let waitTill = new Date().getTime() + 300000; // 5 minutes
+        sync({waitFor: [TimeToBe(new Date(waitTill).getHours(), new Date(waitTill).getMinutes())]});
+    
         sync({request: [turnOffLightEvent(lightOn.id)]});
     }
 });

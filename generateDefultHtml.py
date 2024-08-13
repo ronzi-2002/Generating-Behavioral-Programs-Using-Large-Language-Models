@@ -21,6 +21,8 @@ def generate(events, outputFilePath):
         </style>
     </head>
     <body>
+        <div id="timeDisplay" style="text-align: center; font-size: 1.5em; margin-top: 10px;"></div>
+
         <h1>Event Selector</h1>
         <label for="eventSelector">Select Event:</label>
         <select id="eventSelector" onchange="updateParameters()">
@@ -63,6 +65,9 @@ def generate(events, outputFilePath):
                 console.log('Received:', event);
                 const resultLabel = document.getElementById('resultLabel');
                 resultLabel.textContent += JSON.stringify(event) +"\\n";
+                if (event.name === 'TimeToBe') {{
+                    document.getElementById('timeDisplay').textContent = event.data;
+                }}
             }};
             const eventParameters = {event_parameters};
 
