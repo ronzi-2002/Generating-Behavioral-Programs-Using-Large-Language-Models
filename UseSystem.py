@@ -151,6 +151,7 @@ class BPProgramMenu(Menu):
         #java -jar .\target\DesignlessProgrammin.jar
         import os
         if compile:
+            #first check if you have maven installed
             os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pom.xml")
         if self.isTimeInvolved:
             speedFactor = input("You have time events in your file, do you want to speed up the time? (1 for normal speed, 60 for 60 times faster and so on): ")
@@ -162,9 +163,15 @@ class BPProgramMenu(Menu):
         #open the GUI file in the chrome browser
         self.run_BPProgram(file_name, True)
         import webbrowser
-       
-        webbrowser.open(self.GUIFile_path)
-        print("Opening GUI in browser\n\n\n\n\n\n\nn\n\n\n")
+        browsers = webbrowser._browsers.items()
+        #if browsers is dict_items([]), empty. 
+        webbrowser.get().open(self.GUIFile_path,2)
+        # if not browsers:
+        #     print("No browser found, please set a browser as the default browser")
+        #     return
+        # webbrowser.open(self.GUIFile_path,2)
+
+        print(f"\n\n\nOpening GUI in browser\n in case the browser does not open, please open the file:\n {self.GUIFile_path}\n in a browser by clicking on it\n\n\n")
     
 
     def isTimeInvolved(self, file_name):#TODO this is a bit naive.

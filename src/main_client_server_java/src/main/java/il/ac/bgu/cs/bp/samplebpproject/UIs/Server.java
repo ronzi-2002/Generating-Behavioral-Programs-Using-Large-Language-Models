@@ -13,11 +13,25 @@ import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+import javax.json.Json;
+import javax.script.Invocable;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.HashMap;
+
+
 public class Server {
     private WebSocketServer webSocketServer;
     private Set<WebSocket> connections = Collections.synchronizedSet(new HashSet<>());
 
     public Server(BProgram bProgram) {
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("JavaScript");
         webSocketServer = new WebSocketServer(new InetSocketAddress(8001)) {
             @Override
             public void onOpen(WebSocket conn, ClientHandshake handshake) {
@@ -43,8 +57,24 @@ public class Server {
                 }
 
 //                BEvent bpEvent = jsonToBEvent(json);
-                BEvent bpEvent = new BEvent("ExternalEvent", json);
-                bProgram.enqueueExternalEvent(bpEvent);
+                // BEvent bpEvent = new BEvent("ExternalEvent", json);
+                // bProgram.enqueueExternalEvent(bpEvent);
+                
+                // read script file
+                try {
+//                engine.eval(Files.newBufferedReader(Paths.get("C:\\Users\\Ron Ziskind\\IdeaProjects\\StateMapperForBpRon\\src\\main\\resources\\HandleExternalEvents.js"), StandardCharsets.UTF_8));
+                    engine.eval("function jsonize(event) {print (event);let obj = JSON.parse(event);return obj;}");
+
+                    Invocable inv = (Invocable) engine;
+                    // call function from script file
+                    Object result = inv.invokeFunction("jsonize", json.get("data"));
+                    System.out.println(result);
+                    bProgram.enqueueExternalEvent(new BEvent(json.getString("name"), result));
+                }
+                catch (Exception e)
+                {
+                    System.out.println(e);
+                }
             }
 
             @Override

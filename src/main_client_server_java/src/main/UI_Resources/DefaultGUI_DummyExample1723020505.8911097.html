@@ -19,6 +19,7 @@
         <select id="eventSelector" onchange="updateParameters()">
             <option value="">--Select an Event--</option>
             <option value="motionDetectedEvent">motionDetectedEvent</option>
+<option value="openDoorEvent">openDoorEvent</option>
 
         </select>
 
@@ -61,7 +62,7 @@
                     document.getElementById('timeDisplay').textContent = event.data;
                 }
             };
-            const eventParameters = {"motionDetectedEvent": []};
+            const eventParameters = {"motionDetectedEvent": [], "openDoorEvent": []};
 
             function updateParameters() {
                 const eventSelector = document.getElementById('eventSelector');

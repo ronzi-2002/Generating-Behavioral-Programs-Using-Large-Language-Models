@@ -10,7 +10,12 @@
    1. Running the code in the backend
    2. Running a default frontend(Generated on the fly) for the code together with the backend. Notice that this frontend also indicates the status of the connection (at the bottom of the page). If connection isn't successful, try and refresh the page. 
    3. Running a specific frontend for the code together with the backend
-        
+
+
+*To use the GUI, you must have a default browser on your os. For example, to set chrome you can refer to the following link: https://answers.microsoft.com/en-us/windows/forum/all/how-do-i-get-chrome-back-to-being-my-default/57d2d70c-a5fc-49b9-b93f-6abd6ccbb9c0*
+
+*To add new resource file, you must have maven installed on your system, to allow compilation of the new resource file. You can refer to the following link: https://maven.apache.org/download.cgi , after downloading the maven, make sure to set it in the environment variables.*
+
 **Not supported yet    
 
 

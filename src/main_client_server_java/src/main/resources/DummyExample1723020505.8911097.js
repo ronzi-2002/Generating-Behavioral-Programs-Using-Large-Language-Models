@@ -41,6 +41,13 @@ ctx.bthread('While the light bulb is on, the door cannot be opened', 'lightOn', 
         sync({block: [openDoorEvent()]});
     }
 });
+
+//Just a bthread that waits for openDoorEvent
+ctx.bthread('Wait for openDoorEvent', function () {
+    while(true){
+        sync({waitFor: [openDoorEvent()]});
+    }
+});
 //Light bulb turns off after 5 minutes
 function turnOffLightEvent(lightBulbId) {
     return Event("turnOffLightEvent", {lightBulbId: lightBulbId});
