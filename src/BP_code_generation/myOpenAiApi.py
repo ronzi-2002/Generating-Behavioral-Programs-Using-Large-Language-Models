@@ -23,6 +23,7 @@ class BehaviorInstructionType(Enum):
     Basic = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/1Basic Behavior Bot instructions"
     BasicPlus = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/2BasicPlus Behavior Bot instructions"
     DSL = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/3DSLs Behavior Bot instructions"
+    DSL_Isolated= os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/3_5DSLs and isolation Behavior Bot instructions"
     Analysis = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/4Analysis Behavior Bot instructions"
     Default = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions"
 
@@ -108,6 +109,43 @@ class MyOpenAIApi:
         print("ChatGPT:", response)#will print: "What is the capital of France?"
         """
         if method == Methodology.STANDARD:
+            if behavior_instructions_type == BehaviorInstructionType.DSL_Isolated:
+                # For these instructions, each requirement is a standalone. However, we need to update the instructions themself, adding existing requirements.
+                allEvents= exctracting_events.extract_events(code=self.export_to_code(exportToFile=False))
+                instructions = ""
+                with open(behavior_instructions_type.value, "r") as file:
+                    instructions = file.read()
+                #In the file, there is a line that says "<add the existing events here>"
+                #Add existing events in the format of
+                #-EventA(parameters)
+                #-EventB(parameters)
+                #and so on
+                if len(allEvents) == 0:
+                    #delete the line that starts with "Existing Events that were defined before:" 
+                    lines = instructions.split("\n")
+                    for i, line in enumerate(lines):
+                        if line.startswith("Existing Events that were defined before:"):
+                            del lines[i]
+                            break
+                    instructions = "\n".join(lines)
+                else:
+                    instructions = "\n\n\n"+instructions.replace("Existing Events that were defined before(you can use them without declaring them again):", "Existing Events that were defined before(you can use them without declaring them again):\n"+ "\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in allEvents]))
+                self.set_instructions(instructions)
+                #Now after we handled the instructions, we need to call the model,
+                self.history.append({"role": "user", "content": new_message})
+                self.original_History.append({"role": "user", "content": new_message})
+                response = self.client.chat.completions.create(
+                    model=self.model,  # You can use any model you prefer
+                    messages=self.history,
+                    temperature = self.temp
+                )
+                #we add the response to the original history but not the processed one
+                self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+                #we remove the last user message, 
+                self.history.pop(-1)
+                return response.choices[0].message.content
+
+
             if behavior_instructions_type == BehaviorInstructionType.Analysis:
                 #in this case, we need to add a simple string to the requirement.
                 # this will result the analysis to appear in the assistant's response. 
@@ -482,7 +520,7 @@ def main():
             methodologies.append(Methodology.STANDARD)
             methodologies.append(Methodology.PREPROCESS_AS_PART_OF_PROMPT)
 
-        behavior_instructions_type = input("Select behavior instructions type: Enter 1 for Basic, 2 for BasicPlus, 3 for DSL, 4 for Analysis, 5 for Default or something else to test all\n see readme for more information\n your choice: ")
+        behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus, \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
         behavior_instructions_types = []
         if behavior_instructions_type == "1":
             behavior_instructions_types = [BehaviorInstructionType.Basic]
@@ -490,16 +528,17 @@ def main():
             behavior_instructions_types = [BehaviorInstructionType.BasicPlus]
         elif behavior_instructions_type == "3":
             behavior_instructions_types = [BehaviorInstructionType.DSL]
+        elif behavior_instructions_type == "3.5":
+            behavior_instructions_types = [BehaviorInstructionType.DSL_Isolated]
         elif behavior_instructions_type == "4":
             behavior_instructions_types = [BehaviorInstructionType.Analysis]
         elif behavior_instructions_type == "5":
             behavior_instructions_types = [BehaviorInstructionType.Default]
         else:
-            behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.Analysis]
+            behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.DSL_Isolated, BehaviorInstructionType.Analysis]
 
         
         retVal = []
-        print(behavior_instructions_types)
         #for every combination of methodology and behavior_instructions_type
         for methodology, behavior_instructions_type in [(methodology, behavior_instructions_type) for methodology in methodologies for behavior_instructions_type in behavior_instructions_types]:
 
