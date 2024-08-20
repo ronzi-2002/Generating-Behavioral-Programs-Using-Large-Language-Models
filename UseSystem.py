@@ -49,7 +49,8 @@ class BPLLMMenu(Menu):
     def __init__(self):
         super().__init__("BPLLM Menu")
         self.file_path_of_last_generated_code = None
-        self.add_item("Generate BP Code", lambda: self.generate_BP_code())
+        self.add_item("Generate BP Code For Requirement Doc", lambda: self.generate_BP_code())
+        self.add_item("Generate BP Code- additional requirements", lambda: self.generate_Additional_BP_code())
         self.add_item("Set OpenAI API Key", lambda: self.set_openai_api_key())
         self.add_item("Generate UI Code", lambda: print("Not implemented yet"))
     def generate_BP_code(self):
@@ -58,7 +59,18 @@ class BPLLMMenu(Menu):
         if not any(item.name == "Move to BPProgram Menu With Generated Code" for item in self.menu_items):
             self.add_item("Move to BPProgram Menu With Generated Code", lambda: BPProgramMenu(file_name=self.file_path_of_last_generated_code))
         return self
+    def generate_Additional_BP_code(self):
+        #first, we need the some previously generated code file
+        file_path = input("Enter the file path of the previously generated code: \n Notice that your file should be in the format that the requirements are between \\* and */: , as generated in the new versions\n")
+        history = myOpenAiApi.additional_requirements_generation(file_path)
+        print("history: ", history)
+        #export the history to a file
+        with open("History.txt", "w") as file:
+            for line in history:
+                file.write(str(line) + "\n")
+        
 
+         
     def set_openai_api_key(self):
         key = input("Enter your OpenAI API key: ")
         #switch the value of the key in the .env file
@@ -78,7 +90,7 @@ class BPLLMMenu(Menu):
 
         print("API key has been set successfully")
         return self
-        
+
 
 class BPProgramMenu(Menu):
     def __init__(self, file_name = None):

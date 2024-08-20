@@ -79,7 +79,7 @@ class MyOpenAIApi:
         """
         response = self.client.chat.completions.create(
             model=self.model,  # You can use any model you prefer
-            messages=[
+            messages=self.history + [
                 {"role": "user", "content": message}
             ],
             temperature = self.temp
@@ -251,44 +251,14 @@ class MyOpenAIApi:
         if self.history and self.history[0]["role"] == "system":
             self.history[0]["content"] = instructions
         elif len(self.history) > 0:
-            self.history[0] = {"role": "system", "content": instructions}#TODO make sure it is the best to make it the first element
+            self.history.insert(0, {"role": "system", "content": instructions}) #TODO make sure it is the best to make it the first element
         else:
             self.history.append({"role": "system", "content": instructions})
     def export_to_code(self, directory=os.getcwd(), file_name=None,exportToFile=True, methodology=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic):
         #create a js file, where each user message is in a comment, and the assistant's response as is.
         string_to_write = ""
-        for message in self.original_History:
-            if message["role"] == "user":
-                # if there are multiple lines in the message, use multiline comments
-                if "\n" in message["content"]:
-                    string_to_write += "/*\n"
-                    string_to_write += message["content"]
-                    string_to_write += "\n*/\n"
-                else:
-                    string_to_write += f"//{message['content']}\n"
-            elif message["role"] == "assistant":
-                assistant_response = message["content"]
-   
-
-                # string_to_write += f"{assistant_response}\n"
-                # if ```javascript is in the response, comment everything that is not in the javascript code(between ```javascript and ```). it can appear in any line
-                if "```javascript" in message["content"]:
-                    lines = message["content"].split("\n")
-                    in_javascript_code = False
-                    for i, line in enumerate(lines):
-                        if line.startswith("```javascript"):
-                            in_javascript_code = True
-                            lines[i] = "// "+line#This can also be removed totally
-                            lines[i] = ""
-                        elif line.startswith("```"):
-                            in_javascript_code = False
-                            lines[i] = "// "+line#This can also be removed totally
-                            lines[i] = ""
-                        elif not in_javascript_code:
-                            lines[i] = f"// {line}" 
-                            
-                    assistant_response = "\n".join(lines)   
-                string_to_write += f"{assistant_response}\n"
+        for i in range(len(self.original_History)):
+            string_to_write += self.get_pretty_response_string(i)
                     
 
 
@@ -313,23 +283,38 @@ class MyOpenAIApi:
             return exportTo
         return string_to_write
     def get_pretty_response_string(self, response_index):#TODO this is a bit weird, it is because the bot functions are not part of the class, I will fix it
+        message = self.original_History[response_index]
         string_to_write = ""
-        response = self.history[response_index]
-        if response["role"] == "user":
+        if message["role"] == "user":
             # if there are multiple lines in the message, use multiline comments
-            if "\n" in response["content"]:
-                string_to_write += "/*\n"
-                string_to_write += response["content"]
-                string_to_write += "\n*/\n"
-            else:
-                string_to_write += f"//{response['content']}\n"
-        elif response["role"] == "assistant":
-            assistant_response = response["content"]
-            #if begins with ```javascript, remove it and the ``` at the end
-            if assistant_response.startswith("```javascript"):
-                assistant_response = assistant_response[13:]
-                assistant_response = assistant_response[:-3]
+            # if "\n" in message["content"]:
+            string_to_write += "/*\n"
+            string_to_write += message["content"]
+            string_to_write += "\n*/\n"
+            # else:
+            #     string_to_write += f"//{message['content']}\n"
+        elif message["role"] == "assistant":
+            assistant_response = message["content"]
 
+
+            # string_to_write += f"{assistant_response}\n"
+            # if ```javascript is in the response, comment everything that is not in the javascript code(between ```javascript and ```). it can appear in any line
+            if "```javascript" in message["content"]:
+                lines = message["content"].split("\n")
+                in_javascript_code = False
+                for i, line in enumerate(lines):
+                    if line.startswith("```javascript"):
+                        in_javascript_code = True
+                        lines[i] = "// "+line#This can also be removed totally
+                        lines[i] = ""
+                    elif line.startswith("```"):
+                        in_javascript_code = False
+                        lines[i] = "// "+line#This can also be removed totally
+                        lines[i] = ""
+                    elif not in_javascript_code:
+                        lines[i] = f"// {line}" 
+                        
+                assistant_response = "\n".join(lines)   
             string_to_write += f"{assistant_response}\n"
         return string_to_write
     
@@ -469,6 +454,7 @@ def file_to_array(file_path):
 
 
 
+
 def main():
     instructions_file_path = os.getcwd() + "/src/main/BotInstructions/v_10/Bot Instructions"
 
@@ -558,5 +544,92 @@ def main():
             entityAndQueriesCache, generated_code_path =  bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path, methodology=methodology, behavior_instructions_type=behavior_instructions_type, entityAndQueriesCache=entityAndQueriesCache)
             retVal.append(generated_code_path)
         return retVal
+    
+def additional_requirements_generation(file_path_of_generated_code):
+    #we will read the file, then we will set the history accordingly
+    with open(file_path_of_generated_code, "r") as file:
+        lines = file.readlines()
+    history = []
+    #user messages are in comments/**/, assistant messages are in the code, both can be multi-lined
+    user_message = ""
+    assistant_message = ""
+    isUser = False
+    for line in lines:
+        if line.startswith("/*"):
+            isUser = True
+            if assistant_message:
+                history.append({"role": "assistant", "content": assistant_message})
+                assistant_message = ""
+            # user_message = line
+        elif line.startswith("*/"):
+            isUser = False
+            history.append({"role": "user", "content": user_message})
+            user_message = ""
+        elif isUser:
+            user_message += line
+        else:
+            assistant_message += line
+    if assistant_message:
+        history.append({"role": "assistant", "content": assistant_message})
+    
+    
+    
+    behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus, \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
+    behavior_instructions_types = []
+    if behavior_instructions_type == "1":
+        behavior_instructions_types = [BehaviorInstructionType.Basic]
+    elif behavior_instructions_type == "2":
+        behavior_instructions_types = [BehaviorInstructionType.BasicPlus]
+    elif behavior_instructions_type == "3":
+        behavior_instructions_types = [BehaviorInstructionType.DSL]
+    elif behavior_instructions_type == "3.5":
+        behavior_instructions_types = [BehaviorInstructionType.DSL_Isolated]
+    elif behavior_instructions_type == "4":
+        behavior_instructions_types = [BehaviorInstructionType.Analysis]
+    elif behavior_instructions_type == "5":
+        behavior_instructions_types = [BehaviorInstructionType.Default]
+    else:
+        behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.DSL_Isolated, BehaviorInstructionType.Analysis]
+    
+    
+    
+    all_models= []
+    for behavior_instructions_type in behavior_instructions_types:
+        model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)
+        behavior_instructions_file_path = behavior_instructions_type.value
+        model.history = history
+        
+        #add first value to be system instructions
+        instructions = ""
+        with open(behavior_instructions_file_path, "r") as file:
+                instructions = file.read()
+
+        model.history.insert(0, {"role": "system", "content": instructions})
+        model.original_History = history
+        all_models.append(model)
+
+    #now that we have all the models, we can start the conversation
+    choice= input("If you want the chat to be cumulative, enter 1, otherwise enter 2(each response will not consider your previous requirements, but will consider the file it is based on\n")
+    print("You can exit the chat by typing exit\n")
+    while True:
+        input_message = input("Your Req: ")
+        if input_message == "exit":
+            break
+        for model in all_models:
+            if choice == "1":
+                response = model.chat_with_gpt_cumulative(input_message)
+            else:
+                response = model.chat_with_gpt(input_message)
+            print("ChatGPT:", response)
+
+        
+
+
+    # return history
+
+
+    
+
+
 if __name__ == "__main__":
     main()

@@ -1,4 +1,6 @@
-//There is a smart light bulb(which can be on and off)
+/*
+There is a smart light bulb(which can be on and off)
+*/
 function smartLightBulb(id, on) {
     return ctx.Entity(id, 'smartLightBulb', {on: on})
 }
@@ -12,7 +14,9 @@ Needed queries:
 ctx.registerQuery('light', entity => entity.type == 'smartLightBulb');
 
 ctx.registerQuery('lightOn', entity => entity.type == 'smartLightBulb' && entity.on == true);
-//When motion is detected, the light bulb turns on
+/*
+When motion is detected, the light bulb turns on
+*/
 function motionDetectedEvent() {
     return Event("motionDetectedEvent");
 }
@@ -32,7 +36,9 @@ ctx.bthread('When motion is detected, the light bulb turns on', 'light', functio
         sync({request: [turnOnLightEvent(light.id)]});
     }
 });
-//While the light bulb is on, the house cant be exited
+/*
+While the light bulb is on, the house cant be exited
+*/
 function exitHouseEvent() {
     return Event("exitHouseEvent");
 }
@@ -42,7 +48,9 @@ ctx.bthread('While the light bulb is on, the house can\'t be exited', 'lightOn',
         sync({block: [exitHouseEvent()]});
     }
 });
-//Light bulb turns off after 5 minutes
+/*
+Light bulb turns off after 5 minutes
+*/
 function turnOffLightEvent(lightId) {
     return Event("turnOffLightEvent", {lightId: lightId});
 }
@@ -59,7 +67,9 @@ ctx.bthread('Light bulb turns off after 5 minutes', 'lightOn', function (light) 
         sync({request: [turnOffLightEvent(light.id)]});
     }
 });
-//When the house is entered, The light bulb turns on and the user is notified
+/*
+When the house is entered, The light bulb turns on and the user is notified
+*/
 function houseEnteredEvent() {
     return Event("houseEnteredEvent");
 }

@@ -12,7 +12,7 @@ Needed queries:
 ctx.registerQuery('light', entity => entity.type == 'smartLightBulb');
 
 ctx.registerQuery('lightOn', entity => entity.type == 'smartLightBulb' && entity.on == true);
-//When motion is detected, the light bulb turns on
+When motion is detected, the light bulb turns on
 function motionDetectedEvent() {
     return Event("motionDetectedEvent");
 }
