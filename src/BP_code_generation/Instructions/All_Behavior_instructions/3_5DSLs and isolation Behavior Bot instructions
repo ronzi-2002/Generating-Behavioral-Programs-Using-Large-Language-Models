@@ -9,7 +9,7 @@ Existing Events that were defined before(you can use them without declaring them
 *make sure you use them with the right parameters(consider the names of the parameters)
 
 
-*Checklists*:    
+*Checklist*:
     - Before implementing a bthread or defining an event, use the following checklist to ensure compliance with COBP rules:
     0. consider previously declared events, make sure to analyze their parameters correctly, making sure you are passing the right parameters(if it expects carId, don't pass engine.Id)
     1. Don't use Events that weren't declared. Never assume an event exists without declaring it.

@@ -28,7 +28,7 @@ class BehaviorInstructionType(Enum):
     Default = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions"
 
 class MyOpenAIApi:
-    def __init__(self, model= "gpt-3.5-turbo",api_key=None, instructions= None, temp=0.5, post_process_function=None):#todo add temperature actual default, max_tokens, top_p, frequency_penalty, presence_penalty, stop, and other parameters
+    def __init__(self, model= "gpt-4-turbo-2024-04-09",api_key=None, instructions= None, temp=0.5, post_process_function=None):#todo add temperature actual default, max_tokens, top_p, frequency_penalty, presence_penalty, stop, and other parameters
         self.api_key = api_key
         self.client = openai
         self.openai = openai
@@ -380,7 +380,7 @@ def bot_usage_interactive(instructions= None, instructions_file_path=None):
         with open(instructions_file_path, "r") as file:
             instructions = file.read()
     # print(instructions)
-    myOpenAIApi = MyOpenAIApi(model="gpt-4-turbo", instructions=instructions, temp=0)
+    myOpenAIApi = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", instructions=instructions, temp=0)
     while True:
         input_message = input("You: ")
         if input_message == "exit":
@@ -389,20 +389,17 @@ def bot_usage_interactive(instructions= None, instructions_file_path=None):
         print("ChatGPT:", response)
     myOpenAIApi.export_to_code()
 
-def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,query_instructions_file_path=None,behavior_instructions_file_path=None,inputs_array=None, output_directory=None, file_name=None, methodology=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic):
+def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,query_instructions_file_path=None,behavior_instructions_file_path=None,inputs_array=None, output_directory=None, file_name=None, methodology=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic, entityAndQueriesCache=[]):
     temp_file= open("temp_file","w")# in case you want to see it updated in real time in a file https://superuser.com/questions/274961/how-to-automatically-reload-modified-files-in-notepad (dont forget to turn monitoring on)
     current_instruction = None
     if entity_instructions_file_path:
         with open(entity_instructions_file_path, "r") as file:
             instructions = file.read()
     # print(instructions)
-    myOpenAIApi = MyOpenAIApi(model="gpt-4-turbo", instructions=instructions, temp=0)
+    myOpenAIApi = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", instructions=instructions, temp=0)
     for input_message in inputs_array:
         if input_message in ["" , "\n"]:
             continue
-
-        # if input_message in ["" , "\n"]:
-        #     continue
         if input_message == "Entity INSTRUCTIONS:":
             with open(entity_instructions_file_path, "r") as file:
                 instructions = file.read()
@@ -416,6 +413,14 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
             current_instruction = InstructionPhase.QUERY_INSTRUCTIONS
             continue
         elif input_message == "Behavior INSTRUCTIONS:":
+            if entityAndQueriesCache == []:
+                #we need to set the cache
+                entityAndQueriesCache = myOpenAIApi.history.copy()
+            else:
+                #we need to reset the history to the point where the entity and queries instructions were set
+                myOpenAIApi.history = entityAndQueriesCache.copy()
+                myOpenAIApi.original_History = entityAndQueriesCache.copy()
+
             with open(behavior_instructions_file_path, "r") as file:
                 instructions = file.read()
             myOpenAIApi.set_instructions(instructions)
@@ -425,9 +430,13 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
             current_instruction = InstructionPhase.ORIGINAL_REQUIREMENTS
             break
         temp_file.write("\\\\" + input_message)
+        
+
         if current_instruction == InstructionPhase.BEHAVIOR_INSTRUCTIONS:
             response = myOpenAIApi.chat_with_gpt_cumulative(input_message, method=methodology, behavior_instructions_type=behavior_instructions_type)
         else:
+            if entityAndQueriesCache != []:
+                continue#this is to avoid reprocessing the same entity and queries instructions
             response = myOpenAIApi.chat_with_gpt_cumulative(input_message)
         print("ChatGPT:", response)
 
@@ -439,7 +448,7 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
         generated_code_path = myOpenAIApi.export_to_code(directory=output_directory, file_name=file_name + str(currTime)+".js",methodology=methodology,behavior_instructions_type=behavior_instructions_type)
     else:
        generated_code_path= myOpenAIApi.export_to_code()
-    return generated_code_path
+    return entityAndQueriesCache, generated_code_path
 #incase your inputs are in a file, notice this limits each input to one line
 def file_to_array(file_path):
     # an input can be more than one line, it is just that each input is separated by blank line
@@ -536,16 +545,18 @@ def main():
             behavior_instructions_types = [BehaviorInstructionType.Default]
         else:
             behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.DSL_Isolated, BehaviorInstructionType.Analysis]
-
         
         retVal = []
+        entityAndQueriesCache=[]
         #for every combination of methodology and behavior_instructions_type
         for methodology, behavior_instructions_type in [(methodology, behavior_instructions_type) for methodology in methodologies for behavior_instructions_type in behavior_instructions_types]:
 
             behavior_instructions_file_path = behavior_instructions_type.value
             # print("behavior_instructions_file_path", behavior_instructions_file_path)   
             # retVal.append(behavior_instructions_file_path)
-            retVal.append( bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path, methodology=methodology, behavior_instructions_type=behavior_instructions_type))
+            
+            entityAndQueriesCache, generated_code_path =  bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path, methodology=methodology, behavior_instructions_type=behavior_instructions_type, entityAndQueriesCache=entityAndQueriesCache)
+            retVal.append(generated_code_path)
         return retVal
 if __name__ == "__main__":
     main()

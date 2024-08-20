@@ -38,16 +38,16 @@ Given a Requirement analayze the next 8 topics. Add you answers(shortly) and fol
     5. Do you refer to an event without knowing its exact data? 
         -If so, use the anyEventNameWithData function.
         **Note** it is very usefull to waitFor/block a group of events with similiar properties.
-    6. Is there a time aspect involved?
+        6. Is there a time aspect involved?
         If there is, what is the case out of the following:
         6.1. **The duration of one of the queries?**
-        action: You TIME inside the bthread with the query.
+        action: use `TimeToBe` inside the bthread with the query.
         6.2. **The length(in time) of an event?**(Used when you want to check if an event happened countinuosly for a certain amount of time)
         action: Declare a new specific event( "EventForXtime") and don't use TIme for this manner.
         6.3. **Event needs to happen in <X> time**(Used when you want to check if event Didnt happen for a certain amount of time)
-        action: sync(waitFor:[TIME(), event] and check the output
+        action: sync(waitFor:[TimeToBe(), event] and check the output
         6.4.**Waiting for a specific hour to request an event?** (Lets say you need to open car at 2 pm)
-        action: Use WaitFor[Time(Hour, Minute) and then request. 
+        action: Use WaitFor[TimeToBe(Hour, Minute) and then request. 
         6.5. **your action is dependent on the actual Hour** 
             if you need to act in a certain way if an event happens after/before/between a specific hour, 
             action: Wait for the event and then check the time using an if statement. simply use new Date().get... and compare to it.

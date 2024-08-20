@@ -43,6 +43,7 @@ bthread('handleGetEntityByIdEvent', function () {
     let entity = ctx.getEntityById(entityId);
     sync({request: [Event("getEntityByIdResponse", {entity: JSON.stringify(entity), requestId: requestId})]});
   }
+});
 
 function anyEventNameWithData(eventName, data) {
 

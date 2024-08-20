@@ -35,6 +35,16 @@ bthread('Handle external events', function () {
   }
 });
 
+bthread('handleGetEntityByIdEvent', function () {
+  while (true) {
+    let ev = sync({waitFor: EventSet("getEntityByIdEvent", function (e) { return e.name === "getEntityByIdEvent"; })});
+    let entityId = ev.data.entityId;
+    let requestId = ev.data.requestId;
+    let entity = ctx.getEntityById(entityId);
+    sync({request: [Event("getEntityByIdResponse", {entity: JSON.stringify(entity), requestId: requestId})]});
+  }
+});
+
 function anyEventNameWithData(eventName, data) {
 
   return EventSet(eventName, function (e) {
@@ -52,7 +62,7 @@ function anyEventNameWithData(eventName, data) {
         return false;
       }
     }
-    return e.name === eventName// && e.data === data;//TODO: check if this is the correct way to compare objects, maybe use JSON.stringify or compare each field
+    return e.name === eventName;
   });
 }
 function getEntitiesByType(type) {
