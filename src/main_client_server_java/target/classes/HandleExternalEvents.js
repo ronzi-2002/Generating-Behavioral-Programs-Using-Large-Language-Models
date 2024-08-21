@@ -104,7 +104,7 @@ function TimeToBe(hour, minute) {
   return Event("TimeToBe", hour+":"+minute);
 }
 
-bthread('Time management', function () {
+ctx.bthread('Time management', function () {
   const timeEventSet = EventSet("TimeToBe", function (e) {
     return e.name === "TimeToBe";
   });

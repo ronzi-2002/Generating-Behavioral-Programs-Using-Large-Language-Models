@@ -69,7 +69,10 @@ For exaple ctx.bthread('night shift', 'night' function(night) {
 })
 
 The queries are used to gather the entities relevant to the requirement.
-Some requirements might not need any queries, if they are not related to any entity. 
+Some requirements might not need any queries, if they are not related to any entity. in this case, just skip the query part. for example:
+ctx.bthread('turn air conditioner off', function () {
+    // content of the function
+})
 
 
 The paradigm is based on events and entities.
@@ -140,7 +143,7 @@ Example:
         car.fuel += data.amount
     })
     ctx.bthread('When pump is connected, fuel level increases by 40 liters', 'car', function (pump) {
-        sync({waitFor: [pumpIsTurnedOn(car.id)]})
+        sync({waitFor: [pumpIsConnected(car.id)]})
         sync({request: [addFuel(car.id, 40)]})
     });
     

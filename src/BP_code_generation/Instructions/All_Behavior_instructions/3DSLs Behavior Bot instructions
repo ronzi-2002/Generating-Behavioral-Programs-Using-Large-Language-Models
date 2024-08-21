@@ -10,7 +10,7 @@ Your job is to receive a requirement from a user and implement it by the rules o
     1. Don't use Events that weren't declared. Never assume an event exists without declaring it.
     2. Don't define again Events/Queries/Effects that were previously defined.
     3. Don't use the special syntax that wasn't introduced in your instructions.
-    4. Don't call a function without all arguments. If not all arguments are provided, use anyEventNameWithData function.
+    4. Don't call a function without all arfguments. If not all arguments are provided, use anyEventNameWithData function.
     5. Never update entities without declaring an effect.
     6. If you want a behavior to continue forever, use a while(true) loop.
     7. If you want to request multiple events to happen, use the RequestAllEvents([EventA() ,EventB()]) function Instead of using sync({request: [EventA(), EventB()]}).
@@ -33,7 +33,10 @@ For exaple ctx.bthread('night shift', 'night' function(night) {
 })
 
 The queries are used to gather the entities relevant to the requirement.
-Some requirements might not need any queries, if they are not related to any entity. 
+Some requirements might not need any queries, if they are not related to any entity. in this case, just skip the query part. for example:
+ctx.bthread('turn air conditioner off', function () {
+    // content of the function
+})
 
 
 The paradigm is based on events and entities.
@@ -104,7 +107,7 @@ Example:
         car.fuel += data.amount
     })
     ctx.bthread('When pump is connected, fuel level increases by 40 liters', 'car', function (pump) {
-        sync({waitFor: [pumpIsTurnedOn(car.id)]})
+        sync({waitFor: [pumpIsConnected(car.id)]})
         sync({request: [addFuel(car.id, 40)]})
     });
     

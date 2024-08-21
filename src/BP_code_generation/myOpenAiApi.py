@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from src.BP_code_generation.post_process import post_process
 from enum import Enum
 import src.UI_code_generation.exctracting_events as exctracting_events
+import re
 class Methodology(Enum):
     STANDARD = "standard"
     PREPROCESS_AS_PART_OF_PROMPT = "preprocess_as_part_of_prompt"
@@ -55,7 +56,31 @@ class MyOpenAIApi:
         # if temp:
         self.temp = temp
         self.post_process_function = post_process_function
-        self.original_History  = []
+        self.History_For_Output  = []
+    
+    def static_post_process(self,last_resp):
+        """
+        this is a very simple post process, it does not require any interaction with the model. It simply replaces static strings in the response with other strings.:
+        1. ctx.getEntitiesByType -> getEntitiesByType *we remove the ctx. part and allow the model to use it with ctx as all similar functions are used with ctx  
+        """
+        print("last_resp before", last_resp)
+        if "ctx.getEntitiesByType" in last_resp:
+            last_resp = last_resp.replace("ctx.getEntitiesByType", "getEntitiesByType")
+
+        # # ctx.bthread('bthreadName',[],function(){...});-> bthread('bthreadName',function(){...});
+        # #this is relavent only when the array is empty
+        # # Regular expression to match ctx.bthread with an empty array
+        # pattern = r"ctx\.bthread\('([^']+)'\,\s*\[\]\,\s*function\(\)\{"
+    
+        # # Replace the matched pattern with the desired format
+        # processed_code = re.sub(pattern, r"bthread('\1', function(){", last_resp)
+        # print("last_resp after", processed_code)
+    
+        # return processed_code
+
+  
+
+        return last_resp
     
     def reset_history(self):
         self.history = []
@@ -84,7 +109,7 @@ class MyOpenAIApi:
             ],
             temperature = self.temp
         )
-        return response.choices[0].message.content
+        return self.static_post_process( response.choices[0].message.content)
     
     def chat_with_gpt_cumulative(self,new_message, method=Methodology.STANDARD, behavior_instructions_type = BehaviorInstructionType.Basic):
         """
@@ -133,17 +158,17 @@ class MyOpenAIApi:
                 self.set_instructions(instructions)
                 #Now after we handled the instructions, we need to call the model,
                 self.history.append({"role": "user", "content": new_message})
-                self.original_History.append({"role": "user", "content": new_message})
+                self.History_For_Output.append({"role": "user", "content": new_message})
                 response = self.client.chat.completions.create(
                     model=self.model,  # You can use any model you prefer
                     messages=self.history,
                     temperature = self.temp
                 )
                 #we add the response to the original history but not the processed one
-                self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+                self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response.choices[0].message.content)})
                 #we remove the last user message, 
                 self.history.pop(-1)
-                return response.choices[0].message.content
+                return self.static_post_process( response.choices[0].message.content)
 
 
             if behavior_instructions_type == BehaviorInstructionType.Analysis:
@@ -152,7 +177,7 @@ class MyOpenAIApi:
                 #TODO this analysis and the added string will appear in the history. We can(should) remove it after the response is generated(as done in the second methodology)
                 new_message += "\n\n Make sure it obeys your 8 response steps"
             self.history.append({"role": "user", "content": new_message})
-            self.original_History.append({"role": "user", "content": new_message})
+            self.History_For_Output.append({"role": "user", "content": new_message})
             response = self.client.chat.completions.create(
                 model=self.model,  # You can use any model you prefer
                 messages=self.history,
@@ -162,10 +187,10 @@ class MyOpenAIApi:
                 post_process_answer = self.post_process_function(js_code= self.export_to_code(exportToFile=False), last_resp=response.choices[0].message.content)
                 if post_process_answer == "":#No corrections needed
                     self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-                    self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+                    self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response.choices[0].message.content)})
                 else:#TODO make sure it doesnt get stuck in the recursive loop
                     self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-                    self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+                    self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response.choices[0].message.content)})
                     new_response = self.chat_with_gpt_cumulative(post_process_answer)
                     #pre last assistant message is the one that needs to be corrected
                     self.history.pop(-3)
@@ -176,7 +201,7 @@ class MyOpenAIApi:
             
             else:
                 self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-                self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
+                self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response.choices[0].message.content)})
         elif method == Methodology.PREPROCESS_AS_PART_OF_PROMPT:
             allEvents= exctracting_events.extract_events(code=self.export_to_code(exportToFile=False))
             preProcessString = ""
@@ -210,7 +235,7 @@ class MyOpenAIApi:
             
             print(new_message + preProcessString)
             self.history.append({"role": "user", "content": new_message + preProcessString})
-            self.original_History.append({"role": "user", "content": new_message})
+            self.History_For_Output.append({"role": "user", "content": new_message})
             response = self.client.chat.completions.create(
                 model=self.model,  # You can use any model you prefer
                 messages=self.history,
@@ -229,8 +254,8 @@ class MyOpenAIApi:
             print("\n\n\n\n\n\n FINAL RESPONSE", assistant_response)
 
             self.history.append({"role": "assistant", "content": assistant_response})
-            self.original_History.append({"role": "assistant", "content": response.choices[0].message.content})
-            return response.choices[0].message.content
+            self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response.choices[0].message.content)})
+            return self.static_post_process(response.choices[0].message.content)
 
 
             
@@ -239,13 +264,13 @@ class MyOpenAIApi:
             print("Methodology not supported "+method)
             exit()
         # self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-        return response.choices[0].message.content
+        return self.static_post_process(response.choices[0].message.content)
     def add_to_history_gptResponse(self, message):
         self.history.append({"role": "assistant", "content": message})
-        self.original_History.append({"role": "assistant", "content": message})
+        self.History_For_Output.append({"role": "assistant", "content": message})
     def add_to_history_userMessage(self, message):
         self.history.append({"role": "user", "content": message})
-        self.original_History.append({"role": "user", "content": message})
+        self.History_For_Output.append({"role": "user", "content": message})
     def set_instructions(self, instructions):
         #if the assistant already has a system message in the history, replace it with the new instructions
         if self.history and self.history[0]["role"] == "system":
@@ -257,7 +282,7 @@ class MyOpenAIApi:
     def export_to_code(self, directory=os.getcwd(), file_name=None,exportToFile=True, methodology=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic):
         #create a js file, where each user message is in a comment, and the assistant's response as is.
         string_to_write = ""
-        for i in range(len(self.original_History)):
+        for i in range(len(self.History_For_Output)):
             string_to_write += self.get_pretty_response_string(i)
                     
 
@@ -283,7 +308,7 @@ class MyOpenAIApi:
             return exportTo
         return string_to_write
     def get_pretty_response_string(self, response_index):#TODO this is a bit weird, it is because the bot functions are not part of the class, I will fix it
-        message = self.original_History[response_index]
+        message = self.History_For_Output[response_index]
         string_to_write = ""
         if message["role"] == "user":
             # if there are multiple lines in the message, use multiline comments
@@ -404,7 +429,7 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
             else:
                 #we need to reset the history to the point where the entity and queries instructions were set
                 myOpenAIApi.history = entityAndQueriesCache.copy()
-                myOpenAIApi.original_History = entityAndQueriesCache.copy()
+                myOpenAIApi.History_For_Output = entityAndQueriesCache.copy()
 
             with open(behavior_instructions_file_path, "r") as file:
                 instructions = file.read()
@@ -605,7 +630,7 @@ def additional_requirements_generation(file_path_of_generated_code):
                 instructions = file.read()
 
         model.history.insert(0, {"role": "system", "content": instructions})
-        model.original_History = history
+        model.History_For_Output = history
         all_models.append(model)
 
     #now that we have all the models, we can start the conversation
