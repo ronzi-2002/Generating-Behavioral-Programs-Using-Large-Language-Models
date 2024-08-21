@@ -1,0 +1,42 @@
+History:
+Role: user
+Content: There are 4 stadiums in the city. Two football stadium, one basketball stadium and a tennis stadium.
+
+
+Role: assistant
+Content: function stadium(id,subtype) {
+    return ctx.Entity(id, 'stadium', {subtype: subtype})
+}
+ctx.populateContext([stadium('football1','football'),stadium('football2','football'),stadium('basketball1','basketball'),stadium('tennis1','tennis')]);
+
+
+
+Role: user
+Content: Needed queries:
+1. stadium
+2. outdoor_stadium
+
+
+Role: assistant
+Content: ctx.registerQuery('stadium', entity => entity.type == String('stadium'));
+ctx.registerQuery('outdoor_stadium', entity => entity.type == String('stadium') && (entity.subtype == String('football') || entity.subtype == String('tennis')));
+
+
+Requirements and Code:
+Requirement: Stadium lights turn on right after sunset starts
+
+Code: function sunsetStartEvent() {
+    return Event("sunsetStartEvent")
+}
+function turnOnStadiumLightsEvent(stadiumId) {
+    return Event("turnOnStadiumLightsEvent", stadiumId)
+}
+
+ctx.bthread('Stadium lights turn on right after sunset starts', 'stadium', function (stadium) {
+    while(true) {
+        sync({waitFor: [sunsetStartEvent()]});
+        sync({request: [turnOnStadiumLightsEvent(stadium.id)]});
+    }
+});
+
+

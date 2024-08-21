@@ -1,0 +1,32 @@
+Requirement: Stadium lights turn on right after sunset starts
+
+Code: function sunsetStartEvent() {
+    return Event("sunsetStartEvent")
+}
+function turnOnStadiumLightsEvent(stadiumId) {
+    return Event("turnOnStadiumLightsEvent", stadiumId)
+}
+
+ctx.bthread('Stadium lights turn on right after sunset starts', 'stadium', function (stadium) {
+    while(true) {
+        sync({waitFor: [sunsetStartEvent()]});
+        sync({request: [turnOnStadiumLightsEvent(stadium.id)]});
+    }
+});
+
+Generated Code: function sunsetEvent() {
+    return Event("sunsetEvent");
+}
+
+function turnOnStadiumLightsEvent(stadiumId) {
+    return Event("turnOnStadiumLightsEvent", {stadiumId: stadiumId});
+}
+
+ctx.bthread('Stadium lights turn on right after sunset starts', 'stadium', function (stadium) {
+    while(true){
+        sync({waitFor: [sunsetEvent()]});
+        sync({request: [turnOnStadiumLightsEvent(stadium.id)]});
+    }
+});
+Blue Score: {'codebleu': 0.8684606894780789, 'ngram_match_score': 0.608840154229603, 'weighted_ngram_match_score': 0.6212212860057302, 'syntax_match_score': 0.8636363636363636, 'dataflow_match_score': 1.0}
+

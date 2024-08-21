@@ -63,7 +63,7 @@ class MyOpenAIApi:
         this is a very simple post process, it does not require any interaction with the model. It simply replaces static strings in the response with other strings.:
         1. ctx.getEntitiesByType -> getEntitiesByType *we remove the ctx. part and allow the model to use it with ctx as all similar functions are used with ctx  
         """
-        print("last_resp before", last_resp)
+        # print("last_resp before", last_resp)
         if "ctx.getEntitiesByType" in last_resp:
             last_resp = last_resp.replace("ctx.getEntitiesByType", "getEntitiesByType")
 
@@ -183,25 +183,26 @@ class MyOpenAIApi:
                 messages=self.history,
                 temperature = self.temp
             )
-            if self.post_process_function:
-                post_process_answer = self.post_process_function(js_code= self.export_to_code(exportToFile=False), last_resp=response.choices[0].message.content)
-                if post_process_answer == "":#No corrections needed
-                    self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-                    self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response.choices[0].message.content)})
-                else:#TODO make sure it doesnt get stuck in the recursive loop
-                    self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-                    self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response.choices[0].message.content)})
-                    new_response = self.chat_with_gpt_cumulative(post_process_answer)
-                    #pre last assistant message is the one that needs to be corrected
-                    self.history.pop(-3)
-                    #remove last user message
-                    self.history.pop(-2)
+            #TODO figure out how to use post_process_function currently it is not used
+            # if self.post_process_function:
+            #     post_process_answer = self.post_process_function(js_code= self.export_to_code(exportToFile=False), last_resp=response.choices[0].message.content)
+            #     if post_process_answer == "":#No corrections needed
+            #         self.history.append({"role": "assistant", "content": response.choices[0].message.content})
+            #         self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response.choices[0].message.content)})
+            #     else:#TODO make sure it doesnt get stuck in the recursive loop
+            #         self.history.append({"role": "assistant", "content": response.choices[0].message.content})
+            #         self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response.choices[0].message.content)})
+            #         new_response = self.chat_with_gpt_cumulative(post_process_answer)
+            #         #pre last assistant message is the one that needs to be corrected
+            #         self.history.pop(-3)
+            #         #remove last user message
+            #         self.history.pop(-2)
                     
-                    return new_response
+            #         return new_response
             
-            else:
-                self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-                self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response.choices[0].message.content)})
+            # else:
+            self.history.append({"role": "assistant", "content": response.choices[0].message.content})
+            self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response.choices[0].message.content)})
         elif method == Methodology.PREPROCESS_AS_PART_OF_PROMPT:
             allEvents= exctracting_events.extract_events(code=self.export_to_code(exportToFile=False))
             preProcessString = ""
