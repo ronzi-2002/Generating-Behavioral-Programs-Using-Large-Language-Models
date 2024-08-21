@@ -181,7 +181,7 @@ def get_data_set_of_file_and_eval(file_path_of_generated_code, output_file_path)
     else:
         df.to_excel(output_file_path, index=False)
 
-    print("Exported to requirements_code_generated_blue.xlsx")
+    print("Exported to Excel file: ", output_file_path)
 
 
 
