@@ -5,10 +5,10 @@ Requirement:     Needed queries:
     4. lion_enclosure
     */
    
-   ctx.registerQuery("animalEnclosure", (entity) => entity.type == String("animalEnclosure"));
-   ctx.registerQuery( "water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("aquarium") || entity.subtype == String("dolphins")));
-   ctx.registerQuery( "non_water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("lions") || entity.subtype == String("tigers")));
-   ctx.registerQuery( "lion_enclosure", (entity) => entity.type == String("animalEnclosure") && entity.subtype == String("lions"));
+ctx.registerQuery("animalEnclosure", (entity) => entity.type == String("animalEnclosure"));
+ctx.registerQuery("water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("aquarium") || entity.subtype == String("dolphins")));
+ctx.registerQuery("non_water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("lions") || entity.subtype == String("tigers")));
+ctx.registerQuery("lion_enclosure", (entity) => entity.type == String("animalEnclosure") && entity.subtype == String("lions"));
  For each water related enclosure, when the "clean" button is pressed, send a diver to clean the enclosure.
 
 Code: function cleanButtonIsPressedEvent(animalEnclosureId) {
@@ -105,38 +105,33 @@ ctx.bthread('Send zookeeper to feed lions when feed button is pressed', 'lion_en
 });
 Blue Score: {'codebleu': 0.7103900853559463, 'ngram_match_score': 0.038390836520802156, 'weighted_ngram_match_score': 0.043287794816437984, 'syntax_match_score': 0.7555555555555555, 'dataflow_match_score': 1.0}
 
-Requirement:  After lions are fed, they cannot be fed again until they roar 3 times.
+Requirement:  After lions are fed, they cannot be fed again until they roar.
 
 Code: function lionRoarEvent(animalEnclosureId) {
     return Event("lionRoarEvent", animalEnclosureId);
 }
 
-ctx.bthread( "after lions are fed, they cannot be fed again until they roar 3 times", "lion_enclosure", function (animalEnclosure) {
+ctx.bthread( "after lions are fed, they cannot be fed again until they roar", "lion_enclosure", function (animalEnclosure) {
     while (true) {
         sync({ waitFor: [sendZookeeperToFeedEvent(animalEnclosure.id)] });
         sync({ waitFor: [lionRoarEvent(animalEnclosure.id)], block: [sendZookeeperToFeedEvent(animalEnclosure.id)] });
-        sync({ waitFor: [lionRoarEvent(animalEnclosure.id)], block: [sendZookeeperToFeedEvent(animalEnclosure.id)] });
-        sync({ waitFor: [lionRoarEvent(animalEnclosure.id)], block: [sendZookeeperToFeedEvent(animalEnclosure.id)] });
     }
 });
 
 
-Generated Code: function lionRoarEvent(enclosureId) {
-    return Event("lionRoarEvent", {enclosureId: enclosureId});
+Generated Code: function lionsRoarEvent(enclosureId) {
+    return Event("lionsRoarEvent", {enclosureId: enclosureId});
 }
 
-ctx.bthread('Lions cannot be fed again until they roar 3 times after being fed', 'lion_enclosure', function (enclosure) {
+ctx.bthread('Lions cannot be fed again until they roar', 'lion_enclosure', function (enclosure) {
     while(true){
-        sync({waitFor: [sendZookeeperEvent(enclosure.id)]});
-        for (let i = 0; i < 3; i++) {
-            sync({waitFor: [lionRoarEvent(enclosure.id)]});
-        }
-        sync({request: [sendZookeeperEvent(enclosure.id)]});
+        sync({waitFor: [feedButtonPressedEvent(enclosure.id)]});
+        sync({waitFor: [lionsRoarEvent(enclosure.id)]});
     }
 });
-Blue Score: {'codebleu': 0.5310748176642903, 'ngram_match_score': 0.17150685984167713, 'weighted_ngram_match_score': 0.1840556573902133, 'syntax_match_score': 0.647887323943662, 'dataflow_match_score': 0.5909090909090909}
+Blue Score: {'codebleu': 0.6066684815012391, 'ngram_match_score': 0.14738726844543681, 'weighted_ngram_match_score': 0.16735956207082914, 'syntax_match_score': 0.6046511627906976, 'dataflow_match_score': 0.8333333333333334}
 
-Requirement:  After The zoo is closed, all lights are turned off.
+Requirement:  After The zoo is closed, lights in all animal enclosures are turned off
 
 Code: function zooClosedEvent() {
     return Event("zooClosedEvent");
@@ -145,7 +140,7 @@ function turnOffLightsEvent(animalEnclosureId) {
     return Event("turnOffLightsEvent", animalEnclosureId);
 }
 
-ctx.bthread( "after The zoo is closed, all lights are turned off", "animalEnclosure", function (animalEnclosure) {
+ctx.bthread( "after The zoo is closed, lights in all animal enclosures are turned off", "animalEnclosure", function (animalEnclosure) {
     while (true) {
         sync({ waitFor: [zooClosedEvent()] });
         sync({ request: [turnOffLightsEvent(animalEnclosure.id)] });
@@ -158,19 +153,17 @@ Generated Code: function zooClosedEvent() {
     return Event("zooClosedEvent");
 }
 
-function turnOffLightsEvent() {
-    return Event("turnOffLightsEvent");
+function turnOffLightsEvent(enclosureId) {
+    return Event("turnOffLightsEvent", {enclosureId: enclosureId});
 }
 
-ctx.bthread('Turn off all lights when the zoo is closed', function () {
-    while(true){
-        sync({waitFor: [zooClosedEvent()]});
-        sync({request: [turnOffLightsEvent()]});
-    }
+ctx.bthread('Turn off lights in all animal enclosures when the zoo is closed', 'animalEnclosure', function (enclosure) {
+    sync({waitFor: [zooClosedEvent()]});
+    sync({request: [turnOffLightsEvent(enclosure.id)]});
 });
-Blue Score: {'codebleu': 0.4643478809801652, 'ngram_match_score': 0.19031406541247423, 'weighted_ngram_match_score': 0.210740501964935, 'syntax_match_score': 0.4772727272727273, 'dataflow_match_score': 0.5833333333333334}
+Blue Score: {'codebleu': 0.7016778852034702, 'ngram_match_score': 0.2544841028214093, 'weighted_ngram_match_score': 0.27744626436480685, 'syntax_match_score': 0.7045454545454546, 'dataflow_match_score': 0.9166666666666666}
 
-Requirement:  Zoo lights turn on right after sunset starts
+Requirement:   Animal enclosures lights turn on right after sunset starts
 
 Code: function turnOnLightsEvent(animalEnclosureId) {
     return Event("turnOnLightsEvent", animalEnclosureId);
@@ -191,39 +184,39 @@ Generated Code: function sunsetStartsEvent() {
     return Event("sunsetStartsEvent");
 }
 
-function turnOnLightsEvent() {
-    return Event("turnOnLightsEvent");
+function turnOnLightsEvent(enclosureId) {
+    return Event("turnOnLightsEvent", {enclosureId: enclosureId});
 }
 
-ctx.bthread('Turn on zoo lights right after sunset starts', function () {
+ctx.bthread('Turn on lights in all animal enclosures right after sunset starts', 'animalEnclosure', function (enclosure) {
     while(true){
         sync({waitFor: [sunsetStartsEvent()]});
-        sync({request: [turnOnLightsEvent()]});
+        sync({request: [turnOnLightsEvent(enclosure.id)]});
     }
 });
-Blue Score: {'codebleu': 0.43402800133915187, 'ngram_match_score': 0.046489131872216524, 'weighted_ngram_match_score': 0.051366639095059535, 'syntax_match_score': 0.4772727272727273, 'dataflow_match_score': 0.5833333333333334}
+Blue Score: {'codebleu': 0.7578237423353547, 'ngram_match_score': 0.059781674814878165, 'weighted_ngram_match_score': 0.06391029399321314, 'syntax_match_score': 0.8636363636363636, 'dataflow_match_score': 1.0}
 
-Requirement:  Zoo lights cant be turned off until they were turned on and vice versa. All zoo lights are off at first(default)
+Requirement:  Animal enclosures lights cant be turned off until they were turned on and vice versa. All zoo lights are off at first(default)
 
-Code: ctx.bthread( "Zoo lights cant be turned off until they were turned on and vice versa. All zoo lights are off at first(default)", "animalEnclosure", function (animalEnclosure) {
+Code: ctx.bthread( "Animal enclosures lights cant be turned off until they were turned on and vice versa. All zoo lights are off at first(default)", "animalEnclosure", function (animalEnclosure) {
     while (true) {
         sync({ waitFor: [turnOnLightsEvent(animalEnclosure.id)], block: [turnOffLightsEvent(animalEnclosure.id)] });
         sync({ waitFor: [turnOffLightsEvent(animalEnclosure.id)], block: [turnOnLightsEvent(animalEnclosure.id)] });
     }
 });
-Generated Code: function turnOffLightsEvent() {
-    return Event("turnOffLightsEvent");
+Generated Code: function turnOffLightsEvent(enclosureId) {
+    return Event("turnOffLightsEvent", {enclosureId: enclosureId});
 }
 
-function turnOnLightsEvent() {
-    return Event("turnOnLightsEvent");
+function turnOnLightsEvent(enclosureId) {
+    return Event("turnOnLightsEvent", {enclosureId: enclosureId});
 }
 
-ctx.bthread('Zoo lights cannot be turned off until they were turned on and vice versa, starting with lights off', function () {
+ctx.bthread('Animal enclosures lights cannot be turned off until they were turned on and vice versa, starting with lights off', 'animalEnclosure', function (enclosure) {
     while(true){
-        sync({waitFor: [turnOnLightsEvent()], block: [turnOffLightsEvent()]});
-        sync({waitFor: [turnOffLightsEvent()], block: [turnOnLightsEvent()]});
+        sync({waitFor: [turnOnLightsEvent(enclosure.id)], block: [turnOffLightsEvent(enclosure.id)]});
+        sync({waitFor: [turnOffLightsEvent(enclosure.id)], block: [turnOnLightsEvent(enclosure.id)]});
     }
 });
-Blue Score: {'codebleu': 0.41747056980444686, 'ngram_match_score': 0.23905445258295593, 'weighted_ngram_match_score': 0.24607253149255445, 'syntax_match_score': 0.1951219512195122, 'dataflow_match_score': 0.7272727272727273}
+Blue Score: {'codebleu': 0.727774010508925, 'ngram_match_score': 0.2172833167707285, 'weighted_ngram_match_score': 0.24892685483736787, 'syntax_match_score': 0.975609756097561, 'dataflow_match_score': 0.7272727272727273}
 

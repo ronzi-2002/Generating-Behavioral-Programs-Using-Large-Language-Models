@@ -20,10 +20,10 @@ Requirement:     Needed queries:
     4. lion_enclosure
     */
    
-   ctx.registerQuery("animalEnclosure", (entity) => entity.type == String("animalEnclosure"));
-   ctx.registerQuery( "water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("aquarium") || entity.subtype == String("dolphins")));
-   ctx.registerQuery( "non_water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("lions") || entity.subtype == String("tigers")));
-   ctx.registerQuery( "lion_enclosure", (entity) => entity.type == String("animalEnclosure") && entity.subtype == String("lions"));
+ctx.registerQuery("animalEnclosure", (entity) => entity.type == String("animalEnclosure"));
+ctx.registerQuery("water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("aquarium") || entity.subtype == String("dolphins")));
+ctx.registerQuery("non_water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("lions") || entity.subtype == String("tigers")));
+ctx.registerQuery("lion_enclosure", (entity) => entity.type == String("animalEnclosure") && entity.subtype == String("lions"));
  For each water related enclosure, when the "clean" button is pressed, send a diver to clean the enclosure.
 
 Code: function cleanButtonIsPressedEvent(animalEnclosureId) {
@@ -79,24 +79,22 @@ ctx.bthread( "for each lion enclosure, when the 'feed' button is pressed, send a
 
 
 
-Requirement:  After lions are fed, they cannot be fed again until they roar 3 times.
+Requirement:  After lions are fed, they cannot be fed again until they roar.
 
 Code: function lionRoarEvent(animalEnclosureId) {
     return Event("lionRoarEvent", animalEnclosureId);
 }
 
-ctx.bthread( "after lions are fed, they cannot be fed again until they roar 3 times", "lion_enclosure", function (animalEnclosure) {
+ctx.bthread( "after lions are fed, they cannot be fed again until they roar", "lion_enclosure", function (animalEnclosure) {
     while (true) {
         sync({ waitFor: [sendZookeeperToFeedEvent(animalEnclosure.id)] });
-        sync({ waitFor: [lionRoarEvent(animalEnclosure.id)], block: [sendZookeeperToFeedEvent(animalEnclosure.id)] });
-        sync({ waitFor: [lionRoarEvent(animalEnclosure.id)], block: [sendZookeeperToFeedEvent(animalEnclosure.id)] });
         sync({ waitFor: [lionRoarEvent(animalEnclosure.id)], block: [sendZookeeperToFeedEvent(animalEnclosure.id)] });
     }
 });
 
 
 
-Requirement:  After The zoo is closed, all lights are turned off.
+Requirement:  After The zoo is closed, lights in all animal enclosures are turned off
 
 Code: function zooClosedEvent() {
     return Event("zooClosedEvent");
@@ -105,7 +103,7 @@ function turnOffLightsEvent(animalEnclosureId) {
     return Event("turnOffLightsEvent", animalEnclosureId);
 }
 
-ctx.bthread( "after The zoo is closed, all lights are turned off", "animalEnclosure", function (animalEnclosure) {
+ctx.bthread( "after The zoo is closed, lights in all animal enclosures are turned off", "animalEnclosure", function (animalEnclosure) {
     while (true) {
         sync({ waitFor: [zooClosedEvent()] });
         sync({ request: [turnOffLightsEvent(animalEnclosure.id)] });
@@ -115,7 +113,7 @@ ctx.bthread( "after The zoo is closed, all lights are turned off", "animalEnclos
 
 
 
-Requirement:  Zoo lights turn on right after sunset starts
+Requirement:   Animal enclosures lights turn on right after sunset starts
 
 Code: function turnOnLightsEvent(animalEnclosureId) {
     return Event("turnOnLightsEvent", animalEnclosureId);
@@ -133,9 +131,9 @@ ctx.bthread( "Zoo lights turn on right after sunset starts", "animalEnclosure", 
 
 
 
-Requirement:  Zoo lights cant be turned off until they were turned on and vice versa. All zoo lights are off at first(default)
+Requirement:  Animal enclosures lights cant be turned off until they were turned on and vice versa. All zoo lights are off at first(default)
 
-Code: ctx.bthread( "Zoo lights cant be turned off until they were turned on and vice versa. All zoo lights are off at first(default)", "animalEnclosure", function (animalEnclosure) {
+Code: ctx.bthread( "Animal enclosures lights cant be turned off until they were turned on and vice versa. All zoo lights are off at first(default)", "animalEnclosure", function (animalEnclosure) {
     while (true) {
         sync({ waitFor: [turnOnLightsEvent(animalEnclosure.id)], block: [turnOffLightsEvent(animalEnclosure.id)] });
         sync({ waitFor: [turnOffLightsEvent(animalEnclosure.id)], block: [turnOnLightsEvent(animalEnclosure.id)] });

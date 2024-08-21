@@ -61,14 +61,14 @@ ctx.bthread('Lights cant be turned off until they were turned on and vice versa.
 });
 
 /*
-After a stadium is sent to destruction, no action can be performed on it ever again, including the destruction of it
+After a stadium is sent to destruction, light actions can't be performed on it ever again
 */
 function destroyStadiumEvent(stadiumId) {
     return Event("destroyStadiumEvent", stadiumId)
 }
-ctx.bthread('After a stadium is sent to destruction, no action can be performed on it ever again, including the destruction of it', 'stadium', function (stadium) {
+ctx.bthread('After a stadium is sent to destruction, light actions can not be performed on it ever again', 'stadium', function (stadium) {
     sync({waitFor: [destroyStadiumEvent(stadium.id)]});
-    sync({block: [cleanStadiumEvent(stadium.id), turnOnStadiumLightsEvent(stadium.id), turnOffStadiumLightsEvent(stadium.id), destroyStadiumEvent(stadium.id)]});
+    sync({block: [turnOnStadiumLightsEvent(stadium.id), turnOffStadiumLightsEvent(stadium.id)]});
 });
 
 
