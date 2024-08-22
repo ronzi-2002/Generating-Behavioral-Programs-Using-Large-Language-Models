@@ -5,6 +5,7 @@
 1. Generating code from natural language instructions
    1. Generating BP code from a requirements document (Please look at the examples in [RequirementDocs](src/BP_code_generation/RequirementDocs))
       1. Many options are available for the behavior instructions, see  [Instruction Options](src/BP_code_generation/Instructions/All_Behavior_instructions)
+   2. Generating BP code from additional requirements, based on existing BP code
    3. Generating UI code from a requirements document(+and bp code)**
    4. Setting your API key for the OpenAI API(You can also set the API key manually in .env file)
 2. Running the generated code
