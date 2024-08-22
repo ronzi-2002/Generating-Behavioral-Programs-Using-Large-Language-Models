@@ -1,16 +1,17 @@
 import time
-from codebleu import calc_codebleu
+# from codebleu import calc_codebleu
 from enum import Enum
 import os
 import pandas as pd
 from openpyxl import load_workbook
+import ast
 
 
 #This file is in src/BP_code_generation/Evaluation/evaluation_expirement.py
 #I need to import the MyOpenAIApi class from src/BP_code_generation/MyOpenAIApi.py
 
 
-from src.BP_code_generation.myOpenAiApi import MyOpenAIApi
+# from src.BP_code_generation.myOpenAiApi import MyOpenAIApi
 
 class BehaviorInstructionType(Enum):
     Basic = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/1Basic Behavior Bot instructions"
@@ -213,21 +214,49 @@ def load_data_from_excel(file_path):
         # data["blue_score"] = result
         print(result)
     
+def get_avg_blue_score(file_path):
+    df = pd.read_excel(file_path)
+
+    # Assume the file has columns 'Filename' and 'Blue Score'
+    # Group by 'Filename' and calculate the average BLEU score
+    #The Blue Score = {'codebleu': 0.8037232132806461, 'ngram_match_score': 0.4330011686519913, 'weighted_ngram_match_score': 0.45038481030831556, 'syntax_match_score': 0.7884615384615384, 'dataflow_match_score': 1.0}
+    #The average BLEU score is the average of the 'codebleu' values
+    # Extract the 'codebleu' value from the 'Blue Score' dictionary
+    df['Blue Score'] = df['Blue Score'].apply(ast.literal_eval)
+
+    df['codebleu'] = df['Blue Score'].apply(lambda x: x['codebleu'])
+
+    # Group by 'Filename' and calculate the average 'codebleu' score
+    average_codebleu_scores = df.groupby('Filename')['codebleu'].mean().reset_index()
+
+    # Rename columns for clarity
+    average_codebleu_scores.columns = ['Filename', 'Average_CodeBLEU_Score']
+
+
+    # Display the results
+    print(average_codebleu_scores)
+    # Calculate the overall average 'codebleu' score, across all files, but give more weight to files with more requirements
+    # The overall average 'codebleu' score is the weighted average of the 'Average_CodeBLEU_Score' values, where the weights are the number of requirements in each file
+    # Calculate the total number of requirements in each file
+    num_requirements_per_file = df['Filename'].value_counts().reset_index()
+    num_requirements_per_file.columns = ['Filename', 'Num_Requirements']
+    print("Avarege codebleu score for all files: ", (average_codebleu_scores['Average_CodeBLEU_Score'] * num_requirements_per_file['Num_Requirements']).sum() / num_requirements_per_file['Num_Requirements'].sum())
+
 
 if __name__ == "__main__":
     # get_data_set_of_file(file_path)
     # load_data_from_excel("requirements_code_generated_blue.xlsx")
     #run the evaluation for all the files in the data folder(use relative path)
-    data_folder_path = "src/BP_code_generation/Evaluation/Data"
-    output_file_path = "requirements_code_generated_blue"+time.strftime("%Y%m%d-%H%M%S")+".xlsx"
-    for file_name in os.listdir(data_folder_path):
-        file_path = os.path.join(data_folder_path, file_name)
-        #if the file is a js file
-        if file_name.endswith(".js"):
-            get_data_set_of_file_and_eval(file_path, output_file_path)
+    # data_folder_path = "src/BP_code_generation/Evaluation/Data"
+    # output_file_path = "requirements_code_generated_blue"+time.strftime("%Y%m%d-%H%M%S")+".xlsx"
+    # for file_name in os.listdir(data_folder_path):
+    #     file_path = os.path.join(data_folder_path, file_name)
+    #     #if the file is a js file
+    #     if file_name.endswith(".js"):
+    #         get_data_set_of_file_and_eval(file_path, output_file_path)
 
 
-
+    get_avg_blue_score("requirements_code_generated_blue20240822-000457.xlsx")
     # print(history)
     # print(requirements_and_code)
     # print(history)
