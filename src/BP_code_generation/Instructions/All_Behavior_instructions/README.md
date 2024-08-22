@@ -10,4 +10,5 @@ Versions of Behavior Instructions:
     1. RequestALL
     2. Time related instructions
     *similiar to BasicPlus in the structure of the instructions
-4. Analyses: Based on V16. advanced instructions built on top of V15. 2 part instructions, with the first part being an analyze of the instructions. and the second part being an explanation of BP(similar to V15)
+4. (3.5) DSL_Isolated: Based on separating the different requirements. When generating the requirement N, all previous declared events are added to the instructions of the model, but all previous requirements(and their generations) are removed from the context.
+5. Analyses: Based on V16. advanced instructions built on top of V15. 2 part instructions, with the first part being an analyze of the instructions. and the second part being an explanation of BP(similar to V15)

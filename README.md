@@ -31,13 +31,14 @@ The directory contains 3 directories:
 
 
 1. Instructions: Contains 3 instruction files for the different phases
-2. RequirementDocs: Contains requirements formatted for our process(dividing the 3 phases)
-3. Results: Contains results generated using these instructions
+   1. All_Behavior_instructions: Contains all the variations of behavior instructions for the bot.
+   2. RequirementDocs: Contains requirements formatted for our process(dividing the 3 phases)
+   3. Results: Contains results generated using these instructions, divided into subdirectories based on the instructions used.
+   4. Evaluation: Contains the datasets used for evaluation(and a txt file where it nicely formatted), the excel files with the results and the code used for evaluation.
+      *To run evaluation_experiment, you will might need to run "python -m src.BP_code_generation.Evaluation.evaluation_experiment" 
+
 
 In addition, there are 2 python files, that are used to generate the code from the instructions. You dont need to run them, as the UseSystem.py file will run them for you.
-
-* V11 is a more tested version of the instructions, and the results are more accurate
-* V13 is the latest version of the instructions, it supports non-context based instructions, seems to be more accurate, but needs more testing
 
 
 ## main_client_server_java:
@@ -46,8 +47,8 @@ For each BP program, there is a corresponding "frontend" consisting of a HTML.
 
 Once again, you dont need to run these files, as the UseSystem.py file will run them for you.
 
-    
-
+## UI_code_generation
+The directory contains some helper files for generating the UI code. You can find the UI instructions there
 
 
     
