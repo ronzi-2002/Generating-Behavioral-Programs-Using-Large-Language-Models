@@ -1,5 +1,5 @@
 import time
-# from codebleu import calc_codebleu
+from codebleu import calc_codebleu
 from enum import Enum
 import os
 import pandas as pd
@@ -11,7 +11,7 @@ import ast
 #I need to import the MyOpenAIApi class from src/BP_code_generation/MyOpenAIApi.py
 
 
-# from src.BP_code_generation.myOpenAiApi import MyOpenAIApi
+from src.BP_code_generation.myOpenAiApi import MyOpenAIApi
 
 class BehaviorInstructionType(Enum):
     Basic = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/1Basic Behavior Bot instructions"
@@ -42,7 +42,7 @@ def get_data_set_of_file_and_eval(file_path_of_generated_code, output_file_path)
     isBehavior = False
     requirements_and_code = {}
     for line in lines:
-        if line.startswith("//BEHAVIOR REQUIREMENTS"):
+        if line.strip().startswith("//BEHAVIOR REQUIREMENTS"):
             isBehavior = True
             if assistant_message:
                 history.append({"role": "assistant", "content": assistant_message})
@@ -50,7 +50,7 @@ def get_data_set_of_file_and_eval(file_path_of_generated_code, output_file_path)
                 user_message = ""
 
             continue
-        if line.startswith("/*"):
+        if line.strip().startswith("/*"):
             isUser = True
             if assistant_message:
                 if not isBehavior:
@@ -60,7 +60,7 @@ def get_data_set_of_file_and_eval(file_path_of_generated_code, output_file_path)
                 assistant_message = ""
                 user_message = ""
             # user_message = line
-        elif line.startswith("*/"):
+        elif line.strip().startswith("*/"):
             isUser = False
             if not isBehavior:
                 history.append({"role": "user", "content": user_message})
@@ -78,8 +78,8 @@ def get_data_set_of_file_and_eval(file_path_of_generated_code, output_file_path)
     #history now holds the entity and queries part
     #now we will get the requirements and their corresponding code
 
-    print (requirements_and_code)
-    print (history)
+    # print (requirements_and_code)
+    # print (history)
     #export the history and requirements_and_code to a file called history_and_requirements
     with open("history_and_requirements.txt", "w") as file:
         file.write("History:\n")
@@ -139,13 +139,13 @@ def get_data_set_of_file_and_eval(file_path_of_generated_code, output_file_path)
             response = model.chat_with_gpt_cumulative(req)
             print("_____________________REQ_start______________________")
             print("_____________ChatGPT___________:\n", response)
-            print("_____________History___________:\n","\n".join([item["content"] for item in model.history[1:]]))
+            # print("_____________History___________:\n","\n".join([item["content"] for item in model.history[1:]]))
             print("_____________________REQ_end______________________")
             result = calc_codebleu([code], [response], lang="javascript", weights=(0.1, 0.1, 0.4, 0.4), tokenizer=None)
             requirements_code_generated_blue[req] = {"code": code, "generated_code": response, "blue_score": result, "file_name": file_name, "behavior_instructions_type": behavior_instructions_type.name}
             print(result)
     #export the requirements_code_generated_blue to a file called requirements_code_generated_blue
-    with open("requirements_code_generated_blue.txt", "w") as file:
+    with open("src/BP_code_generation/Evaluation/requirements_code_generated_blue.txt", "w") as file:
         for req, data in requirements_code_generated_blue.items():
             file.write(f"Requirement: {req}\n")
             file.write(f"Code: {data['code']}\n")
@@ -167,7 +167,7 @@ def get_data_set_of_file_and_eval(file_path_of_generated_code, output_file_path)
 
     # Export to Excel
     if not output_file_path:
-        output_file_path = "requirements_code_generated_blue.xlsx"
+        output_file_path = "src/BP_code_generation/Evaluation/requirements_code_generated_blue.xlsx"
     #if the file already exists, we will append to it
     if os.path.exists(output_file_path):
         # Load the existing Excel file
@@ -247,13 +247,14 @@ if __name__ == "__main__":
     # get_data_set_of_file(file_path)
     # load_data_from_excel("requirements_code_generated_blue.xlsx")
     #run the evaluation for all the files in the data folder(use relative path)
-    # data_folder_path = "src/BP_code_generation/Evaluation/Data"
-    # output_file_path = "requirements_code_generated_blue"+time.strftime("%Y%m%d-%H%M%S")+".xlsx"
-    # for file_name in os.listdir(data_folder_path):
-    #     file_path = os.path.join(data_folder_path, file_name)
-    #     #if the file is a js file
-    #     if file_name.endswith(".js"):
-    #         get_data_set_of_file_and_eval(file_path, output_file_path)
+    data_folder_path = "src/BP_code_generation/Evaluation/Data"
+    output_file_path = "src/BP_code_generation/Evaluation/requirements_code_generated_blue"+time.strftime("%Y%m%d-%H%M%S")+".xlsx"
+    output_file_path = "src/BP_code_generation/Evaluation/requirements_code_generated_blue20240822-000457.xlsx"
+    for file_name in os.listdir(data_folder_path):
+        file_path = os.path.join(data_folder_path, file_name)
+        #if the file is a js file
+        if file_name.endswith("Zoo.js"):
+            get_data_set_of_file_and_eval(file_path, output_file_path)
 
 
     get_avg_blue_score("requirements_code_generated_blue20240822-000457.xlsx")

@@ -11,20 +11,23 @@ ctx.populateContext([animalEnclosure("bigLions1", "lions"),animalEnclosure("smal
 ]);
 
 
-
-Requirements and Code:
-Requirement:     Needed queries:
+Role: user
+Content:     Needed queries:
     1. animalEnclosure
     2. water_related_enclosure
     3. non_water_related_enclosure
     4. lion_enclosure
-    */
-   
-ctx.registerQuery("animalEnclosure", (entity) => entity.type == String("animalEnclosure"));
+
+
+Role: assistant
+Content: ctx.registerQuery("animalEnclosure", (entity) => entity.type == String("animalEnclosure"));
 ctx.registerQuery("water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("aquarium") || entity.subtype == String("dolphins")));
 ctx.registerQuery("non_water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("lions") || entity.subtype == String("tigers")));
 ctx.registerQuery("lion_enclosure", (entity) => entity.type == String("animalEnclosure") && entity.subtype == String("lions"));
- For each water related enclosure, when the "clean" button is pressed, send a diver to clean the enclosure.
+
+
+Requirements and Code:
+Requirement:  For each water related enclosure, when the "clean" button is pressed, send a diver to clean the enclosure.
 
 Code: function cleanButtonIsPressedEvent(animalEnclosureId) {
     return Event("cleanButtonIsPressedEvent", animalEnclosureId);

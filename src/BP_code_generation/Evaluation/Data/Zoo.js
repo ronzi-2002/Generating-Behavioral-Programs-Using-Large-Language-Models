@@ -6,15 +6,13 @@ function animalEnclosure(id, subtype) {
 }
 ctx.populateContext([animalEnclosure("bigLions1", "lions"),animalEnclosure("smallLions1", "lions"),animalEnclosure("tigers1", "tigers"),animalEnclosure("dolphins1", "dolphins"),animalEnclosure("aquarium1", "aquarium"),
 ]);
-
 /*
     Needed queries:
     1. animalEnclosure
     2. water_related_enclosure
     3. non_water_related_enclosure
     4. lion_enclosure
-    */
-   
+*/
 ctx.registerQuery("animalEnclosure", (entity) => entity.type == String("animalEnclosure"));
 ctx.registerQuery("water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("aquarium") || entity.subtype == String("dolphins")));
 ctx.registerQuery("non_water_related_enclosure", (entity) => entity.type == String("animalEnclosure") && (entity.subtype == String("lions") || entity.subtype == String("tigers")));
