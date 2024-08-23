@@ -100,7 +100,7 @@ function TimeToBe(hour, minute) {
   hour = newHour;
   minute = newMinute;
 
-  bp.log.info("Time to be: " + hour + ":" + minute);
+  // bp.log.info("Time to be: " + hour + ":" + minute);
   return Event("TimeToBe", hour+":"+minute);
 }
 
@@ -114,7 +114,7 @@ bthread('Time management', function () {
     let timeArray = time.split(":");
     let hour = timeArray[0];
     let minute = timeArray[1];
-    bp.log.info("Time to be: " + hour + ":" + minute);
+    // bp.log.info("Time to be: " + hour + ":" + minute);
     let date = new Date();
     date.setHours(hour);
     date.setMinutes(minute);
@@ -124,4 +124,58 @@ bthread('Time management', function () {
 
   }
 });
+
+const __INTERNAL_HELPERS = {
+  anyOrderExec: function(event) {
+      bthread("AnyOrder-exec", function () {
+          sync({
+              request: event
+          });
+      });
+  }
+};
+function RequestAllEvents() {
+  if (arguments.length === 0) return;
+  let args = Array.prototype.slice.call(arguments);
+  if (Array.isArray(arguments[0])) {
+      args = arguments[0];
+      if (args.length === 0) return;
+  }
+  for (let idx in args) {
+      __INTERNAL_HELPERS.anyOrderExec(args[idx]);
+  }
+
+  waitForAll(args);
+}
+
+
+
+function waitForAll() {
+  if (arguments.length === 0) return;
+  let waitedFor = Array.prototype.slice.call(arguments);
+  if (waitedFor.length === 0) return;
+  if (Array.isArray(arguments[0])) {
+      waitedFor = arguments[0].slice();
+  }
+
+  let e = null;
+  let wfe = null;
+  while (waitedFor.length > 0) {
+      // e = waitFor(bp.eventSets.all);
+      e = sync({waitFor: bp.eventSets.all});
+      wfe = null;
+      for (let idx = waitedFor.length - 1; idx >= 0; idx--) {
+          wfe = waitedFor[idx];
+          if (wfe.contains(e)) {
+              waitedFor.splice(idx, 1);
+          }
+          wfe = null;
+      }
+      if (waitedFor.length === 0) {
+          return e;
+      }
+      e = null;
+      wfe = null;
+  }
+}
 

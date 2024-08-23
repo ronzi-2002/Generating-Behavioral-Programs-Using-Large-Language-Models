@@ -150,7 +150,6 @@ public class main_with_external{
 
                 Runnable logTask = () -> {
                     // LocalDateTime now = LocalDateTime.now();
-                    System.out.println("\n\n\n\nMinute changed: " + simulatedTime[0]);
 
                     bprog.enqueueExternalEvent(new BEvent("TimeToBe",simulatedTime[0].getHour()+":" +simulatedTime[0].getMinute()));
                     simulateDateTime.plusMinutes(1);

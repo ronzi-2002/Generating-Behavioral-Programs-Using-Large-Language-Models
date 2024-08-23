@@ -300,11 +300,11 @@ Never refer to data fields that are not declared in the event.
 Here are several examples of requirements and their implementation in COBP. 
 Based on the examples and the previous explanation of COBP, you will implement each of the requirements that the user will give you. Give only the most suitable implementation, and do not write additional text before or after the implementation. Stop after the implementation and do not suggest requirements.
 
-### Examples:
+### Examples 
+This example file is just an example. You will receive different requirements from the user, you cant use any of the following without declaring it.
 
 For the example we build upon the next entities:
-- door: {id, type: 'door', isOpen: boolean, isLocked: boolean}
-- car: {id, type: 'car', opened: boolean, fuelLevel: int, airConditioner: boolean, doors: [door1, door2]}
+- car: {id, type: 'car', opened: boolean, fuelLevel: int, airConditioner: boolean}
 And the next Queries:
 - car: entity => entity.type == 'car'
 - car.open: entity => entity.type == 'car' && entity.opened == true
@@ -390,23 +390,19 @@ ctx.bthread('When fuel level is changed to higher than 10%, a fuel quality check
 
 ###Examples With Effects: refer to these examples if the requirement has an effect on the entities
 **Note** - Effects must be for requested events only. 
-//Requirement: When the open button is pressed, open all car doors
+//Requirement: When the open button is pressed, unlock all car doors
 //Output:
 function openButtonPressedEvent(carId) {
     return Event("openButtonPressedEvent", {carId: carId})
 }
-function opendoorEvent(doorId) {
-    return Event("opendoorEvent", {doorId: doorId})
+function unlockCarDoors(carId) {
+    return Event("openCarDoors", {carId: carId})
 }
-ctx.registerEffect('opendoorEvent', function (data) {
-    let door = ctx.getEntityById(data.doorId);
-    door.isOpen = true;
-})
-ctx.bthread('When the open button is pressed, the car should open', 'car', function (car) {
+//We have no door entity, or any door related field in the car entity, so we will not update any entity, and refer just to the car.
+ctx.bthread('When the open button is pressed, unlock all car doors', 'car', function (car) {
     while(true){
-        sync({waitFor: [openButtonPressedEvent(car.id)]})
-        let EventsToRequest = car.doors.map(door => opendoorEvent(door.id))
-        RequestAllEvents(EventsToRequest)
+        sync({waitFor: [openButtonPressedEvent(car.id)]});
+        sync({request: [unlockCarDoors(car.id)]});
     }
 });
 
@@ -453,21 +449,21 @@ ctx.bthread('After car drove 10 kilometers, the fuel level is decreased by 5 lit
 ###TIME RELATED REQUIREMENTS. REFER TO THESE EXAMPLES ONLY IF TIME IS MENTIONED IN THE REQUIREMENT
 
 ### Time related to a query
-//Requirement: when car is open for 10 minutes, close the doors
+//Requirement: when car is open for 10 minutes, close it
 //Output:
 
-function closeDoorsEvent(carId) {
-    return Event("closeDoorsEvent", {carId: carId})
+function closeCarEvent(carId) {
+    return Event("closeCarEvent", {carId: carId});
 }
-ctx.registerEffect('closeDoorsEvent', function (data) {
-    let car = ctx.getEntityById(data.carId)
-    car.doors.forEach(door => door.isOpen = false)
-})
-ctx.bthread('When car is open for 10 minutes, close the doors', 'car.open', function (car) {
+ctx.registerEffect('closeCarEvent', function (data) {
+    let car = ctx.getEntityById(data.carId);
+    car.opened = false;
+});
+ctx.bthread('When car is open for 10 minutes, close ', 'car.open', function (car) {
     while(true){
         let waitTill = new Date().getTime() + 600000; // 10 minutes
         sync({waitFor: [TimeToBe(new Date(waitTill).getHours(), new Date(waitTill).getMinutes())]});
-        sync({request: [closeDoorsEvent(car.id)]});
+        sync({request: [closeCarEvent(car.id)]});
     }
 });
 

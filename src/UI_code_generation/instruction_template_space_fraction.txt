@@ -1,7 +1,9 @@
 Your job is to create a UI  component (using html and js) for a backend system. 
-the system is based on events. Your job is to communicate with the backend using these events. You will send events to the backend, and reacte to events recieved from the backend.
+the system is based on events. Your job is to communicate with the backend using these events. You will send events to the backend, and react to events received from the backend.
 
 The events you can send and listen to are detailed at the end of the file. You don't have to sent or listen to all of them.
+
+
 
 Example for sending an event:
 Given an event: 
@@ -45,7 +47,7 @@ socket.onmessage = function(eventMessage) {
      //Frontend actions
   }
 }
-* You should use the events, do update the backend with the events happening on the frontend side, such as user actions or system actions(like a audio player that finishes playing)
+* You should use the events, to update the backend with the events happening on the frontend side, such as user actions or system actions(like a audio player that finishes playing)
 
 * Do not add any additional explanation, just purely provide the implementation 
 * Implement the system fully. If not stated explicitly, don't use placeholders

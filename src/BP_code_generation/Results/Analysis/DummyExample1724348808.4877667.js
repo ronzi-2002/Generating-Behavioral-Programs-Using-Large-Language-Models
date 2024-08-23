@@ -1,6 +1,25 @@
-\\There is a smart light bulb(which can be on and off)\\Needed queries:
+/*
+There is a smart light bulb(which can be on and off)
+*/
+function smartLightBulb(id, on) {
+    return ctx.Entity(id, 'smartLightBulb', {on: on})
+}
+
+ctx.populateContext([smartLightBulb('smartLightBulb1', false)])
+/*
+Needed queries:
  1. light
- 2. light On\\When motion is detected, the light bulb turns on// #### Analysis of the Requirement: "When motion is detected, the light bulb turns on"
+ 2. light On
+*/
+ctx.registerQuery('light', entity => entity.type == 'smartLightBulb');
+
+ctx.registerQuery('lightOn', entity => entity.type == 'smartLightBulb' && entity.on == true);
+/*
+When motion is detected, the light bulb turns on
+
+ Make sure it obeys your 8 response steps
+*/
+// #### Analysis of the Requirement: "When motion is detected, the light bulb turns on"
 // 
 // 1. **Events**:
 //    - **Needed**: `motionDetectedEvent`, `turnOnLightEvent`
@@ -54,8 +73,12 @@ ctx.bthread('When motion is detected, the light bulb turns on', 'light', functio
     }
 });
 
+/*
+While the light bulb is on, the house cant be exited
 
-\\While the light bulb is on, the house cant be exited// #### Analysis of the Requirement: "While the light bulb is on, the house can't be exited"
+ Make sure it obeys your 8 response steps
+*/
+// #### Analysis of the Requirement: "While the light bulb is on, the house can't be exited"
 // 
 // 1. **Events**:
 //    - **Needed**: `exitHouseEvent`
@@ -98,8 +121,12 @@ ctx.bthread('While the light bulb is on, the house can\'t be exited', 'lightOn',
     }
 });
 
+/*
+Light bulb turns off after 5 minutes
 
-\\Light bulb turns off after 5 minutes// #### Analysis of the Requirement: "Light bulb turns off after 5 minutes"
+ Make sure it obeys your 8 response steps
+*/
+// #### Analysis of the Requirement: "Light bulb turns off after 5 minutes"
 // 
 // 1. **Events**:
 //    - **Needed**: `turnOffLightEvent`
@@ -151,8 +178,12 @@ ctx.bthread('Light bulb turns off after 5 minutes', 'lightOn', function (light) 
     }
 });
 
+/*
+When user locks the house, The light bulb turns off and the user is notified
 
-\\When user locks the house, The light bulb turns off and the user is notified// #### Analysis of the Requirement: "When user locks the house, the light bulb turns off and the user is notified"
+ Make sure it obeys your 8 response steps
+*/
+// #### Analysis of the Requirement: "When user locks the house, the light bulb turns off and the user is notified"
 // 
 // 1. **Events**:
 //    - **Needed**: `houseLockedEvent`, `turnOffLightEvent`, `notifyUserEvent`
@@ -205,5 +236,4 @@ ctx.bthread('When user locks the house, the light bulb turns off and the user is
         ]);
     }
 });
-
 
