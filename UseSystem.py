@@ -84,7 +84,7 @@ class BPLLMMenu(Menu):
         instructions = self.generate_instructions_for_UI_generation(path)
 
         #Now we need the UI requirements
-        UI_requirements = input("Enter the UI requirements: ")
+        UI_requirements = input("Enter the file path of the UI requirements: ")
         #generate the UI code, practically, we just need to call the api.
         UI_code_path = myOpenAiApi.generate_UI_code(instructions,UI_requirements, "src/main_client_server_java/src/main/UI_Resources", path.split("/")[-1].split("\\")[-1])
         print("ui code exported to ", UI_code_path)
