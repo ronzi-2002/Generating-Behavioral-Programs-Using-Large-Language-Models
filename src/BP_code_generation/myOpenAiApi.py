@@ -655,7 +655,19 @@ def additional_requirements_generation(file_path_of_generated_code):
 
 
     
-
+def generate_UI_code(instructions, ui_requirement_file_path, output_file_path):
+    #first we need to generate the code
+    openai_api = MyOpenAIApi(instructions=instructions)
+    #read the requirements file
+    with open(ui_requirement_file_path, "r") as file:
+        requirements = file.read()
+    requirements_array = requirements.split("\n")
+    #generate the code
+    for requirement in requirements_array:
+        openai_api.chat_with_gpt_cumulative(requirement, method=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic)#using standard methodology and basic behavior instructions because they dont do any special processing(TODO there is a minimal post processing that is done in the standard methodology, change it to be by a boolean flag)
+    #export the code
+    # code_path = openai_api.export_to_code(...
+    #todo the above is a bit of a problem because it doenst fit our current use case, we need to change it to a function called export_ui_code
 
 if __name__ == "__main__":
     main()

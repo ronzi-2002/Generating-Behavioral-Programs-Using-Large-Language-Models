@@ -24,6 +24,10 @@ def extract_events(file_path= None, code=None):
     request_regex = re.compile(r'sync\(\{request:\s*\[([^\]]+)\]\}\)')
     wait_for_regex = re.compile(r'sync\(\{waitFor:\s*\[([^\]]+)\]\}\)')
     any_event_with_data_regex = re.compile(r'anyEventNameWithData\("([^"]+)"(?:, *{([^}]*)})?\)')
+    #requested events might be in the form of RequestAllEvents([EventA(),EventB()])
+    request_all_events_regex = re.compile(r'RequestAllEvents\(\[([^\]]+)\]\)')
+    #request_regex is or of request_all_events_regex and request_regex
+    # request_regex = re.compile(r'sync\(\{request:\s*\[([^\]]+)\]\}\)|RequestAllEvents\(\[([^\]]+)\]\)')
 
     if file_path:
         with open(file_path, 'r') as file:
@@ -47,7 +51,7 @@ def extract_events(file_path= None, code=None):
     # Find all requested events
     for request_match in request_regex.findall(code):
         #EventA() -> EventA
-        requestedEvents = request_match.split(',')
+        requestedEvents = request_match.split(',')#if 2 were requested, then requestedEvents = ['EventA()', 'EventB()']
         # for event_match in event_regex.findall(request_match):
         #     event_name = event_match[0]
         for event_name in requestedEvents:
@@ -75,7 +79,17 @@ def extract_events(file_path= None, code=None):
             if event['EventName'] == event_name:
                 event['waitedFor'] = True
 
-
+    # Find all requested events using RequestAllEvents
+    for request_match in request_all_events_regex.findall(code):
+        #EventA() -> EventA
+        requestedEvents = request_match.split(',')#if 2 were requested, then requestedEvents = ['EventA()', 'EventB()']
+        # for event_match in event_regex.findall(request_match):
+        #     event_name = event_match[0]
+        for event_name in requestedEvents:
+            event_name = event_name.split('(')[0].strip()
+            for event in events:
+                if event['EventName'] == event_name:
+                    event['requested'] = True
     return events
 
 
@@ -114,10 +128,13 @@ if __name__ == "__main__":
 }
 
     """
-    print(extract_Queries(code=text))
-    print(extract_events(code=text))
-    events = extract_events(code=  text)
-    print([','.join(list(event['parameters'].keys())) for event in events])
+    # print(extract_Queries(code=text))
+    # print(extract_events(code=text))
+    # events = extract_events(code=  text)
+    # print([','.join(list(event['parameters'].keys())) for event in events])
+    file_path = "C:/Users/Ron Ziskind/Desktop/thesis/Generating-Behavioral-Programs-Using-Large-Language-Models/src/BP_code_generation/Results/DSL/DummyExample1724348711.6088707.js"
+    events = extract_events(file_path=file_path)
+    print(json.dumps(events, indent=4))
 
 
 
