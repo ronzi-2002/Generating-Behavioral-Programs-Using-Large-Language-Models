@@ -159,16 +159,22 @@ class MyOpenAIApi:
                 #Now after we handled the instructions, we need to call the model,
                 self.history.append({"role": "user", "content": new_message})
                 self.History_For_Output.append({"role": "user", "content": new_message})
-                response = self.client.chat.completions.create(
-                    model=self.model,  # You can use any model you prefer
-                    messages=self.history,
-                    temperature = self.temp
-                )
+
+                # response = self.client.chat.completions.create(#TODO this was commented for offline mode
+                #     model=self.model,  # You can use any model you prefer
+                #     messages=self.history,
+                #     temperature = self.temp
+                # )
+                demo_response= ""
+                with open("simulation_text_ui", "r") as file:
+                    demo_response = file.read() 
+                response_to_return = demo_response
+
                 #we add the response to the original history but not the processed one
-                self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response.choices[0].message.content)})
+                self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response_to_return)})
                 #we remove the last user message, 
                 self.history.pop(-1)
-                return self.static_post_process( response.choices[0].message.content)
+                return self.static_post_process( response_to_return)
 
 
             if behavior_instructions_type == BehaviorInstructionType.Analysis:
@@ -178,11 +184,18 @@ class MyOpenAIApi:
                 new_message += "\n\n Make sure it obeys your 8 response steps"
             self.history.append({"role": "user", "content": new_message})
             self.History_For_Output.append({"role": "user", "content": new_message})
-            response = self.client.chat.completions.create(
-                model=self.model,  # You can use any model you prefer
-                messages=self.history,
-                temperature = self.temp
-            )
+            # response = self.client.chat.completions.create(#TODO uncomment this
+            #     model=self.model,  # You can use any model you prefer
+            #     messages=self.history,
+            #     temperature = self.temp
+            # )
+            demo_response= ""
+            with open("simulation_text_ui", "r") as file:
+                demo_response = file.read() 
+            response_to_return = demo_response
+
+           
+
             #TODO figure out how to use post_process_function currently it is not used
             # if self.post_process_function:
             #     post_process_answer = self.post_process_function(js_code= self.export_to_code(exportToFile=False), last_resp=response.choices[0].message.content)
@@ -201,8 +214,8 @@ class MyOpenAIApi:
             #         return new_response
             
             # else:
-            self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-            self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response.choices[0].message.content)})
+            self.history.append({"role": "assistant", "content": response_to_return})
+            self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response_to_return)})
         elif method == Methodology.PREPROCESS_AS_PART_OF_PROMPT:
             allEvents= exctracting_events.extract_events(code=self.export_to_code(exportToFile=False))
             preProcessString = ""
@@ -265,7 +278,7 @@ class MyOpenAIApi:
             print("Methodology not supported "+method)
             exit()
         # self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-        return self.static_post_process(response.choices[0].message.content)
+        return self.static_post_process(response_to_return)
     def add_to_history_gptResponse(self, message):
         self.history.append({"role": "assistant", "content": message})
         self.History_For_Output.append({"role": "assistant", "content": message})
@@ -285,11 +298,6 @@ class MyOpenAIApi:
         string_to_write = ""
         for i in range(len(self.History_For_Output)):
             string_to_write += self.get_pretty_response_string(i)
-                    
-
-
-
-
         
         #create a file in the same directory as the script and add a timestamp to the file name
         if exportToFile:
@@ -308,6 +316,48 @@ class MyOpenAIApi:
             print("code has been exported to " + exportTo)
             return exportTo
         return string_to_write
+    def export_to_code_UI(self, directory=os.getcwd(), file_name=None,exportToFile=True):
+        #create a js file, where each user message is in a comment, and the assistant's response as is.
+        string_to_write = ""
+        for i in range(len(self.History_For_Output)):
+            string_to_write += self.get_pretty_response_string(i)
+        
+        #create a file in the same directory as the script and add a timestamp to the file name
+        if exportToFile:
+            if not file_name:
+                file_name = "chat_history" + str(time.time()) + ".html"
+            #if the directory does not exist, create it
+            
+
+            exportTo = directory + "/" + file_name
+            file = open(exportTo, "w")
+            file.write(string_to_write)
+            file.close()
+            print("code has been exported to " + exportTo)
+            return exportTo
+        return string_to_write
+    def get_pretty_response_string_ui(self, response_index):
+        message = self.History_For_Output[response_index]
+        string_to_write = ""
+        if message["role"] == "user":
+            # if there are multiple lines in the message, use multiline comments
+            # if "\n" in message["content"]:
+            string_to_write += "/*\n"
+            string_to_write += message["content"]
+            string_to_write += "\n*/\n"
+            # else:
+            #     string_to_write += f"//{message['content']}\n"
+        elif message["role"] == "assistant":
+            assistant_response = message["content"]
+
+
+            # string_to_write += f"{assistant_response}\n"
+            # if ```javascript is in the response, comment everything that is not in the javascript code(between ```javascript and ```). it can appear in any line
+            if assistant_response.startswith("```html"):
+                    assistant_response = assistant_response[7:-4]#todo make sure its the correct indexes.
+            string_to_write += f"{assistant_response}\n"
+        return string_to_write
+    
     def get_pretty_response_string(self, response_index):#TODO this is a bit weird, it is because the bot functions are not part of the class, I will fix it
         message = self.History_For_Output[response_index]
         string_to_write = ""
@@ -655,19 +705,20 @@ def additional_requirements_generation(file_path_of_generated_code):
 
 
     
-def generate_UI_code(instructions, ui_requirement_file_path, output_file_path):
+def generate_UI_code(instructions, ui_requirement_file_path, output_file_dir, output_file_name):
     #first we need to generate the code
     openai_api = MyOpenAIApi(instructions=instructions)
     #read the requirements file
     with open(ui_requirement_file_path, "r") as file:
         requirements = file.read()
-    requirements_array = requirements.split("\n")
+    requirements_array = requirements.split("@@@@")
     #generate the code
     for requirement in requirements_array:
         openai_api.chat_with_gpt_cumulative(requirement, method=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic)#using standard methodology and basic behavior instructions because they dont do any special processing(TODO there is a minimal post processing that is done in the standard methodology, change it to be by a boolean flag)
     #export the code
     # code_path = openai_api.export_to_code(...
     #todo the above is a bit of a problem because it doenst fit our current use case, we need to change it to a function called export_ui_code
-
+    code_path = openai_api.export_to_code_UI(output_file_dir,output_file_name.replace(".js",".html"))
+    return code_path
 if __name__ == "__main__":
     main()
