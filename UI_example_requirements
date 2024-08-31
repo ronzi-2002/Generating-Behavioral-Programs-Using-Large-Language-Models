@@ -1,6 +1,6 @@
 The Scene:
-Create a Screen that shows a one-room house. In the room, there will be a lightbulb(represented by a circle) for each existing lightbulb, a person icon and a lock_button.
-An off lightbulb should be  gray and an on lightbulb should be yellow
+Create a Screen that shows a one-room house. In the room, there will be a lightbulb(represented by a circle) for each existing lightbulb, a person icon(Represented by a square) and a lock_button.
+An off lightbulb should be gray and an on lightbulb should be yellow
 
 
 

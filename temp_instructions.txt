@@ -93,7 +93,7 @@ if (event.name === 'getEntityByIdResponse') {
 ###Events you need to listen/react to and cant never send:
 -turnOnLightEvent(lightId)
 -turnOffLightEvent(lightId)
--userNotifiedEvent()
+-notifyUserEvent()
 
 
 

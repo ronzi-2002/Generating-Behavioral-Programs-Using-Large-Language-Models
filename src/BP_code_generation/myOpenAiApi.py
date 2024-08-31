@@ -168,7 +168,7 @@ class MyOpenAIApi:
                 )
                 with open("simulation_text_ui", "r") as file:
                     demo_response = file.read() 
-                response_to_return = demo_response
+                response_to_return = response.choices[0].message.content
 
                 #we add the response to the original history but not the processed one
                 self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response_to_return)})
@@ -192,7 +192,7 @@ class MyOpenAIApi:
             )
             with open("simulation_text_ui", "r") as file:
                 demo_response = file.read() 
-            response_to_return = demo_response
+            response_to_return = response.choices[0].message.content
 
            
 

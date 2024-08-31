@@ -1,0 +1,100 @@
+/*
+The Scene:
+Create a Screen that shows a one-room house. In the room, there will be a lightbulb(represented by a circle) for each existing lightbulb, a person icon and a lock_button.
+An off lightbulb should be  gray and an on lightbulb should be yellow
+
+
+
+Actions:
+ - allow moving the player to 4  directions with the arrows.
+ - Pressing the lock button will lock the house 
+ - show notifications in a browser pop up.
+
+*/
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart House Simulation</title>
+<style>
+  #house {
+    position: relative;
+    width: 300px;
+    height: 300px;
+    border: 2px solid black;
+    margin: 20px;
+  }
+  .lightbulb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: gray;
+    position: absolute;
+  }
+  #person {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 30px;
+    height: 30px;
+    background: url('person-icon.png') no-repeat center;
+    background-size: cover;
+  }
+  #lock_button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+  }
+</style>
+</head>
+<body>
+<div id="house">
+  <div id="lightbulb1" class="lightbulb" style="top: 10px; left: 10px;"></div>
+  <div id="person"></div>
+  <button id="lock_button">Lock House</button>
+</div>
+
+<script>
+  const socket = new WebSocket('ws://backend-system-url');
+
+  socket.onmessage = function(eventMessage) {
+    const event = JSON.parse(eventMessage.data);
+    console.log(event);
+
+    if (event.name === 'turnOnLightEvent') {
+      document.getElementById(`lightbulb${event.data.lightId}`).style.backgroundColor = 'yellow';
+    } else if (event.name === 'turnOffLightEvent') {
+      document.getElementById(`lightbulb${event.data.lightId}`).style.backgroundColor = 'gray';
+    } else if (event.name === 'notifyUserEvent') {
+      alert(event.data.message);
+    }
+  };
+
+  document.getElementById('lock_button').addEventListener('click', function() {
+    socket.send(JSON.stringify({ name: 'lockHouseEvent' }));
+  });
+
+  document.addEventListener('keydown', function(event) {
+    const person = document.getElementById('person');
+    let top = person.offsetTop;
+    let left = person.offsetLeft;
+
+    switch (event.key) {
+      case 'ArrowUp': top -= 10; break;
+      case 'ArrowDown': top += 10; break;
+      case 'ArrowLeft': left -= 10; break;
+      case 'ArrowRight': left += 10; break;
+    }
+
+    person.style.top = `${top}px`;
+    person.style.left = `${left}px`;
+
+    socket.send(JSON.stringify({ name: 'motionDetectedEvent' }));
+  });
+</script>
+</body>
+</html>
+```
