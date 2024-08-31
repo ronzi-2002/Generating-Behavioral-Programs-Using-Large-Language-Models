@@ -1,0 +1,84 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Room</title>
+  <style>
+    #room {
+      width: 400px;
+      height: 400px;
+      border: 1px solid #000;
+      position: relative;
+    }
+    .lightbulb, .person {
+      position: absolute;
+    }
+    .lightbulb {
+      width: 50px;
+      height: 50px;
+      background: yellow;
+      border-radius: 50%;
+    }
+    .person {
+      width: 30px;
+      height: 30px;
+      background: blue;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div id="room">
+    <div id="smartLightBulb1" class="lightbulb"></div>
+    <div id="person" class="person"></div>
+  </div>
+  <script>
+    var socket = new WebSocket('ws://localhost:8001');
+    
+    socket.onopen = function() {
+      console.log('Connected to backend');
+    };
+    
+    socket.onmessage = function(eventMessage) {
+      console.log('Received: ' + eventMessage.data);
+      var event = JSON.parse(eventMessage.data);
+
+      if (event.name === 'turnOnLightEvent') {
+        var lightBulb = document.getElementById(event.data.lightId);
+        if (lightBulb) {
+          lightBulb.style.background = 'gold';
+        }
+      }
+    };
+
+    document.addEventListener('keydown', function(event) {
+      var person = document.getElementById('person');
+      var left = parseInt(person.style.left);
+      var top = parseInt(person.style.top);
+      
+      switch(event.key) {
+        case 'ArrowUp':
+          person.style.top = (top - 10) + 'px';
+          break;
+        case 'ArrowDown':
+          person.style.top = (top + 10) + 'px';
+          break;
+        case 'ArrowLeft':
+          person.style.left = (left - 10) + 'px';
+          break;
+        case 'ArrowRight':
+          person.style.left = (left + 10) + 'px';
+          break;
+      }
+
+      socket.send(JSON.stringify({
+        name: 'motionDetectedEvent',
+      }));
+    });
+  </script>
+</body>
+</html>

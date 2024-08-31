@@ -106,14 +106,29 @@ public class ServerListner implements BProgramRunnerListener {
         if(theEvent.name.equals("ExternalEvent")){
             return  ;
         }
-        var10000.println(" --:" + var10001 + " Event " + theEvent.toString());
+        if(theEvent.name.equals("TimeToBe")){
+            //the data is in the form of "hour,minute"
+            //print only if minute is round(0,5,10....)
+            if (theEvent.maybeData instanceof String){
+                String[] data = theEvent.maybeData.toString().split(":");
+                if(Integer.parseInt(data[1])%5==0){
+                    var10000.println(" --:" + var10001 + " Event " + theEvent.toString());
+                }
+                else{
+                    // var10000.print("");
+                }
+            }
+        }
+        else
+            var10000.println(" --:" + var10001 + " Event " + theEvent.toString());
         if (this.server != null) {
             this.server.sendMessage(server.bEventToJson(theEvent).toString());
         }
     }
 
     public void superstepDone(BProgram bp) {
-        this.out.println("---:" + bp.getName() + " No Event Selected");
+        // this.out.println("---:" + bp.getName() + " No Event Selected");
+        //TODO is this needed? It caused a print  every time "TimeToBe" event is selected but the minute is not round.
     }
 
     public void bthreadAdded(BProgram bp, BThreadSyncSnapshot theBThread) {

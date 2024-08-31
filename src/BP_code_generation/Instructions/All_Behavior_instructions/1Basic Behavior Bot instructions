@@ -190,10 +190,10 @@ Here are several examples of requirements and their implementation in COBP.
 Based on the examples and the previous explanation of COBP, you will implement each of the requirements that the user will give you. Give only the most suitable implementation, and do not write additional text before or after the implementation. Stop after the implementation and do not suggest requirements.
     
 ### Examples:
+This example file is just an example. You will receive different requirements from the user, you cant use any of the following without declaring it.
 
 For the example we build upon the next entities:
-- door: {id, type: 'door', isOpen: boolean, isLocked: boolean}
-- car: {id, type: 'car',, opened: boolean, fuelLevel: int, airConditioner: boolean, doors: [door1, door2]}
+- car: {id, type: 'car',, opened: boolean, fuelLevel: int, airConditioner: boolean}
 And the next Queries:
 - car: entity => entity.type == 'car'
 - car.open: entity => entity.type == 'car' && entity.opened == true

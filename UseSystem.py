@@ -52,7 +52,7 @@ class BPLLMMenu(Menu):
         self.add_item("Generate BP Code For Requirement Doc", lambda: self.generate_BP_code())
         self.add_item("Generate BP Code- additional requirements", lambda: self.generate_Additional_BP_code())
         self.add_item("Set OpenAI API Key", lambda: self.set_openai_api_key())
-        self.add_item("Generate UI Code", lambda: print("Not implemented yet"))
+        self.add_item("Generate UI Code", lambda: self.generate_UI_code())
     def generate_BP_code(self):
         self.file_path_of_last_generated_code = myOpenAiApi.main()[0]
         #if item does not exist, add it
@@ -69,6 +69,64 @@ class BPLLMMenu(Menu):
             for line in history:
                 file.write(str(line) + "\n")
         
+    def generate_UI_code(self):
+        #whould we generate the UI code for the last generated code?
+        if self.file_path_of_last_generated_code != None:
+            choice = input("Do you want to generate the UI code for the last generated code? (y/n): ")
+            if choice == "y":
+                path = self.file_path_of_last_generated_code
+            else:
+                path = input("Enter the path of the BP code file: ")
+        else:
+            path = input("Enter the path of the BP code file: ")
+            
+        self.file_path_of_last_generated_code = path
+        instructions = self.generate_instructions_for_UI_generation(path)
+
+        #Now we need the UI requirements
+        UI_requirements_path = input("Enter the file path of the UI requirements or enter D to use the default dummy UI requirements: ")
+        if UI_requirements_path == "D":
+            UI_requirements_path = "UI_example_requirements"
+        #generate the UI code, practically, we just need to call the api.
+        UI_code_path = myOpenAiApi.generate_UI_code(instructions,UI_requirements_path, "src/main_client_server_java/src/main/UI_Resources", path.split("/")[-1].split("\\")[-1])
+        print("ui code exported to ", UI_code_path)
+        if not any(item.name == "Move to BPProgram Menu With Generated" for item in self.menu_items):
+            self.add_item("Move to BPProgram Menu With Generated Code", lambda: BPProgramMenu(file_name=self.file_path_of_last_generated_code))
+        
+        return self
+
+
+
+
+    def generate_instructions_for_UI_generation(self, BP_code_file_path):
+        ui_base_instructions_path = "src/UI_code_generation/instruction_template"
+        ui_instructions =""
+        with open(ui_base_instructions_path, "r") as file:
+            ui_instructions = file.read()
+        #generate the instructions for the UI code generation
+        #first, we need to extract the events from the BP code file
+        events = exctracting_events.extract_events(BP_code_file_path)
+        waitedEvents, requestedEvents, requestedAndWaitedEvents = exctracting_events.get_division_by_status(events)
+        #in the file, under "###Events You need to send:" we need to add the events that are waited
+        #"\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in allEvents]))
+        if len(waitedEvents) == 0:
+            ui_instructions = ui_instructions.replace("###Events You need to send:", "###Events You need to send:\n" + "*There are no events you can send")
+        else:
+            ui_instructions = ui_instructions.replace("###Events You need to send:", "###Events You need to send:\n"+"\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in waitedEvents]))
+        #in the file, under "###Events you need to listen/react to and cant never send:"
+        if len(requestedEvents) == 0:
+            ui_instructions = ui_instructions.replace("###Events you need to listen/react to and cant never send:", "###Events you need to listen/react to and cant never send:\n" + "*There are no events you can listen to and cant never send")
+        else:
+            ui_instructions = ui_instructions.replace("###Events you need to listen/react to and cant never send:", "###Events you need to listen/react to and cant never send:\n"+"\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in requestedEvents]))
+        #in the file, under "Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:"
+        if len(requestedAndWaitedEvents) == 0:
+            ui_instructions = ui_instructions.replace("Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:", "")
+        else:
+            ui_instructions = ui_instructions.replace("Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:", "Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:\n"+"\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in requestedAndWaitedEvents]))
+        #save to some temporary file for debugging
+        with open("temp_instructions.txt", "w") as file:
+            file.write(ui_instructions)
+        return ui_instructions
 
          
     def set_openai_api_key(self):

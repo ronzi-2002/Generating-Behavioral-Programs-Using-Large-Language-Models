@@ -17,4 +17,5 @@ While the light bulb is on, the house cant be exited
 
 Light bulb turns off after 5 minutes
 
-When the house is entered, The light bulb turns on and the user is notified
+When user locks the house, The light bulb turns off and the user is notified
+
