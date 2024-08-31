@@ -160,12 +160,12 @@ class MyOpenAIApi:
                 self.history.append({"role": "user", "content": new_message})
                 self.History_For_Output.append({"role": "user", "content": new_message})
 
-                # response = self.client.chat.completions.create(#TODO this was commented for offline mode
-                #     model=self.model,  # You can use any model you prefer
-                #     messages=self.history,
-                #     temperature = self.temp
-                # )
                 demo_response= ""
+                response = self.client.chat.completions.create(#TODO this was commented for offline mode
+                    model=self.model,  # You can use any model you prefer
+                    messages=self.history,
+                    temperature = self.temp
+                )
                 with open("simulation_text_ui", "r") as file:
                     demo_response = file.read() 
                 response_to_return = demo_response
@@ -184,12 +184,12 @@ class MyOpenAIApi:
                 new_message += "\n\n Make sure it obeys your 8 response steps"
             self.history.append({"role": "user", "content": new_message})
             self.History_For_Output.append({"role": "user", "content": new_message})
-            # response = self.client.chat.completions.create(#TODO uncomment this
-            #     model=self.model,  # You can use any model you prefer
-            #     messages=self.history,
-            #     temperature = self.temp
-            # )
             demo_response= ""
+            response = self.client.chat.completions.create(#TODO uncomment this
+                model=self.model,  # You can use any model you prefer
+                messages=self.history,
+                temperature = self.temp
+            )
             with open("simulation_text_ui", "r") as file:
                 demo_response = file.read() 
             response_to_return = demo_response
