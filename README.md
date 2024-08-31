@@ -6,7 +6,9 @@
    1. Generating BP code from a requirements document (Please look at the examples in [RequirementDocs](src/BP_code_generation/RequirementDocs))
       1. Many options are available for the behavior instructions, see  [Instruction Options](src/BP_code_generation/Instructions/All_Behavior_instructions)
    2. Generating BP code from additional requirements, based on existing BP code
-   3. Generating UI code from a requirements document(+and bp code)**
+   3. Generating UI code from a requirements document(+and bp code). 
+      1. If ran after bp code generation, the UI code can be generated based on the bp code.
+      2. After running the UI code generation, you can run the generated code with its backend, by moving to the second menu(as will offered)
    4. Setting your API key for the OpenAI API(You can also set the API key manually in .env file)
 2. Running the generated code
    1. Running the code in the backend
@@ -21,7 +23,6 @@ If no GUI opened although you declared a default browser, or you want to avoid t
 
 *To add new resource file, you must have maven installed on your system, to allow compilation of the new resource file. You can refer to the following link: https://maven.apache.org/download.cgi , after downloading the maven, make sure to set it in the environment variables.*
 
-**Not supported yet    
 
 
 
