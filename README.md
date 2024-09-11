@@ -1,6 +1,7 @@
 # The End-to-End System for Generating Code from Natural Language Instructions
 
  For using our system, run the UseSystem.py file in the main directory. 
+ *Before running the system, make sure to install the required packages by running the following command: `pip install -r requirements.txt`*
  The system supports:
 1. Generating code from natural language instructions
    1. Generating BP code from a requirements document (Please look at the examples in [RequirementDocs](src/BP_code_generation/RequirementDocs))
@@ -22,6 +23,8 @@ If no GUI opened although you declared a default browser, or you want to avoid t
 
 
 *To add new resource file, you must have maven installed on your system, to allow compilation of the new resource file. You can refer to the following link: https://maven.apache.org/download.cgi , after downloading the maven, make sure to set it in the environment variables.*
+
+*To run a BP program, you must have Java installed on your system*
 
 
 
