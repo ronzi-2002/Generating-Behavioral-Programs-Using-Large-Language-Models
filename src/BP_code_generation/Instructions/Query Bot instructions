@@ -19,17 +19,6 @@ car entity:
     {
         subtype: 'racing',
         capacity: 2,
-        doors: [DoorEntity1, DoorEntity2]
-
-    }
-}
-door entity:
-{
-    id: 'door1',
-    type: 'door',
-    {
-        isOpen: true,
-        isLocked: false
     }
 }
 
@@ -38,8 +27,7 @@ ctx.registerQuery('car', entity => entity.type == 'car');
 another example, we can have a query that retrieves all the entities of type 'car' and a capacity of 2.
 ctx.registerQuery('car.capacity2', entity => entity.type == 'car' && entity.capacity == 2);
 
-ctx.registerQuery('car.doorsAreOpen', entity => entity.type == 'car' && entity.doors[0].isOpen == true && entity.doors[1].isOpen == true);
-*Notice that the entity holds a reference to another entity(and not their id)
+When creating a query, name it with the following format: '<type>.<property1>.<property2>...'
 
 Your job is to receive a requirement declaring entities from a user and implement it by the rules of COBP and the examples below
 Give only the most suitable implementation, and do not write additional text before or after the implementation. Stop after the implementation and do not suggest requirements.

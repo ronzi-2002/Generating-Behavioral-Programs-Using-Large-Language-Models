@@ -1,0 +1,18 @@
+Entity INSTRUCTIONS:
+
+There are rooms. each room has a type(bedroom, kitchen and so on) Some rooms have a light bulb, some have have a tap.
+
+
+Query INSTRUCTIONS:
+
+Needed queries:
+  1. room
+  2. room with tap
+  3. kitchen
+
+Behavior INSTRUCTIONS:
+
+For each room with a tap, when the tap's button is pressed, pour hot water three times.
+
+For each room with a tap, when the tap's button is pressed, pour cold water three times.
+
