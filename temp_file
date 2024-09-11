@@ -1,74 +1,43 @@
-\\There is a smart light bulb(which can be on and off)function smartLightBulb(id, on) {
-    return ctx.Entity(id, 'smartLightBulb', {on: on})
+\\There are rooms. each room has a type(bedroom, kitchen and so on) Some rooms have a light bulb, some have have a tap.function room(id, type, hasLightBulb, hasTap) {
+    return ctx.Entity(id, 'room', {type: type, hasLightBulb: hasLightBulb, hasTap: hasTap})
 }
-
-ctx.populateContext([smartLightBulb('smartLightBulb1', false)])
 
 \\Needed queries:
- 1. light
- 2. light Onctx.registerQuery('light', entity => entity.type == 'smartLightBulb');
+  1. room
+  2. room with tap
+  3. kitchenctx.registerQuery('room', entity => entity.type == 'room');
 
-ctx.registerQuery('lightOn', entity => entity.type == 'smartLightBulb' && entity.on == true);
+ctx.registerQuery('roomWithTap', entity => entity.type == 'room' && entity.hasTap);
 
-\\When motion is detected, the light bulb turns onfunction motionDetectedEvent() {
-    return Event("motionDetectedEvent");
+ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.type == 'kitchen');
+
+\\For each room with a tap, when the tap's button is pressed, pour hot water three times.function tapButtonPressedEvent(roomId) {
+    return Event("tapButtonPressedEvent", {roomId: roomId});
 }
 
-function turnOnLightEvent(lightId) {
-    return Event("turnOnLightEvent", {lightId: lightId});
+function pourHotWaterEvent(roomId) {
+    return Event("pourHotWaterEvent", {roomId: roomId});
 }
 
-ctx.registerEffect('turnOnLightEvent', function (data) {
-    let light = ctx.getEntityById(data.lightId);
-    light.on = true;
-});
-
-ctx.bthread('When motion is detected, the light bulb turns on', 'light', function (light) {
-    while(true){
-        sync({waitFor: [motionDetectedEvent()]});
-        sync({request: [turnOnLightEvent(light.id)]});
+ctx.bthread('Pour hot water three times when tap button is pressed', 'roomWithTap', function (room) {
+    while (true) {
+        sync({waitFor: [tapButtonPressedEvent(room.id)]});
+        for (let i = 0; i < 3; i++) {
+            sync({request: [pourHotWaterEvent(room.id)]});
+        }
     }
 });
 
-\\While the light bulb is on, the house cant be exitedfunction exitHouseEvent() {
-    return Event("exitHouseEvent");
+\\For each room with a tap, when the tap's button is pressed, pour cold water three times.function pourColdWaterEvent(roomId) {
+    return Event("pourColdWaterEvent", {roomId: roomId});
 }
 
-ctx.bthread('While the light bulb is on, the house can\'t be exited', 'lightOn', function (light) {
-    while(true){
-        sync({block: [exitHouseEvent()]});
-    }
-});
-
-\\Light bulb turns off after 5 minutesfunction turnOffLightEvent(lightId) {
-    return Event("turnOffLightEvent", {lightId: lightId});
-}
-
-ctx.registerEffect('turnOffLightEvent', function (data) {
-    let light = ctx.getEntityById(data.lightId);
-    light.on = false;
-});
-
-ctx.bthread('Light bulb turns off after 5 minutes', 'lightOn', function (light) {
-    while(true){
-        let waitTill = new Date().getTime() + 300000; // 5 minutes
-        sync({waitFor: [TimeToBe(new Date(waitTill).getHours(), new Date(waitTill).getMinutes())]});
-        sync({request: [turnOffLightEvent(light.id)]});
-    }
-});
-
-\\When user locks the house, The light bulb turns off and the user is notifiedfunction lockHouseEvent() {
-    return Event("lockHouseEvent");
-}
-
-function notifyUserEvent() {
-    return Event("notifyUserEvent");
-}
-
-ctx.bthread('When user locks the house, the light bulb turns off and the user is notified', 'light', function (light) {
-    while(true){
-        sync({waitFor: [lockHouseEvent()]});
-        RequestAllEvents([turnOffLightEvent(light.id), notifyUserEvent()]);
+ctx.bthread('Pour cold water three times when tap button is pressed', 'roomWithTap', function (room) {
+    while (true) {
+        sync({waitFor: [tapButtonPressedEvent(room.id)]});
+        for (let i = 0; i < 3; i++) {
+            sync({request: [pourColdWaterEvent(room.id)]});
+        }
     }
 });
 

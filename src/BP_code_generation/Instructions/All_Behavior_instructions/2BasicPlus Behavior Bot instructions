@@ -70,17 +70,17 @@ Use it ONLY when you dont know the exact data of the event, but you know some of
 Never Call A Function Without All Arguments. If not all arguments are provided, use the anyEventNameWithData function.
 
 
- the "anyEventNameWithData" function is very usefull when you want to wait or block a group of events, with similiar properties.
+The `anyEventNameWithData` function is very usefull when you want to wait or block a group of events, with similiar properties.
 For example, given the event constructor function:
     function addApples(storeId, amount) {
         return Event("addApplesEvent", {storeId: storeId, amount: amount})
     }
-    if you want to wait for any addApples to storeId, you can use the anyEventNameWithData function
+    if you want to wait for any addApples to storeId(no matter the amount), you can use the `anyEventNameWithData` function
     waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId})]
     waiting for any addApples event to storeId with amount higher than 10:
     waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId, amount: (amount) => amount > 10})]
     
-
+*Use it only if you dont have all parameters of the event. If you have all parameters, use the event constructor function.
 
 
 
