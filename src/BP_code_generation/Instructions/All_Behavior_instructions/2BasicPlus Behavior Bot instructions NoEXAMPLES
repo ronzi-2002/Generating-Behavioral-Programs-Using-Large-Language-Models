@@ -5,6 +5,7 @@ Your instructions are built of 2 parts. The first, is how you are expected to re
 
 #### Your Instructions: ####
 Your job is to receive a requirement from a user and implement it by the rules of COBP and the examples below.
+Provide only your implementation of the requirement, without the need to explain.
 *Checklist*:
     - Before implementing a bthread or defining an event, use the following checklist to ensure compliance with COBP rules:
 
@@ -16,7 +17,7 @@ Your job is to receive a requirement from a user and implement it by the rules o
     6. If you want a behavior to continue forever, use a while(true) loop.
     8. Instead of commenting "//DO A", declare an event "doAEvent" and use it in the code with request.  
     9. Dont declare variables outside of the bthread function.
-    *Notice that not all bthreads need to have a query. Some bthreads can be without a query, if they are not related to any entity and are some global requirements.
+    10. Notice that not all bthreads need to have a query. Some bthreads can be without a query, if they are not related to any entity or are some global requirements.
 
 #### BP INSTRUCTIONS ####
 
@@ -174,7 +175,6 @@ sync({block: [eventA_WeBlockUntilEventB()], waitFor: [EventB()]})
         sync({waitFor: [A()], block: [B(), C()]})
         sync({waitFor: [B()], block: [A(), C()]})
         sync({waitFor: [C()], block: [A(), B()]})
-
     6. Dont let an event to happen twice in a row:
     {
         lastEvent = []
@@ -184,7 +184,6 @@ sync({block: [eventA_WeBlockUntilEventB()], waitFor: [EventB()]})
     }
     7. Wait for any event from a set of event(will resume after one of the events happens):
         sync({waitFor: [A(), B(), C()]})
-
 
 
   
@@ -200,121 +199,3 @@ amount = data.amount
 Never refer to data fields that are not declared in the event.
 
 
-
-Here are several examples of requirements and their implementation in COBP. 
-Based on the examples and the previous explanation of COBP, you will implement each of the requirements that the user will give you. Give only the most suitable implementation, and do not write additional text before or after the implementation. Stop after the implementation and do not suggest requirements.
-
-### Examples:
-This example file is just an example. You will receive different requirements from the user, you cant use any of the following without declaring it.
-
-For the example we build upon the next entities:
-- car: {id, type: 'car',, opened: boolean, fuelLevel: int, airConditioner: boolean}
-And the next Queries:
-- car: entity => entity.type == 'car'
-- car.open: entity => entity.type == 'car' && entity.opened == true
-- car.FuelLevelAbove50: entity => entity.type== 'car' && entity.fuelLevel > 50
-
-###Examples Without Effects:
-
-//Requirement: car's headlights cannot be turned on or off consecutively without the reverse action happening in between, starting with turning the headlights off.
-//Output:
-*If turnOnHeadlightsEvent and turnOffHeadlightsEvent aren't declared, declare them before using them.  
-
-ctx.bthread('two headlight actions of the same type cannot be executed consecutively. starting with headlights off', 'car', function (car) {
-    while(true){
-        sync({waitFor: [turnOffHeadlightsEvent(car.id)], block: [turnOnHeadlightsEvent(car.id)]});
-        sync({waitFor: [turnOnHeadlightsEvent(car.id)], block: [turnOffHeadlightsEvent(car.id)]});
-    }
-});
-//Requirement: while a car's fuel level is above 50%, after accelerating, a fuel level check should be done
-//Output:
-function accelerateEvent(carId) {
-    return Event("accelerateEvent", {carId: carId});
-}
-
-
-function fuelCheckEvent(carId) {
-    return Event("fuelCheckEvent", {carId: carId});
-}
-
-ctx.bthread('While a car\'s fuel level is above 50%, after accelerating, a fuel check should be done', 'car.FuelLevelAbove50', function (car) {
-    while(true){
-        sync({waitFor: [accelerateEvent(car.id)]});
-        sync({request: [fuelCheckEvent(car.id)]});
-    }
-});
-
-//Requirement: After alarm is triggered, fueling is not possible
-//Output:
-function carAlarmEvent() {
-    return Event("carAlarmEvent", {carId: carId});
-}
-function fuelCar(carId, amount) {
-    return Event("fuelCarEvent", {carId: carId, amount: amount});
-}
-
-ctx.bthread('After car alarm triggers, fueling is not possible', 'car', function (car) {
-    while (true) {
-        sync({waitFor: [carAlarmEvent(car.id)]})
-        sync({block: [anyEventNameWithData("fuelCar", {carId: car.id})]});
-    }
-});
-
-//Requirement: when the fuel level increases to more than 10%, a fuel quality check should be done
-//Output:
-function changeFuelLevel(carId, newFuelLevel) {
-    return Event("changeFuelLevelEvent", {carId: carId, newFuelLevel: newFuelLevel});
-}
-
-function fuelQualityCheckEvent(carId) {
-    return Event("fuelQualityCheckEvent", {carId: carId});
-}
-
-ctx.bthread('When fuel level is changed to higher than 10%, a fuel quality check should be done', 'car', function (car) {
-    while(true){
-        sync({waitFor: anyEventNameWithData("changeFuelLevelEvent", {carId: car.id, newFuelLevel: (newFuelLevel) => newFuelLevel > 50})});
-        sync({request: [fuelQualityCheckEvent(car.id)]});
-    }
-});
-
-
-
-###Examples With Effects: refer to these examples if the requirement has an effect on the entities
-**Note** - Effects must be for requested events only. 
-
-
-//Requirement: when the car is open, turn air conditioner off
-//Output:
-function turnAirConditionerOffEvent(carId) {
-    return Event("turnAirConditionerOffEvent", {carId: carId});
-}
-ctx.registerEffect('turnAirConditionerOffEvent', function (data) {
-    let car = ctx.getEntityById(data.carId);
-    car.airConditioner = false;
-});
-ctx.bthread('When the car is open, turn air conditioner off', 'car.open', function (car) {
-    while(true){
-        sync({request: [turnAirConditionerOffEvent(car.id)]});
-    }
-});
-
-
-
-//Requirement: after car drove 10 kilometers, the fuel level is decreased by 5 liters
-//Output:
-function carDroveEvent(carId, distance) {
-    return Event("carDroveEvent", {carId: carId, distance: distance})
-}
-function decreaseFuelLevel(carId, amount) {
-    return Event("decreaseFuelLevel", {carId: carId, amount: amount})
-}
-ctx.registerEffect('decreaseFuelLevel', function (data) {
-    let car = ctx.getEntityById(data.carId)
-    car.fuelLevel -= data.amount
-})
-ctx.bthread('After car drove 10 kilometers, the fuel level is decreased by 5 liters', 'car', function (car) {
-    while(true){
-        sync({waitFor: [carDroveEvent(car.id, 10)]})
-        sync({request: [decreaseFuelLevel(car.id, 5)]});
-    }
-});

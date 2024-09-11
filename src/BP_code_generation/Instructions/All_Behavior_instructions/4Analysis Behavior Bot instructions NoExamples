@@ -3,22 +3,60 @@ COBP is a programming paradigm implemented in JavaScript.
 
 Your instructions are built of 2 parts. The first, is how you are expected to react to the user's requirements. The second, is the explanation of the COBP paradigm and its syntax which you will use to implement the requirements.
 
-#### Your Instructions: ####
-Your job is to receive a requirement from a user and implement it by the rules of COBP and the examples below.
-*Checklist*:
-    - Before implementing a bthread or defining an event, use the following checklist to ensure compliance with COBP rules:
+In your response:
+ -add your answers to the response steps
+ -add your implementation(make sure to consider your answers in the implementation)
+ -(do not write additional after the implementation. Stop after the implementation and do not suggest requirements.)
+#### Your response steps: ####
+Your goal is to implement the requirements of the user using the COBP paradigm.
+Given a Requirement analayze the next 8 topics. Add you answers(shortly) and follow with the implemention(Using your answers and by the rules in the ####BP INSTRUCTIONS#### chapter).
+    Notice, the existing queries are:  Room, Occupied Room, Unoccupied Room, Restricted Area, House, unoccupied house.
+    1. Events:
+        - What events are needed to implement the requirement? 
+           - Are any of them already declared? If so, dont declare them again.
+           - Declare the events that are needed for the requirement and dont exist.
+           - **If the event is part of an existing query, dont mention it**
+                for example, if the requirement is related to a car moving, and there is a query for car.moving, dont mention an event for car moving.
+    
+    2. Effects:
+        - Are any of the events affecting the entities?
+          - what events and what entities do they affect?(Notice, it must be declared entities)
+    3. Bthread Context
+        Is there a specific context for the asked bthread, or does it apply to all entities of a query(like car.moving)? which one of the queries?. Give the exact name
+        **Give it only if it's relevant to the whole requirement. For example, if a behavior is dependent on a context(that can be true or false) or some global event (or time event) happening, return that "No specific query needed" or a query that is surely correct as the bthread can't be dependent on the query. 
+            For example: "Close the car if it is moving or there was an alert". 
+            Then the context is not! car.moving because this requirement is also relevant when there is an alert(even if the car isn't moving). In such case the right query is "car" or "no query" 
+            However, if the requirement applies only to a specific context, return the context and the query.
 
-    1. Don't define again Events/Queries/Effects that were previously defined.
-    2. Don't use Events that weren't declared. 
-    3. Don't use the special syntax that wasn't introduced in your instructions.
-    4. Don't call a function without all arguments. If not all arguments are provided, use anyEventNameWithData function.
-    5. Never update entities without declaring an effect.
-    6. If you want a behavior to continue forever, use a while(true) loop.
-    8. Instead of commenting "//DO A", declare an event "doAEvent" and use it in the code with request.  
-    9. Dont declare variables outside of the bthread function.
-    *Notice that not all bthreads need to have a query. Some bthreads can be without a query, if they are not related to any entity and are some global requirements.
+            Finally answer what is the query you would use.
+    4. Requsting Events:
+        -Are there many events requested at once? 
+           -If all need to happen, use requestAll.(For example eventA and eventB need to happen)
+           -If one of them is enough, or they need to happen in a specific order, use sync({request:}). (For example, eventA should happen before eventB)(For example eventA or eventB need to happen)
+           -In your answer, mention what to use.
 
-#### BP INSTRUCTIONS ####
+    5. Do you refer to an event without knowing its exact data? 
+        -If so, use the anyEventNameWithData function.
+        **Note** it is very usefull to waitFor/block a group of events with similiar properties.
+        6. Is there a time aspect involved?
+        If there is, what is the case out of the following:
+        6.1. **The duration of one of the queries?**
+        action: use `TimeToBe` inside the bthread with the query.
+        6.2. **The length(in time) of an event?**(Used when you want to check if an event happened countinuosly for a certain amount of time)
+        action: Declare a new specific event( "EventForXtime") and don't use TIme for this manner.
+        6.3. **Event needs to happen in <X> time**(Used when you want to check if event Didnt happen for a certain amount of time)
+        action: sync(waitFor:[TimeToBe(), event] and check the output
+        6.4.**Waiting for a specific hour to request an event?** (Lets say you need to open car at 2 pm)
+        action: Use WaitFor[TimeToBe(Hour, Minute) and then request. 
+        6.5. **your action is dependent on the actual Hour** 
+            if you need to act in a certain way if an event happens after/before/between a specific hour, 
+            action: Wait for the event and then check the time using an if statement. simply use new Date().get... and compare to it.
+    7. Make sure that Your Loop has some sync it will surely meet, don't create an infinite loop that doesn't have any unconditional sync. If not, create an event to wait for.
+        - Add to your answer "Break The infinite loop by waiting for <event>" . with the event in the sync function.(it can be more than one event)
+        - Its okay if the loop is infinite, as long as it has a sync that will surely meet(no matter if the sync is in the begginning or the end of the loop)
+    8. Dont add comments that specify what needs to be done. Just create an according event. (For example, if you are asked to send file to printer, declare an event called sendFileToPrinter)
+
+####BP INSTRUCTIONS####
 
 ### Bthreads and Queries:
 The paradigm attempts to create a thread for each reactive requirement in the next syntax:
@@ -54,8 +92,6 @@ The event might also have some data, specifically if it is related to some entit
 function addApples(storeId, amount) {
     return Event("addApples", {storeId: storeId, amount: amount})
 }
-- Dont declare a paramater that is related to an entity that wasnt declared.
-For example, if the store entity wasnt declared, dont declare an event with storeId as a parameter. Because their is no way to get a storeId.
 Events with same name but different data are considered different events. 
 
 **Calling Events Without all Parameters** 
@@ -70,17 +106,17 @@ Use it ONLY when you dont know the exact data of the event, but you know some of
 Never Call A Function Without All Arguments. If not all arguments are provided, use the anyEventNameWithData function.
 
 
-The `anyEventNameWithData` function is very usefull when you want to wait or block a group of events, with similiar properties.
+ the "anyEventNameWithData" function is very usefull when you want to wait or block a group of events, with similiar properties.
 For example, given the event constructor function:
     function addApples(storeId, amount) {
         return Event("addApplesEvent", {storeId: storeId, amount: amount})
     }
-    if you want to wait for any addApples to storeId(no matter the amount), you can use the `anyEventNameWithData` function
+    if you want to wait for any addApples to storeId, you can use the anyEventNameWithData function
     waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId})]
     waiting for any addApples event to storeId with amount higher than 10:
     waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId, amount: (amount) => amount > 10})]
     
-*Use it only if you dont have all parameters of the event. If you have all parameters, use the event constructor function.
+
 
 
 
@@ -125,7 +161,13 @@ You can use it only inside the registerEffect function.
     ctx.bthread('When car gets started, turn on the lights', 'car', function (car) {
         sync({waitFor: [carStartedEvent(car.id)]})
         sync({request: [turnOnLightsEvent(car.id)]})
-    })    
+    })
+If there is no query or you need to get the entities outside of the bthread(For example, in the effect), you can use the following functions:
+* If you want to get all entities of a certain type, you can use the getEntitiesByType function. For example:
+    getEntitiesByType('car') will return an array of all entities of type room.
+    *If you want to get all entities of a certain type, always use the getEntitiesByType function.
+
+    
 * If you want to get an entity by its id, you can use the getEntityById function. For example:
     ctx.getEntityById(carId) will return the entity with the id carId.
     **Important note** Each entity has a different id.
@@ -139,9 +181,12 @@ Don't use Events that weren't declared.
 Events can be:
 1. requested:
  - sync({request: [EventA(),EventB()]}). The events are requested to be triggered, but only one will actually be triggered. The thread will resume to the next step after the event happens.
+ - RequestAllEvents([EventA() ,EventB()]). You Must use the function to guarantee that both events will happen The thread will resume to the next step after all events happen.
+    **When multiple actions need to be executed in response to a single event, especially in critical or emergency situations, use `RequestAllEvent`: to ensure that all actions are requested and executed. This method is crucial for maintaining system integrity and timely response.**
 2. waited for
  - sync({waitFor: [EventA()]}). The thread will resume to the next step after one of the events happen. Notice that this doesn't trigger the event. Using this without any actions after has no meaning.
  - sync({waitFor: [anyEventNameWithData("EventA")]})  This waits for any event that is in the EventSet.
+  - WaitForAll([EventA(),EventB()]). The thread will resume to the next step after all events happen.
  3. blocked
  - sync({block: [EventA()]})  This blocks an event from happening. the thread will not resume after this.
  - sync({block: [anyEventNameWithData("EventA")]})  This blocks any event that is in the EventSet.
@@ -156,38 +201,33 @@ For example:
 sync({block: [eventA_WeBlockUntilEventB()], waitFor: [EventB()]})
 
 
+
+
 ### Popular templates are:(dont forget to declare the events and effects before using them)
-    1. request A or B(If one of them happens, the thread will resume) dont use this template if you want both events to happen
+    1. request A and B, without significance to the order( the thread will resume after both events happen)
+        (RequestAllEvent(: [A(), B()])
+    2. request A or B(If one of them happens, the thread will resume) dont use this template if you want both events to happen
         sync({request: [A(), B()]})
-    2. Wait for an event and then request another event:
+    3. Wait for an event and then request another event:
         sync({waitFor: [A()]})
         sync({request: [B()]})
 
-    3. Event A should happen when B happens
+    4. Event A should happen when B happens
         sync({waitFor: [B()]})
         sync({request: [A()]})
     
-    4. Block an event until some other event happens:
+    5. Block an event until some other event happens:
         sync({block: [A()], waitFor: [B()]})
 
-    5. Enforce the events order, or turns between events: This will Enforce A, B, C order
+    6. Enforce the events order, or turns between events: This will Enforce A, B, C order
         sync({waitFor: [A()], block: [B(), C()]})
         sync({waitFor: [B()], block: [A(), C()]})
         sync({waitFor: [C()], block: [A(), B()]})
 
-    6. Dont let an event to happen twice in a row:
-    {
-        lastEvent = []
-        while (true) {
-            lastEvent = sync({waitFor: [A(), B(), C()], block: lastEvent})
-        }
-    }
     7. Wait for any event from a set of event(will resume after one of the events happens):
-        sync({waitFor: [A(), B(), C()]})
+        sync({waitFor: [A(), B(), EventC()]})
 
-
-
-  
+        
 
 
 The sync function also returns the event that happened. This can be used to get the data of the event.
@@ -196,125 +236,8 @@ let event = sync({waitFor: [EventA(amount)]})
 let data = event.data //data is now the data of the event
 amount = data.amount
 
+let event = sync({waitFor: [TimeToBe(10,0)]
+let evName = event.name //evName is now the name of the event("TimeToBe")
 
 Never refer to data fields that are not declared in the event.
 
-
-
-Here are several examples of requirements and their implementation in COBP. 
-Based on the examples and the previous explanation of COBP, you will implement each of the requirements that the user will give you. Give only the most suitable implementation, and do not write additional text before or after the implementation. Stop after the implementation and do not suggest requirements.
-
-### Examples:
-This example file is just an example. You will receive different requirements from the user, you cant use any of the following without declaring it.
-
-For the example we build upon the next entities:
-- car: {id, type: 'car',, opened: boolean, fuelLevel: int, airConditioner: boolean}
-And the next Queries:
-- car: entity => entity.type == 'car'
-- car.open: entity => entity.type == 'car' && entity.opened == true
-- car.FuelLevelAbove50: entity => entity.type== 'car' && entity.fuelLevel > 50
-
-###Examples Without Effects:
-
-//Requirement: car's headlights cannot be turned on or off consecutively without the reverse action happening in between, starting with turning the headlights off.
-//Output:
-*If turnOnHeadlightsEvent and turnOffHeadlightsEvent aren't declared, declare them before using them.  
-
-ctx.bthread('two headlight actions of the same type cannot be executed consecutively. starting with headlights off', 'car', function (car) {
-    while(true){
-        sync({waitFor: [turnOffHeadlightsEvent(car.id)], block: [turnOnHeadlightsEvent(car.id)]});
-        sync({waitFor: [turnOnHeadlightsEvent(car.id)], block: [turnOffHeadlightsEvent(car.id)]});
-    }
-});
-//Requirement: while a car's fuel level is above 50%, after accelerating, a fuel level check should be done
-//Output:
-function accelerateEvent(carId) {
-    return Event("accelerateEvent", {carId: carId});
-}
-
-
-function fuelCheckEvent(carId) {
-    return Event("fuelCheckEvent", {carId: carId});
-}
-
-ctx.bthread('While a car\'s fuel level is above 50%, after accelerating, a fuel check should be done', 'car.FuelLevelAbove50', function (car) {
-    while(true){
-        sync({waitFor: [accelerateEvent(car.id)]});
-        sync({request: [fuelCheckEvent(car.id)]});
-    }
-});
-
-//Requirement: After alarm is triggered, fueling is not possible
-//Output:
-function carAlarmEvent() {
-    return Event("carAlarmEvent", {carId: carId});
-}
-function fuelCar(carId, amount) {
-    return Event("fuelCarEvent", {carId: carId, amount: amount});
-}
-
-ctx.bthread('After car alarm triggers, fueling is not possible', 'car', function (car) {
-    while (true) {
-        sync({waitFor: [carAlarmEvent(car.id)]})
-        sync({block: [anyEventNameWithData("fuelCar", {carId: car.id})]});
-    }
-});
-
-//Requirement: when the fuel level increases to more than 10%, a fuel quality check should be done
-//Output:
-function changeFuelLevel(carId, newFuelLevel) {
-    return Event("changeFuelLevelEvent", {carId: carId, newFuelLevel: newFuelLevel});
-}
-
-function fuelQualityCheckEvent(carId) {
-    return Event("fuelQualityCheckEvent", {carId: carId});
-}
-
-ctx.bthread('When fuel level is changed to higher than 10%, a fuel quality check should be done', 'car', function (car) {
-    while(true){
-        sync({waitFor: anyEventNameWithData("changeFuelLevelEvent", {carId: car.id, newFuelLevel: (newFuelLevel) => newFuelLevel > 50})});
-        sync({request: [fuelQualityCheckEvent(car.id)]});
-    }
-});
-
-
-
-###Examples With Effects: refer to these examples if the requirement has an effect on the entities
-**Note** - Effects must be for requested events only. 
-
-
-//Requirement: when the car is open, turn air conditioner off
-//Output:
-function turnAirConditionerOffEvent(carId) {
-    return Event("turnAirConditionerOffEvent", {carId: carId});
-}
-ctx.registerEffect('turnAirConditionerOffEvent', function (data) {
-    let car = ctx.getEntityById(data.carId);
-    car.airConditioner = false;
-});
-ctx.bthread('When the car is open, turn air conditioner off', 'car.open', function (car) {
-    while(true){
-        sync({request: [turnAirConditionerOffEvent(car.id)]});
-    }
-});
-
-
-
-//Requirement: after car drove 10 kilometers, the fuel level is decreased by 5 liters
-//Output:
-function carDroveEvent(carId, distance) {
-    return Event("carDroveEvent", {carId: carId, distance: distance})
-}
-function decreaseFuelLevel(carId, amount) {
-    return Event("decreaseFuelLevel", {carId: carId, amount: amount})
-}
-ctx.registerEffect('decreaseFuelLevel', function (data) {
-    let car = ctx.getEntityById(data.carId)
-    car.fuelLevel -= data.amount
-})
-ctx.bthread('After car drove 10 kilometers, the fuel level is decreased by 5 liters', 'car', function (car) {
-    while(true){
-        sync({waitFor: [carDroveEvent(car.id, 10)]})
-        sync({request: [decreaseFuelLevel(car.id, 5)]});
-    }
-});

@@ -50,7 +50,7 @@ ctx.bthread('Pour cold water three times when tap button is pressed', 'roomWithT
     }
 });
 /*
-Do not perform two consecutive pouring actions of the same type in kitchens, always allow cold water first
+Do not perform two consecutive pouring actions of the same type in kitchens
 */
 
 ctx.bthread('Do not perform two consecutive pouring actions of the same type in kitchens', 'kitchen', function (kitchen) {
@@ -62,16 +62,14 @@ ctx.bthread('Do not perform two consecutive pouring actions of the same type in 
         });
     }
 });
-
 /*
 No water can be poured after emergency button was pressed
 */
-function emergencyButtonPressedEvent() {
-    return Event("emergencyButtonPressedEvent");
+function emergencyButtonPressed() {
+    return Event("emergencyButtonPressed");
 }
 
 ctx.bthread('Block pouring water after emergency button is pressed', function () {
-    sync({waitFor: [emergencyButtonPressedEvent()]});
-    sync({block: [anyEventNameWithData("pourHotWaterEvent"), anyEventNameWithData("pourColdWaterEvent")]});
+    sync({waitFor: [emergencyButtonPressed()]});
+    sync({block: [anyEventNameWithData("pourHotWater"), anyEventNameWithData("pourColdWater")]});
 });
-
