@@ -43,17 +43,17 @@ Your Role is to declare the bthreads the events and eventsets.
 
 ### Event Declaration:
 To declare an event, we use the next syntax:
-function eventAEvent() {
-    return Event("eventA")
+function AEvent() {
+    return Event("AEvent")
 }
 For example:
-function addApples() {
-    return Event("addApples")
+function addApplesEvent() {
+    return Event("addApplesEvent")
 }
 
 The event might also have some data, specifically if it is related to some entity, for example, if the previous event is for a room:
-function addApples(storeId, amount) {
-    return Event("addApples", {storeId: storeId, amount: amount})
+function addApplesEvent(storeId, amount) {
+    return Event("addApplesEvent", {storeId: storeId, amount: amount})
 }
 - Dont declare a paramater that is related to an entity that wasnt declared.
 For example, if the store entity wasnt declared, dont declare an event with storeId as a parameter. Because their is no way to get a storeId.
@@ -62,7 +62,7 @@ Events with same name but different data are considered different events.
 **Calling Events Without all Parameters** 
 It is important to call the event function with all arguments. If not all arguments are provided, use the anyEventNameWithData function.
 For gathering events, we use The "anyEventNameWithData" Function. For example:
-AnyEventNameWithData("addApples", {storeId: storeId}) will gather all events with the name "addApples" and the data field storeId equal to the storeId provided.
+AnyEventNameWithData("addApplesEvent", {storeId: storeId}) will gather all events with the name "addApplesEvent" and the data field storeId equal to the storeId provided.
 
 ** anyEventNameWithData(eventName, data)
 The function returns an event set that contains all events whose name is eventName and data object existing fields match the field values in filterData.
@@ -73,10 +73,10 @@ Never Call A Function Without All Arguments. If not all arguments are provided, 
 
 The `anyEventNameWithData` function is very usefull when you want to wait or block a group of events, with similiar properties.
 For example, given the event constructor function:
-    function addApples(storeId, amount) {
+    function addApplesEvent(storeId, amount) {
         return Event("addApplesEvent", {storeId: storeId, amount: amount})
     }
-    if you want to wait for any addApples to storeId(no matter the amount), you can use the `anyEventNameWithData` function
+    if you want to wait for any addApplesEvent to storeId(no matter the amount), you can use the `anyEventNameWithData` function
     waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId})]
     waiting for any addApples event to storeId with amount higher than 10:
     waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId, amount: (amount) => amount > 10})]
@@ -96,20 +96,20 @@ Events may affect the entities. We define this effect right after the Event func
 Example:
     //Requirement: when pump is connected to the car, fuel level increases by 40 liters
     //Output:
-    function pumpIsConnected(carId) {
-        return Event("pumpIsConnected", {carId: carId})
+    function pumpIsConnectedEvent(carId) {
+        return Event("pumpIsConnectedEvent", {carId: carId})
     }
   
-    function addFuel(carId, amount) {
-        return Event("addFuel", {carId: carId, amount: amount})
+    function addFuelEvent(carId, amount) {
+        return Event("addFuelEvent", {carId: carId, amount: amount})
     }
-    ctx.registerEffect('addFuel', function (data) {
+    ctx.registerEffect('addFuelEvent', function (data) {
         let car = ctx.getEntityById(data.carId)
         car.fuel += data.amount
     })
     ctx.bthread('When pump is connected, fuel level increases by 40 liters', 'car', function (pump) {
-        sync({waitFor: [pumpIsConnected(car.id)]})
-        sync({request: [addFuel(car.id, 40)]})
+        sync({waitFor: [pumpIsConnectedEvent(car.id)]})
+        sync({request: [addFuelEvent(car.id, 40)]})
     });
     
 *as part of the effect, it is possible to add new entities, to the DB using ctx.populateContext(ctx.Entity(<id>,<entityType>, <additional data>)).
@@ -184,7 +184,7 @@ Never refer to data fields that are not declared in the event.
         sync({waitFor: [C()], block: [A(), B()]})
     6. Dont let an event to happen twice in a row:
     bthread('Dont let an event to happen twice in a row', function () {
-        lastEvent = []
+        lastEvent = 
         while (true) {
             lastEvent = sync({waitFor: [A(),B()], block: lastEvent})
         }
@@ -192,11 +192,3 @@ Never refer to data fields that are not declared in the event.
     
     7. Wait for any event from a set of event(will resume after one of the events happens):
         sync({waitFor: [A(), B(), C()]})
-
-
-  
-
-
-
-
-
