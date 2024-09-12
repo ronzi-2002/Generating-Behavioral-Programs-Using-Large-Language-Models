@@ -1,4 +1,5 @@
 import subprocess
+import time
 import src.UI_code_generation.exctracting_events as exctracting_events
 import src.BP_code_generation.myOpenAiApi as myOpenAiApi
 import generateDefultHtml 
@@ -45,12 +46,29 @@ class MainMenu(Menu):
         super().__init__("Main Menu")
         self.add_item("Use BPLLM Menu", lambda: BPLLMMenu())
         self.add_item("Run BPProgram Menu", lambda: BPProgramMenu())
+class EditBPProgramMenu(Menu):
+    def __init__(self):
+        super().__init__("Edit BPProgram Menu")
+        #first we need to get the file name of the BPProgram
+        self.file_path_of_Bp_Program = input("Enter the file path of the previously generated code: \n Notice that your file should be in the format that the requirements are between \\* and */: , as generated in the new versions\n")
+        self.output_file_path = self.file_path_of_Bp_Program.replace(".js", "_editedAt"+time.strftime("%Y%m%d-%H%M%S")+".js")
+        print("Your edits will be saved in ", self.output_file_path)
+        self.add_item("add requirement", lambda: self.add_requirement())
+        self.add_item("remove requirement", lambda: self.remove_requirement())
+        self.add_item("Modify requirement", lambda: self.modify_requirement())
+        self.add_item("Move to BPProgram Menu", lambda: BPProgramMenu(file_name=self.file_path_of_Bp_Program))
+    def add_requirement(self):
+        myOpenAiApi.add_requirement(self.file_path_of_Bp_Program, self.output_file_path)
+        print("Requirement added successfully")
+        return self
+         
 class BPLLMMenu(Menu):
     def __init__(self):
         super().__init__("BPLLM Menu")
         self.file_path_of_last_generated_code = None
         self.add_item("Generate BP Code For Requirement Doc", lambda: self.generate_BP_code())
         self.add_item("Generate BP Code- additional requirements", lambda: self.generate_Additional_BP_code())
+        self.add_item("Edit Existing BP Code", lambda: EditBPProgramMenu())
         self.add_item("Set OpenAI API Key", lambda: self.set_openai_api_key())
         self.add_item("Generate UI Code", lambda: self.generate_UI_code())
     def generate_BP_code(self):
@@ -63,7 +81,7 @@ class BPLLMMenu(Menu):
         #first, we need the some previously generated code file
         file_path = input("Enter the file path of the previously generated code: \n Notice that your file should be in the format that the requirements are between \\* and */: , as generated in the new versions\n")
         history = myOpenAiApi.additional_requirements_generation(file_path)
-        print("history: ", history)
+        # print("history: ", history)
         #export the history to a file
         with open("History.txt", "w") as file:
             for line in history:
