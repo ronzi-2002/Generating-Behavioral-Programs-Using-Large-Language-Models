@@ -23,11 +23,12 @@ class InstructionPhase(Enum):
 class BehaviorInstructionType(Enum):
     Basic = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/1Basic Behavior Bot instructions"
     BasicPlus = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/2BasicPlus Behavior Bot instructions"
+    BasicPlus_NoExamples = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/2BasicPlus Behavior Bot instructions NoEXAMPLES"
     DSL = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/3DSLs Behavior Bot instructions"
     DSL_Isolated= os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/3_5DSLs and isolation Behavior Bot instructions"
     Analysis = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/4Analysis Behavior Bot instructions"
-    Default = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions"
-
+    # Default = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions"
+    Default = BasicPlus_NoExamples
 class MyOpenAIApi:
     def __init__(self, model= "gpt-4-turbo-2024-04-09",api_key=None, instructions= None, temp=0.5, post_process_function=None):#todo add temperature actual default, max_tokens, top_p, frequency_penalty, presence_penalty, stop, and other parameters
         self.api_key = api_key
@@ -591,12 +592,14 @@ def main():
             methodologies.append(Methodology.STANDARD)
             methodologies.append(Methodology.PREPROCESS_AS_PART_OF_PROMPT)
 
-        behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus, \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
+        behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus(recommended), \n2.5 for BasicPlus without examples(recommended), \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
         behavior_instructions_types = []
         if behavior_instructions_type == "1":
             behavior_instructions_types = [BehaviorInstructionType.Basic]
         elif behavior_instructions_type == "2":
             behavior_instructions_types = [BehaviorInstructionType.BasicPlus]
+        elif behavior_instructions_type == "2.5":
+            behavior_instructions_types = [BehaviorInstructionType.BasicPlus_NoExamples]
         elif behavior_instructions_type == "3":
             behavior_instructions_types = [BehaviorInstructionType.DSL]
         elif behavior_instructions_type == "3.5":

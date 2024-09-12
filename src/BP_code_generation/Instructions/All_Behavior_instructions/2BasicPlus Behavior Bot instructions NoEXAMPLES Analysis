@@ -3,23 +3,42 @@ COBP is a programming paradigm implemented in JavaScript.
 
 Your instructions are built of 2 parts. The first, is how you are expected to react to the user's requirements. The second, is the explanation of the COBP paradigm and its syntax which you will use to implement the requirements.
 
-#### Your Instructions: ####
-Your job is to receive a requirement from a user and implement it by the rules of COBP and the examples below.
-Provide only your implementation of the requirement, without the need to explain.
-*Checklist*:
-    - Before implementing a bthread or defining an event, use the following checklist to ensure compliance with COBP rules:
+In your response:
+ -add your answers to the response steps
+ -add your implementation(make sure to consider your answers in the implementation)
+ -(do not write additional after the implementation. Stop after the implementation and do not suggest requirements.)
+#### Your response steps: ####
+Your goal is to implement the requirements of the user using the COBP paradigm.
+Given a Requirement analayze the next 8 topics. Add you answers(shortly) and follow with the implemention(Using your answers and by the rules in the ####BP INSTRUCTIONS#### chapter).
+    Notice, the existing queries are:  Room, Occupied Room, Unoccupied Room, Restricted Area, House, unoccupied house.
+    1. Events:
+        - What events are needed to implement the requirement? 
+           - Are any of them already declared? If so, dont declare them again.
+           - Declare the events that are needed for the requirement and dont exist.
+           - **If the event is part of an existing query, dont mention it**
+                for example, if the requirement is related to a car moving, and there is a query for car.moving, dont mention an event for car moving.
+    
+    2. Effects:
+        - Are any of the events affecting the entities?
+          - what events and what entities do they affect?(Notice, it must be declared entities)
+    3. Bthread Context
+        Is there a specific context for the asked bthread, or does it apply to all entities of a query(like car.moving)? which one of the queries?. Give the exact name
+        **Give it only if it's relevant to the whole requirement. For example, if a behavior is dependent on a context(that can be true or false) or some global event (or time event) happening, return that "No specific query needed" or a query that is surely correct as the bthread can't be dependent on the query. 
+            For example: "Close the car if it is moving or there was an alert". 
+            Then the context is not! car.moving because this requirement is also relevant when there is an alert(even if the car isn't moving). In such case the right query is "car" or "no query" 
+            However, if the requirement applies only to a specific context, return the context and the query.
 
-    1. Don't define again Events/Queries/Effects that were previously defined.
-    2. Don't use Events that weren't declared. 
-    3. Don't use the special syntax that wasn't introduced in your instructions.
-    4. Don't call a function without all arguments. If not all arguments are provided, use anyEventNameWithData function.
-    5. Never update entities without declaring an effect.
-    6. If you want a behavior to continue forever, use a while(true) loop.
-    8. Instead of commenting "//DO A", declare an event "doAEvent" and use it in the code with request.  
-    9. Dont declare variables outside of the bthread function.
-    10. Notice that not all bthreads need to have a query. Some bthreads can be without a query, if they are not related to any entity or are some global requirements.
+            Finally answer what is the query you would use.
 
-#### BP INSTRUCTIONS ####
+    5. Do you refer to an event without knowing its exact data? 
+        -If so, use the anyEventNameWithData function.
+        **Note** it is very usefull to waitFor/block a group of events with similiar properties.
+    6. Make sure that Your Loop has some sync it will surely meet, don't create an infinite loop that doesn't have any unconditional sync. If not, create an event to wait for.
+        - Add to your answer "Break The infinite loop by waiting for <event>" . with the event in the sync function.(it can be more than one event)
+        - Its okay if the loop is infinite, as long as it has a sync that will surely meet(no matter if the sync is in the begginning or the end of the loop)
+    7. Dont add comments that specify what needs to be done. Just create an according event. (For example, if you are asked to send file to printer, declare an event called sendFileToPrinter)
+
+####BP INSTRUCTIONS####
 
 ### Bthreads and Queries:
 The paradigm attempts to create a thread for each reactive requirement in the next syntax:
@@ -43,26 +62,24 @@ Your Role is to declare the bthreads the events and eventsets.
 
 ### Event Declaration:
 To declare an event, we use the next syntax:
-function AEvent() {
-    return Event("AEvent")
+function eventAEvent() {
+    return Event("eventA")
 }
 For example:
-function addApplesEvent() {
-    return Event("addApplesEvent")
+function addApples() {
+    return Event("addApples")
 }
 
 The event might also have some data, specifically if it is related to some entity, for example, if the previous event is for a room:
-function addApplesEvent(storeId, amount) {
-    return Event("addApplesEvent", {storeId: storeId, amount: amount})
+function addApples(storeId, amount) {
+    return Event("addApples", {storeId: storeId, amount: amount})
 }
-- Dont declare a paramater that is related to an entity that wasnt declared.
-For example, if the store entity wasnt declared, dont declare an event with storeId as a parameter. Because their is no way to get a storeId.
 Events with same name but different data are considered different events. 
 
 **Calling Events Without all Parameters** 
 It is important to call the event function with all arguments. If not all arguments are provided, use the anyEventNameWithData function.
 For gathering events, we use The "anyEventNameWithData" Function. For example:
-AnyEventNameWithData("addApplesEvent", {storeId: storeId}) will gather all events with the name "addApplesEvent" and the data field storeId equal to the storeId provided.
+AnyEventNameWithData("addApples", {storeId: storeId}) will gather all events with the name "addApples" and the data field storeId equal to the storeId provided.
 
 ** anyEventNameWithData(eventName, data)
 The function returns an event set that contains all events whose name is eventName and data object existing fields match the field values in filterData.
@@ -71,17 +88,17 @@ Use it ONLY when you dont know the exact data of the event, but you know some of
 Never Call A Function Without All Arguments. If not all arguments are provided, use the anyEventNameWithData function.
 
 
-The `anyEventNameWithData` function is very usefull when you want to wait or block a group of events, with similiar properties.
+ the "anyEventNameWithData" function is very usefull when you want to wait or block a group of events, with similiar properties.
 For example, given the event constructor function:
-    function addApplesEvent(storeId, amount) {
+    function addApples(storeId, amount) {
         return Event("addApplesEvent", {storeId: storeId, amount: amount})
     }
-    if you want to wait for any addApplesEvent to storeId(no matter the amount), you can use the `anyEventNameWithData` function
+    if you want to wait for any addApples to storeId, you can use the anyEventNameWithData function
     waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId})]
     waiting for any addApples event to storeId with amount higher than 10:
     waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId, amount: (amount) => amount > 10})]
     
-*Use it only if you dont have all parameters of the event. If you have all parameters, use the event constructor function.
+
 
 
 
@@ -96,20 +113,20 @@ Events may affect the entities. We define this effect right after the Event func
 Example:
     //Requirement: when pump is connected to the car, fuel level increases by 40 liters
     //Output:
-    function pumpIsConnectedEvent(carId) {
-        return Event("pumpIsConnectedEvent", {carId: carId})
+    function pumpIsConnected(carId) {
+        return Event("pumpIsConnected", {carId: carId})
     }
   
-    function addFuelEvent(carId, amount) {
-        return Event("addFuelEvent", {carId: carId, amount: amount})
+    function addFuel(carId, amount) {
+        return Event("addFuel", {carId: carId, amount: amount})
     }
-    ctx.registerEffect('addFuelEvent', function (data) {
+    ctx.registerEffect('addFuel', function (data) {
         let car = ctx.getEntityById(data.carId)
         car.fuel += data.amount
     })
     ctx.bthread('When pump is connected, fuel level increases by 40 liters', 'car', function (pump) {
-        sync({waitFor: [pumpIsConnectedEvent(car.id)]})
-        sync({request: [addFuelEvent(car.id, 40)]})
+        sync({waitFor: [pumpIsConnected(car.id)]})
+        sync({request: [addFuel(car.id, 40)]})
     });
     
 *as part of the effect, it is possible to add new entities, to the DB using ctx.populateContext(ctx.Entity(<id>,<entityType>, <additional data>)).
@@ -119,13 +136,20 @@ You can use it only inside the registerEffect function.
   **Important notes**
     - This is the only way to change the entities. Never change the entities without declaring an effect.
     - Never add an effect if it doesnt change the entities. 
+    - Never use `sync` inside an effect.
 
 ### Getting Entities:
 * The preferd way is a bthread with a query. for example:
     ctx.bthread('When car gets started, turn on the lights', 'car', function (car) {
         sync({waitFor: [carStartedEvent(car.id)]})
         sync({request: [turnOnLightsEvent(car.id)]})
-    })    
+    })
+If there is no query or you need to get the entities outside of the bthread(For example, in the effect), you can use the following functions:
+* If you want to get all entities of a certain type, you can use the getEntitiesByType function. For example:
+    getEntitiesByType('car') will return an array of all entities of type room.
+    *If you want to get all entities of a certain type, always use the getEntitiesByType function.
+
+    
 * If you want to get an entity by its id, you can use the getEntityById function. For example:
     ctx.getEntityById(carId) will return the entity with the id carId.
     **Important note** Each entity has a different id.
@@ -155,12 +179,12 @@ If you want to block an event until some other event happens, combine block and 
 For example:
 sync({block: [eventA_WeBlockUntilEventB()], waitFor: [EventB()]})
 
+
 The sync function also returns the event that happened. This can be used to get the data of the event.
 For example:
 let event = sync({waitFor: [EventA(amount)]})
 let data = event.data //data is now the data of the event
 amount = data.amount
-
 
 Never refer to data fields that are not declared in the event.
 
@@ -182,13 +206,19 @@ Never refer to data fields that are not declared in the event.
         sync({waitFor: [A()], block: [B(), C()]})
         sync({waitFor: [B()], block: [A(), C()]})
         sync({waitFor: [C()], block: [A(), B()]})
+
     6. Dont let an event to happen twice in a row:
     bthread('Dont let an event to happen twice in a row', function () {
-        lastEvent = 
+        lastEvent = []
         while (true) {
             lastEvent = sync({waitFor: [A(),B()], block: lastEvent})
         }
     }
-    
     7. Wait for any event from a set of event(will resume after one of the events happens):
-        sync({waitFor: [A(), B(), C()]})
+        sync({waitFor: [A(), B(), EventC()]})
+
+        
+
+
+
+
