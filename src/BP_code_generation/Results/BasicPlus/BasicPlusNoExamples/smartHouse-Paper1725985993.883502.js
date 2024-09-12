@@ -1,8 +1,8 @@
 /*
-There are rooms. each room has a type(bedroom, kitchen and so on) Some rooms have a light bulb, some have have a tap.
+There are rooms. each room has a type(bedroom, kitchen and so on), some rooms have a tap.
 */
-function room(id, type, hasLightBulb, hasTap) {
-    return ctx.Entity(id, 'room', {type: type, hasLightBulb: hasLightBulb, hasTap: hasTap})
+function room(id, roomType, hasTap) {
+    return ctx.Entity(id, 'room', {roomType: roomType, hasTap: hasTap});
 }
 /*
 Needed queries:
@@ -12,9 +12,9 @@ Needed queries:
 */
 ctx.registerQuery('room', entity => entity.type == 'room');
 
-ctx.registerQuery('roomWithTap', entity => entity.type == 'room' && entity.hasTap);
+ctx.registerQuery('room.withTap', entity => entity.type == 'room' && entity.hasTap);
 
-ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.type == 'kitchen');
+ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.roomType == 'kitchen');
 /*
 For each room with a tap, when the tap's button is pressed, pour hot water three times.
 */
@@ -26,7 +26,7 @@ function pourHotWaterEvent(roomId) {
     return Event("pourHotWaterEvent", {roomId: roomId});
 }
 
-ctx.bthread('Pour hot water three times when tap button is pressed', 'roomWithTap', function (room) {
+ctx.bthread('Pour hot water three times when tap button is pressed', 'room.withTap', function (room) {
     while (true) {
         sync({waitFor: [tapButtonPressedEvent(room.id)]});
         for (let i = 0; i < 3; i++) {
@@ -41,7 +41,7 @@ function pourColdWaterEvent(roomId) {
     return Event("pourColdWaterEvent", {roomId: roomId});
 }
 
-ctx.bthread('Pour cold water three times when tap button is pressed', 'roomWithTap', function (room) {
+ctx.bthread('Pour cold water three times when tap button is pressed', 'room.withTap', function (room) {
     while (true) {
         sync({waitFor: [tapButtonPressedEvent(room.id)]});
         for (let i = 0; i < 3; i++) {
@@ -57,13 +57,13 @@ ctx.bthread('Do not perform two consecutive pouring actions of the same type in 
     let lastEvent = null;
     while (true) {
         lastEvent = sync({
-            waitFor: [pourHotWater(kitchen.id), pourColdWater(kitchen.id)],
+            waitFor: [pourHotWaterEvent(kitchen.id), pourColdWaterEvent(kitchen.id)],
             block: lastEvent
         });
     }
 });
 /*
-No water can be poured after emergency button was pressed
+No water can be poured after an emergency button is pressed
 */
 function emergencyButtonPressed() {
     return Event("emergencyButtonPressed");

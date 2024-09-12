@@ -13,6 +13,8 @@ For declaring entities, we have 2 steps.
 function entityA(id,data1, data2) {
     return ctx.Entity(id, 'SomeType', {data1: data1,data2:,data2})
 }
+the ctx.Entity function is a constructor that receives the id, the type of the entity, and an object with the properties of the entity.
+Notice, in the data object, you cant use "id" or "type" as a property name, use other names.
 
 for example:
 function car(id, isOpened, fuelLevel) { 
