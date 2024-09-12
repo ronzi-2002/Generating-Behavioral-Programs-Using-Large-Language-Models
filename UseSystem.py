@@ -52,6 +52,15 @@ class EditBPProgramMenu(Menu):
         #first we need to get the file name of the BPProgram
         self.file_path_of_Bp_Program = input("Enter the file path of the previously generated code: \n Notice that your file should be in the format that the requirements are between \\* and */: , as generated in the new versions\n")
         self.output_file_path = self.file_path_of_Bp_Program.replace(".js", "_editedAt"+time.strftime("%Y%m%d-%H%M%S")+".js")
+        
+        #copy the file to the output file, create the output file if it does not exist
+        import os
+        if not os.path.exists(self.output_file_path):
+            open(self.output_file_path, "w").close()
+        import shutil
+        shutil.copy(self.file_path_of_Bp_Program, self.output_file_path)
+        self.file_path_of_Bp_Program =self.output_file_path
+
         print("Your edits will be saved in ", self.output_file_path)
         self.add_item("add requirement", lambda: self.add_requirement())
         self.add_item("remove requirement", lambda: self.remove_requirement())
@@ -60,6 +69,10 @@ class EditBPProgramMenu(Menu):
     def add_requirement(self):
         myOpenAiApi.add_requirement(self.file_path_of_Bp_Program, self.output_file_path)
         print("Requirement added successfully")
+        return self
+    def remove_requirement(self):
+        myOpenAiApi.remove_requirement(self.file_path_of_Bp_Program, self.output_file_path)
+        print("Requirement removed successfully")
         return self
          
 class BPLLMMenu(Menu):

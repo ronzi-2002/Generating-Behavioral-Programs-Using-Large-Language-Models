@@ -18,30 +18,12 @@ ctx.registerQuery('room.withTap', entity => entity.type == 'room' && entity.hasT
 ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.subtype == 'kitchen');
 
 /*
-For each room with a tap, when the tap's button is pressed, pour hot water three times.
+For each room with a tap, when the tap's button is pressed, pour cold water three times.
 
 */
 function tapButtonPressedEvent(roomId) {
     return Event("tapButtonPressedEvent", {roomId: roomId});
 }
-
-function pourHotWaterEvent(roomId) {
-    return Event("pourHotWaterEvent", {roomId: roomId});
-}
-
-ctx.bthread('Pour hot water three times when tap button is pressed', 'room.withTap', function (room) {
-    while (true) {
-        sync({waitFor: [tapButtonPressedEvent(room.id)]});
-        for (let i = 0; i < 3; i++) {
-            sync({request: [pourHotWaterEvent(room.id)]});
-        }
-    }
-});
-
-/*
-For each room with a tap, when the tap's button is pressed, pour cold water three times.
-
-*/
 function pourColdWaterEvent(roomId) {
     return Event("pourColdWaterEvent", {roomId: roomId});
 }
@@ -59,6 +41,9 @@ ctx.bthread('Pour cold water three times when tap button is pressed', 'room.with
 Do not perform two consecutive pouring actions of the same type in kitchens
 
 */
+function pourHotWaterEvent(roomId) {
+    return Event("pourHotWaterEvent", {roomId: roomId});
+}
 ctx.bthread('Do not perform two consecutive pouring actions of the same type in kitchens', 'kitchen', function (kitchen) {
     let lastEvent = null;
     while (true) {
@@ -82,7 +67,3 @@ ctx.bthread('Block water pouring after emergency button is pressed', function ()
     sync({block: [anyEventNameWithData("pourHotWaterEvent"), anyEventNameWithData("pourColdWaterEvent")]});
 });
 
-/*
-ssassaassasa
-*/
-DEMO RESPONSE FOR TESTING

@@ -744,17 +744,41 @@ def add_requirement(file_path_of_generated_code, output_file_path):
     for model in all_models:
         model.export_to_code(full_output_path=output_file_path)
 
-def delete_requirement(file_path_of_generated_code, output_file_path):
-    history = loadPreviousHistory(file_path_of_generated_code)
+def remove_requirement(file_path_of_generated_code, output_file_path):
+    original_history = loadPreviousHistory(file_path_of_generated_code)
     #show the user a list of all his messages and ask him to select the one he wants to delete
-    for i, message in enumerate(history):
+    for i, message in enumerate(original_history):
         if message["role"] == "user":
-            print(f"{i}. {message['content']}")
-    choice = input("Enter the number of the message you want to delete: ")
-    choice = int(choice)
+            print(f"{i//2}. {message['content']}")
+    choice = input("Enter the number of the message you want to delete:(Notice, it must be a behavioral one)")
+    choice = int(choice)*2
     #In theory we can simply remove the user's message and the assistant's message that follows it
     #But we need to check that the assitant's message doesn't include a declaration of an event that was used in a later message
-    
+    history_after_choice = original_history[choice+2:]
+    #we need to check if the assistant's message includes a declaration of an event(we assume that if Event() function is used, there is a declaration)
+    events = exctracting_events.extract_constructor_functionAndEvents(code=original_history[choice+1]["content"])
+    if events == []:
+        #we can simply remove the user's message and the assistant's message that follows it
+        history = original_history[:choice] + original_history[choice+2:]
+    else: 
+        #we need to check if the assistant's message includes a declaration of an event(we assume that if Event() function is used, there is a declaration)
+        #if it does, we need to remove the user's message and the assistant's message that follows it, and all the messages that use the event
+        #we will remove the messages that use the event by checking if the event is in the message
+        for event in events:
+            for i, message in enumerate(history_after_choice):
+                if message["role"] == "assistant":
+                    if (event["FunctionName"]+"(" in message["content"]) or ("anyEventNameWithData(\""+event["EventName"]+"\"" in message["content"]):#TODO this is a work around.
+                        #we will append the function to this message
+                        message["content"] = event["FullMatch"]+ "\n" + message["content"]
+                        break
+        history = original_history[:choice] + history_after_choice
+    #now we need to export the code
+    model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)#TODO this is a weird work around
+    model.history = history
+    model.History_For_Output = history
+    model.export_to_code(full_output_path=output_file_path)
+                                       
+                    
 
 
     
