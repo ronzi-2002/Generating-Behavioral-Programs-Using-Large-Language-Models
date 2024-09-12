@@ -14,7 +14,8 @@ function entityA(id,data1, data2) {
     return ctx.Entity(id, 'SomeType', {data1: data1,data2:,data2})
 }
 the ctx.Entity function is a constructor that receives the id, the type of the entity, and an object with the properties of the entity.
-Notice, in the data object, you cant use "id" or "type" as a property name, use other names.
+
+**NEVER use "id" or "type" as a property name, use other such as subtype or more specific name.
 
 for example:
 function car(id, isOpened, fuelLevel) { 

@@ -1,8 +1,8 @@
 /*
-There are rooms. each room has a type(bedroom, kitchen and so on) Some rooms have a light bulb, some have have a tap.
+There are rooms. each room has a type(bedroom, kitchen and so on), some rooms have a tap.
 */
-function room(id, type, hasLightBulb, hasTap) {
-    return ctx.Entity(id, 'room', {type: type, hasLightBulb: hasLightBulb, hasTap: hasTap})
+function room(id, roomType, hasTap) {
+    return ctx.Entity(id, 'room', {roomType: roomType, hasTap: hasTap});
 }
 /*
 Needed queries:
