@@ -112,7 +112,7 @@ class MyOpenAIApi:
         )
         return self.static_post_process( response.choices[0].message.content)
     
-    def chat_with_gpt_cumulative(self,new_message, method=Methodology.STANDARD, behavior_instructions_type = BehaviorInstructionType.Basic):
+    def chat_with_gpt_cumulative(self,new_message, method=Methodology.STANDARD, behavior_instructions_type = BehaviorInstructionType.Basic, demoMode = False):
         """
         Chat with GPT-3.5-turbo model using OpenAI API.
 
@@ -178,22 +178,25 @@ class MyOpenAIApi:
                 return self.static_post_process( response_to_return)
 
 
-            if behavior_instructions_type == BehaviorInstructionType.Analysis:
+            elif behavior_instructions_type == BehaviorInstructionType.Analysis:
                 #in this case, we need to add a simple string to the requirement.
                 # this will result the analysis to appear in the assistant's response. 
                 #TODO this analysis and the added string will appear in the history. We can(should) remove it after the response is generated(as done in the second methodology)
                 new_message += "\n\n Make sure it obeys your 8 response steps"
             self.history.append({"role": "user", "content": new_message})
             self.History_For_Output.append({"role": "user", "content": new_message})
-            demo_response= ""
-            response = self.client.chat.completions.create(#TODO uncomment this
-                model=self.model,  # You can use any model you prefer
-                messages=self.history,
-                temperature = self.temp
-            )
-            with open("simulation_text_ui", "r") as file:
-                demo_response = file.read() 
-            response_to_return = response.choices[0].message.content
+            demo_response= "DEMO RESPONSE FOR TESTING"
+            if not demoMode:
+                response = self.client.chat.completions.create(#TODO uncomment this
+                    model=self.model,  # You can use any model you prefer
+                    messages=self.history,
+                    temperature = self.temp
+                )
+                response_to_return = response.choices[0].message.content
+            else:
+                # with open("simulation_text_ui", "r") as file:
+                #     demo_response = file.read() 
+                response_to_return = demo_response
 
            
 
@@ -294,12 +297,17 @@ class MyOpenAIApi:
             self.history.insert(0, {"role": "system", "content": instructions}) #TODO make sure it is the best to make it the first element
         else:
             self.history.append({"role": "system", "content": instructions})
-    def export_to_code(self, directory=os.getcwd(), file_name=None,exportToFile=True, methodology=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic):
+    def export_to_code(self, directory=os.getcwd(), file_name=None,exportToFile=True, methodology=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic, full_output_path = None):
         #create a js file, where each user message is in a comment, and the assistant's response as is.
         string_to_write = ""
         for i in range(len(self.History_For_Output)):
             string_to_write += self.get_pretty_response_string(i)
-        
+        if full_output_path:
+            file = open(full_output_path, "w")
+            file.write(string_to_write)
+            file.close()
+            print("code has been exported to " + full_output_path)
+            return full_output_path
         #create a file in the same directory as the script and add a timestamp to the file name
         if exportToFile:
             if not file_name:
@@ -592,25 +600,7 @@ def main():
             methodologies.append(Methodology.STANDARD)
             methodologies.append(Methodology.PREPROCESS_AS_PART_OF_PROMPT)
 
-        behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus(recommended), \n2.5 for BasicPlus without examples(recommended), \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
-        behavior_instructions_types = []
-        if behavior_instructions_type == "1":
-            behavior_instructions_types = [BehaviorInstructionType.Basic]
-        elif behavior_instructions_type == "2":
-            behavior_instructions_types = [BehaviorInstructionType.BasicPlus]
-        elif behavior_instructions_type == "2.5":
-            behavior_instructions_types = [BehaviorInstructionType.BasicPlus_NoExamples]
-        elif behavior_instructions_type == "3":
-            behavior_instructions_types = [BehaviorInstructionType.DSL]
-        elif behavior_instructions_type == "3.5":
-            behavior_instructions_types = [BehaviorInstructionType.DSL_Isolated]
-        elif behavior_instructions_type == "4":
-            behavior_instructions_types = [BehaviorInstructionType.Analysis]
-        elif behavior_instructions_type == "5":
-            behavior_instructions_types = [BehaviorInstructionType.Default]
-        else:
-            behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.DSL_Isolated, BehaviorInstructionType.Analysis]
-        
+        behavior_instructions_types = select_behavior_instructions_type()
         retVal = []
         entityAndQueriesCache=[]
         #for every combination of methodology and behavior_instructions_type
@@ -623,9 +613,9 @@ def main():
             entityAndQueriesCache, generated_code_path =  bot_usage_from_array(entity_instructions_file_path=entity_instructions_file_path, inputs_array=req_array, output_directory=os.getcwd() + "/src/BP_code_generation"+"/Results", file_name=requirements_file_name, query_instructions_file_path=query_instructions_file_path, behavior_instructions_file_path=behavior_instructions_file_path, methodology=methodology, behavior_instructions_type=behavior_instructions_type, entityAndQueriesCache=entityAndQueriesCache)
             retVal.append(generated_code_path)
         return retVal
-    
-def additional_requirements_generation(file_path_of_generated_code):
-    #we will read the file, then we will set the history accordingly
+
+def loadPreviousHistory(file_path_of_generated_code):
+        #we will read the file, then we will set the history accordingly
     with open(file_path_of_generated_code, "r") as file:
         lines = file.readlines()
     history = []
@@ -650,27 +640,47 @@ def additional_requirements_generation(file_path_of_generated_code):
             assistant_message += line
     if assistant_message:
         history.append({"role": "assistant", "content": assistant_message})
-    
-    
-    
-    behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus, \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
+    return history
+
+def select_behavior_instructions_type(allowAll = True):
     behavior_instructions_types = []
-    if behavior_instructions_type == "1":
-        behavior_instructions_types = [BehaviorInstructionType.Basic]
-    elif behavior_instructions_type == "2":
-        behavior_instructions_types = [BehaviorInstructionType.BasicPlus]
-    elif behavior_instructions_type == "3":
-        behavior_instructions_types = [BehaviorInstructionType.DSL]
-    elif behavior_instructions_type == "3.5":
-        behavior_instructions_types = [BehaviorInstructionType.DSL_Isolated]
-    elif behavior_instructions_type == "4":
-        behavior_instructions_types = [BehaviorInstructionType.Analysis]
-    elif behavior_instructions_type == "5":
-        behavior_instructions_types = [BehaviorInstructionType.Default]
-    else:
-        behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.DSL_Isolated, BehaviorInstructionType.Analysis]
-    
-    
+    while True:
+        behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus(recommended), \n2.5 for BasicPlus without examples(recommended), \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
+        if behavior_instructions_type == "1":
+            behavior_instructions_types = [BehaviorInstructionType.Basic]
+            break
+        elif behavior_instructions_type == "2":
+            behavior_instructions_types = [BehaviorInstructionType.BasicPlus]
+            break
+        elif behavior_instructions_type == "2.5":
+            behavior_instructions_types = [BehaviorInstructionType.BasicPlus_NoExamples]
+            break
+        elif behavior_instructions_type == "3":
+            behavior_instructions_types = [BehaviorInstructionType.DSL]
+            break
+        elif behavior_instructions_type == "3.5":
+            behavior_instructions_types = [BehaviorInstructionType.DSL_Isolated]
+            break
+        elif behavior_instructions_type == "4":
+            behavior_instructions_types = [BehaviorInstructionType.Analysis]
+            break
+        elif behavior_instructions_type == "5":
+            behavior_instructions_types = [BehaviorInstructionType.Default]
+            break
+        elif behavior_instructions_type == "6":
+            if allowAll:
+                behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.DSL_Isolated, BehaviorInstructionType.Analysis]
+                break
+            else:
+                print("Using more than one behavior instructions type is not allowed in this case")
+
+        else:
+            print("Invalid option. Please try again.")
+    return behavior_instructions_types
+
+def additional_requirements_generation(file_path_of_generated_code):
+    history = loadPreviousHistory(file_path_of_generated_code)
+    behavior_instructions_types = select_behavior_instructions_type()
     
     all_models= []
     for behavior_instructions_type in behavior_instructions_types:
@@ -684,8 +694,8 @@ def additional_requirements_generation(file_path_of_generated_code):
                 instructions = file.read()
 
         model.history.insert(0, {"role": "system", "content": instructions})
-        model.History_For_Output = history
-        all_models.append(model)
+        model.History_For_Output = history.copy()
+        all_models.append(model)    
 
     #now that we have all the models, we can start the conversation
     choice= input("If you want the chat to be cumulative, enter 1, otherwise enter 2(each response will not consider your previous requirements, but will consider the file it is based on\n")
@@ -701,10 +711,139 @@ def additional_requirements_generation(file_path_of_generated_code):
                 response = model.chat_with_gpt(input_message)
             print("ChatGPT:", response)
 
-        
-
-
     # return history
+
+def add_requirement(file_path_of_generated_code, output_file_path):
+    history = loadPreviousHistory(file_path_of_generated_code)
+    behavior_instructions_types = select_behavior_instructions_type()
+    
+    all_models= []
+    for behavior_instructions_type in behavior_instructions_types:
+        model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)
+        behavior_instructions_file_path = behavior_instructions_type.value
+        model.history = history
+        
+        #add first value to be system instructions
+        instructions = ""
+        with open(behavior_instructions_file_path, "r") as file:
+                instructions = file.read()
+
+        model.history.insert(0, {"role": "system", "content": instructions})
+        model.History_For_Output = history.copy()
+        all_models.append(model)
+
+    #now that we have all the models, we can start the conversation
+    input_message = input("Your Req: ")
+    for model in all_models:
+        response = model.chat_with_gpt_cumulative(input_message, method=Methodology.STANDARD, behavior_instructions_type=behavior_instructions_type, demoMode=True)
+        print("ChatGPT:", response)
+    
+    # return history
+    #now we need to export the code
+    for model in all_models:
+        model.export_to_code(full_output_path=output_file_path)
+
+def remove_requirement(file_path_of_generated_code, output_file_path):
+    original_history = loadPreviousHistory(file_path_of_generated_code)
+
+    #show the user a list of all his messages and ask him to select the one he wants to delete
+    for i, message in enumerate(original_history):
+        if message["role"] == "user":
+            print(f"{i//2}. {message['content']}")
+    choice = input("Enter the number of the message you want to delete:(Notice, it must be a behavioral one)")
+    choice = int(choice)*2
+    #In theory we can simply remove the user's message and the assistant's message that follows it
+    #But we need to check that the assitant's message doesn't include a declaration of an event that was used in a later message
+    history_after_choice = original_history[choice+2:]
+    events = exctracting_events.extract_constructor_functionAndEvents(code=original_history[choice+1]["content"])
+    if events == []:
+        #we can simply remove the user's message and the assistant's message that follows it
+        history = original_history[:choice] + original_history[choice+2:]
+    else: 
+        #we need to check if the assistant's message includes a declaration of an event(we assume that if Event() function is used, there is a declaration)
+        #if it does, we need to remove the user's message and the assistant's message that follows it, and all the messages that use the event
+        #we will remove the messages that use the event by checking if the event is in the message
+        for event in events:
+            for i, message in enumerate(history_after_choice):
+                if message["role"] == "assistant":
+                    if (event["FunctionName"]+"(" in message["content"]) or ("anyEventNameWithData(\""+event["EventName"]+"\"" in message["content"]):#TODO this is a work around.
+                        #we will append the function to this message
+                        message["content"] = event["FullMatch"]+ "\n" + message["content"]
+                        break
+        history = original_history[:choice] + history_after_choice
+    #now we need to export the code
+    model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)#TODO this is a weird work around
+    model.history = history
+    model.History_For_Output = history
+    model.export_to_code(full_output_path=output_file_path)
+                                       
+def modify_requirement(file_path_of_generated_code, output_file_path):
+    original_history = loadPreviousHistory(file_path_of_generated_code)
+    behavior_instructions_type = select_behavior_instructions_type()[0]
+
+    #First, we will ask the user what requirement he wants to modify
+    for i, message in enumerate(original_history):
+        if message["role"] == "user":
+            print(f"{i//2}. {message['content']}")
+    choice = input("Enter the number of the message you want to modify:(Notice, it must be a behavioral one)")
+    choice = int(choice)*2
+    #Now we will genrate a new response, based on new user requirement and history till choice
+    history_before_choice = original_history[:choice]
+    history_after_choice = original_history[choice+2:]
+    #we will ask the user for the new requirement
+    new_requirement = input("Enter the new requirement:")
+
+    model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)
+    behavior_instructions_file_path = behavior_instructions_type.value
+    model.history = history_before_choice.copy()
+    
+    #add first value to be system instructions
+    instructions = ""
+    with open(behavior_instructions_file_path, "r") as file:
+            instructions = file.read()
+
+    model.history.insert(0, {"role": "system", "content": instructions})
+    model.History_For_Output = history_before_choice.copy()
+
+    response = model.chat_with_gpt_cumulative(new_requirement, method=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic)
+    print("ChatGPT:", response)
+    #now we just change the original history, both the user's message and the assistant's message
+    assitant_message_to_be_deleted = original_history[choice+1]["content"]
+    # original_history[choice]["content"] = new_requirement
+    # original_history[choice+1]["content"] = response
+    #We are almost done.
+    #We now need to check if we didnt remove a function that is later used(similiar to the remove requirement function)
+    eventsOriginal = exctracting_events.extract_constructor_functionAndEvents(code=assitant_message_to_be_deleted)
+    
+    if eventsOriginal == []:
+        #we can simply remove the user's message and the assistant's message that follows it
+        # history = original_history
+        pass
+    else:
+        #we need to check if the assistant's message includes a declaration of an event(we assume that if Event() function is used, there is a declaration)
+        #if it does, we need to remove the user's message and the assistant's message that follows it, and all the messages that use the event
+        #we will remove the messages that use the event by checking if the event is in the message
+        events_modified = exctracting_events.extract_constructor_functionAndEvents(code=response)
+        for event in eventsOriginal:
+            #if the new requirement also declared it, there is no problem
+            if event not in events_modified:
+                for i, message in enumerate(history_after_choice):
+                    if message["role"] == "assistant":
+                        if (event["FunctionName"]+"(" in message["content"]) or ("anyEventNameWithData(\""+event["EventName"]+"\"" in message["content"]):
+                            #we will append the function to this message
+                            message["content"] = event["FullMatch"]+ "\n" + message["content"]
+                            break
+    final_History = history_before_choice + [{"role": "user", "content": new_requirement}, {"role": "assistant", "content": response}] + history_after_choice
+    #now we need to export the code
+    model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)#TODO this is a weird work around
+    model.history = final_History
+    model.History_For_Output = final_History
+    model.export_to_code(full_output_path=output_file_path)
+
+
+
+
+
 
 
     

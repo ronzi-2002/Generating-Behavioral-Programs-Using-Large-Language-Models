@@ -106,7 +106,46 @@ def get_division_by_status(events):
             requestedEvents.append(event)
     return waitedEvents, requestedEvents, requestedAndWaitedEvents
 # Example usage
+def extract_constructor_functionAndEvents(file_path= None, code=None):
+    pattern = r"""
+    function\s+         # 'function' keyword followed by one or more spaces
+    (?P<funName>\w+)\s* # Function name (captured as 'funName'), followed by optional spaces
+    \(\s*               # Opening parenthesis with optional spaces
+    (?P<Parameters>[^)]*)\s*  # Capture parameters inside parentheses (captured as 'Parameters')
+    \)\s*\{             # Closing parenthesis, optional spaces, and opening curly brace
+    \s*return\s+        # 'return' keyword followed by one or more spaces
+    Event\s*\(\s*"      # 'Event("' with optional spaces and a double quote
+    (?P<eventName>\w+)\s*"  # Event name inside double quotes (captured as 'eventName')
+    (?:,\s*\{(?P<extraParams>.*?)\})?\s* # Optional parameters inside the curly braces (captured as 'extraParams')
+    \)\s*;              # Closing parenthesis and semicolon
+    \s*\}               # Closing curly brace
+    """
+    
+    regex = re.compile(pattern, re.VERBOSE)
 
+    if file_path:
+        with open(file_path, 'r') as file:
+            code = file.read()
+
+
+    matches = regex.finditer(code)
+    events = []
+    for match in matches:
+        # print (match.group())
+        # print(f"Function Name: {match.group('funName')}")
+        # print(f"Parameters: {match.group('Parameters')}")
+        # print(f"Event Name: {match.group('eventName')}")
+        # print(f"Extra Params: {match.group('extraParams')}")
+        # print('-' * 40)
+        events.append({
+            'FunctionName': match.group('funName'),
+            'Parameters': match.group('Parameters'),
+            'EventName': match.group('eventName'),
+            'ExtraParams': match.group('extraParams'),
+            'FullMatch': match.group()
+        })
+
+    return events
 if __name__ == "__main__":
 
     # os.getcwd() + "/src/main/BotInstructions/v_13/Entity Bot Instructions"
