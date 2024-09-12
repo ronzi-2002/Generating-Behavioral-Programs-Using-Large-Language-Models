@@ -74,13 +74,17 @@ class EditBPProgramMenu(Menu):
         myOpenAiApi.remove_requirement(self.file_path_of_Bp_Program, self.output_file_path)
         print("Requirement removed successfully")
         return self
+    def modify_requirement(self):
+        myOpenAiApi.modify_requirement(self.file_path_of_Bp_Program, self.output_file_path)
+        print("Requirement modified successfully")
+        return self
          
 class BPLLMMenu(Menu):
     def __init__(self):
         super().__init__("BPLLM Menu")
         self.file_path_of_last_generated_code = None
         self.add_item("Generate BP Code For Requirement Doc", lambda: self.generate_BP_code())
-        self.add_item("Generate BP Code- additional requirements", lambda: self.generate_Additional_BP_code())
+        # self.add_item("Generate BP Code- additional requirements", lambda: self.generate_Additional_BP_code())
         self.add_item("Edit Existing BP Code", lambda: EditBPProgramMenu())
         self.add_item("Set OpenAI API Key", lambda: self.set_openai_api_key())
         self.add_item("Generate UI Code", lambda: self.generate_UI_code())

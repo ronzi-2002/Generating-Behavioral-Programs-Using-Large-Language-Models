@@ -643,7 +643,6 @@ def loadPreviousHistory(file_path_of_generated_code):
     return history
 
 def select_behavior_instructions_type(allowAll = True):
-    behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus(recommended), \n2.5 for BasicPlus without examples(recommended), \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
     behavior_instructions_types = []
     while True:
         behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus(recommended), \n2.5 for BasicPlus without examples(recommended), \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
@@ -746,6 +745,7 @@ def add_requirement(file_path_of_generated_code, output_file_path):
 
 def remove_requirement(file_path_of_generated_code, output_file_path):
     original_history = loadPreviousHistory(file_path_of_generated_code)
+
     #show the user a list of all his messages and ask him to select the one he wants to delete
     for i, message in enumerate(original_history):
         if message["role"] == "user":
@@ -755,7 +755,6 @@ def remove_requirement(file_path_of_generated_code, output_file_path):
     #In theory we can simply remove the user's message and the assistant's message that follows it
     #But we need to check that the assitant's message doesn't include a declaration of an event that was used in a later message
     history_after_choice = original_history[choice+2:]
-    #we need to check if the assistant's message includes a declaration of an event(we assume that if Event() function is used, there is a declaration)
     events = exctracting_events.extract_constructor_functionAndEvents(code=original_history[choice+1]["content"])
     if events == []:
         #we can simply remove the user's message and the assistant's message that follows it
@@ -778,7 +777,73 @@ def remove_requirement(file_path_of_generated_code, output_file_path):
     model.History_For_Output = history
     model.export_to_code(full_output_path=output_file_path)
                                        
-                    
+def modify_requirement(file_path_of_generated_code, output_file_path):
+    original_history = loadPreviousHistory(file_path_of_generated_code)
+    behavior_instructions_type = select_behavior_instructions_type()[0]
+
+    #First, we will ask the user what requirement he wants to modify
+    for i, message in enumerate(original_history):
+        if message["role"] == "user":
+            print(f"{i//2}. {message['content']}")
+    choice = input("Enter the number of the message you want to modify:(Notice, it must be a behavioral one)")
+    choice = int(choice)*2
+    #Now we will genrate a new response, based on new user requirement and history till choice
+    history_before_choice = original_history[:choice]
+    history_after_choice = original_history[choice+2:]
+    #we will ask the user for the new requirement
+    new_requirement = input("Enter the new requirement:")
+
+    model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)
+    behavior_instructions_file_path = behavior_instructions_type.value
+    model.history = history_before_choice.copy()
+    
+    #add first value to be system instructions
+    instructions = ""
+    with open(behavior_instructions_file_path, "r") as file:
+            instructions = file.read()
+
+    model.history.insert(0, {"role": "system", "content": instructions})
+    model.History_For_Output = history_before_choice.copy()
+
+    response = model.chat_with_gpt_cumulative(new_requirement, method=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic)
+    print("ChatGPT:", response)
+    #now we just change the original history, both the user's message and the assistant's message
+    assitant_message_to_be_deleted = original_history[choice+1]["content"]
+    # original_history[choice]["content"] = new_requirement
+    # original_history[choice+1]["content"] = response
+    #We are almost done.
+    #We now need to check if we didnt remove a function that is later used(similiar to the remove requirement function)
+    eventsOriginal = exctracting_events.extract_constructor_functionAndEvents(code=assitant_message_to_be_deleted)
+    
+    if eventsOriginal == []:
+        #we can simply remove the user's message and the assistant's message that follows it
+        # history = original_history
+        pass
+    else:
+        #we need to check if the assistant's message includes a declaration of an event(we assume that if Event() function is used, there is a declaration)
+        #if it does, we need to remove the user's message and the assistant's message that follows it, and all the messages that use the event
+        #we will remove the messages that use the event by checking if the event is in the message
+        events_modified = exctracting_events.extract_constructor_functionAndEvents(code=response)
+        for event in eventsOriginal:
+            #if the new requirement also declared it, there is no problem
+            if event not in events_modified:
+                for i, message in enumerate(history_after_choice):
+                    if message["role"] == "assistant":
+                        if (event["FunctionName"]+"(" in message["content"]) or ("anyEventNameWithData(\""+event["EventName"]+"\"" in message["content"]):
+                            #we will append the function to this message
+                            message["content"] = event["FullMatch"]+ "\n" + message["content"]
+                            break
+    final_History = history_before_choice + [{"role": "user", "content": new_requirement}, {"role": "assistant", "content": response}] + history_after_choice
+    #now we need to export the code
+    model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)#TODO this is a weird work around
+    model.history = final_History
+    model.History_For_Output = final_History
+    model.export_to_code(full_output_path=output_file_path)
+
+
+
+
+
 
 
     
