@@ -292,6 +292,18 @@ class BPProgramMenu(Menu):
 
     def generate_graph(self, file_name):
         import os
+        #Before generating the graph, we need to ask the user if they want to add the external events
+        choice = input("Do you want to add additional behavior/entity to the graph? (b for behavior, e for entity, n for none): ")
+        if choice == "b":
+            #we can use the add requirement function
+            editBPMenu = EditBPProgramMenu()
+            editBPMenu.add_requirement()
+        elif choice == "e":
+            pass
+        else:#nothing is needed to be done.
+            pass
+
+
         # Compile the Java code
         if os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pomGraph.xml") == 0:
         # if True:  
