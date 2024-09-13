@@ -249,7 +249,7 @@ class BPProgramMenu(Menu):
         self.add_item("Run BPProgram With GUI", lambda: self.run_BPProgramWithGUI(file_name))
 
         
-        self.add_item("Generate Graph", lambda: print("Not implemented yet"))
+        self.add_item("Generate Graph", lambda: self.generate_graph(file_name))
         self.add_item("Change File", lambda: BPProgramMenu)
 
     def run_BPProgram(self, file_name, compile = True):
@@ -290,7 +290,55 @@ class BPProgramMenu(Menu):
                 return True
         return False
 
+    def generate_graph(self, file_name):
+        import os
+        # Compile the Java code
+        if os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pomGraph.xml") == 0:
+        # if True:  
+            # Run the jar and capture output
+            process = subprocess.Popen(
+                f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar {file_name} HandleExternalEvents.js",
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True
+            )
 
+            # Store the output and error
+            stdout, stderr = process.communicate()
+            fileDir = ""
+            if process.returncode == 0:
+                print("Output:")
+                print(stdout)  # Or store it in a variable for further use
+                ##one of the line in the output is // Exporting space to: <fileDir>
+                ##we need to extract the fileDir
+                
+                for line in stdout.split("\n"):
+                    if "// Exporting space to: " in line:
+                        fileDir = line.split("// Exporting space to: ")[1]
+                        break
+            else:
+                print("Error:")
+                print(stderr)
+        else:
+            print("Error in compiling the Java code")
+        if fileDir == "":
+            print("Error in exporting the graph")
+            return self
+        export_file_name = file_name + "+HandleExternalEvents.js.dot"
+        full_export_file_path = fileDir+"/" + export_file_name 
+        print (f"Graph exported to {full_export_file_path}")
+
+        #open the graph in the browser
+        import urllib.parse
+
+        graphDot = open(full_export_file_path, "r").read()
+        encoded_path = urllib.parse.quote(graphDot)
+        graphUrl = f"https://dreampuf.github.io/GraphvizOnline/#{encoded_path}"
+        print("If the browser does not open, please open the following link in the browser: ", graphUrl)
+        import webbrowser
+        webbrowser.open(graphUrl)
+        return self
 def main():
     current_menu = MainMenu()
     print("You Can Always Go Back To The Main Menu By Entering M")
