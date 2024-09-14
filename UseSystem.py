@@ -216,7 +216,7 @@ class BPProgramMenu(Menu):
 
             import shutil
             print(shutil.copy(file_path, "src/main_client_server_java/src/main/resources"))
-        
+        self.file_path_of_Bp_Program = "src/main_client_server_java/src/main/resources/" + file_name
         #check if there is a gui for this file. The gui file should be named the same as the file with .html instead of .js 
         self.GUIFile_path =str(os.getcwd())+ "/src/main_client_server_java/src/main/UI_Resources/DefaultGUI_"+file_name.replace(".js", ".html")
         optionalFiles = os.listdir("src/main_client_server_java/src/main/UI_Resources")
@@ -249,7 +249,7 @@ class BPProgramMenu(Menu):
         self.add_item("Run BPProgram With GUI", lambda: self.run_BPProgramWithGUI(file_name))
 
         
-        self.add_item("Generate Graph", lambda: print("Not implemented yet"))
+        self.add_item("Generate Graph", lambda: self.generate_graph(file_name))
         self.add_item("Change File", lambda: BPProgramMenu)
 
     def run_BPProgram(self, file_name, compile = True):
@@ -290,7 +290,83 @@ class BPProgramMenu(Menu):
                 return True
         return False
 
+    def generate_graph(self, file_name):
+        import os
+        #Before generating the graph, we need to ask the user if they want to add the external events
+        choice = input("Do you want to add additional behavior/entity to the graph? (b for behavior, e for entity, else for none): ")
+        if not (choice == "b" or choice == "e"):
+            pass#nothing is needed to be done. before generating the graph
+        else:
+            self.output_file_path = self.file_path_of_Bp_Program.replace(".js", "_editedAt"+time.strftime("%Y%m%d-%H%M%S")+".js")
+        
+            #copy the file to the output file, create the output file if it does not exist
+            import os
+            if not os.path.exists(self.output_file_path):
+                open(self.output_file_path, "w").close()
+            import shutil
+            shutil.copy(self.file_path_of_Bp_Program, self.output_file_path)
+            self.file_path_of_Bp_Program =self.output_file_path
 
+            print("Your edits will be saved in ", self.output_file_path)
+            print("This file will be used to generate the graph")
+            while choice == "b" or choice == "e":
+                if choice == "b":
+                    myOpenAiApi.add_behavioral_requirement_for_graph_generation(self.file_path_of_Bp_Program, self.output_file_path)
+                elif choice == "e":
+                    myOpenAiApi.add_entity_requirement_for_graph_generation(self.file_path_of_Bp_Program, self.output_file_path)
+                choice = input("Do you want to add additional behavior/entity to the graph? (b for behavior, e for entity, else for none): ")
+            file_name = self.output_file_path.split("/")[-1].split("\\")[-1]
+
+
+
+
+        # Compile the Java code
+        if os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pomGraph.xml") == 0:
+        # if True:  
+            # Run the jar and capture output
+            process = subprocess.Popen(
+                f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar {file_name} HandleExternalEvents.js",
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True
+            )
+
+            # Store the output and error
+            stdout, stderr = process.communicate()
+            fileDir = ""
+            if process.returncode == 0:
+                print("Output:")
+                print(stdout)  # Or store it in a variable for further use
+                ##one of the line in the output is // Exporting space to: <fileDir>
+                ##we need to extract the fileDir
+                
+                for line in stdout.split("\n"):
+                    if "// Exporting space to: " in line:
+                        fileDir = line.split("// Exporting space to: ")[1]
+                        break
+            else:
+                print("Error:")
+                print(stderr)
+        else:
+            print("Error in compiling the Java code")
+        if fileDir == "":
+            print("Error in exporting the graph")
+            return self
+        export_file_name = file_name + "+HandleExternalEvents.js.dot"
+        full_export_file_path = fileDir+"/" + export_file_name 
+        print (f"Graph exported to {full_export_file_path}")
+
+        #open the graph in the browser
+        import urllib.parse
+
+        graphDot = open(full_export_file_path, "r").read()
+        encoded_path = urllib.parse.quote(graphDot)
+        graphUrl = f"https://dreampuf.github.io/GraphvizOnline/#{encoded_path}"
+        print("If the browser does not open, please open the following link in the browser: ", graphUrl)
+        import webbrowser
+        webbrowser.open(graphUrl)
+        return self
 def main():
     current_menu = MainMenu()
     print("You Can Always Go Back To The Main Menu By Entering M")

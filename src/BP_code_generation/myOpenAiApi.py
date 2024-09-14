@@ -735,7 +735,7 @@ def add_requirement(file_path_of_generated_code, output_file_path):
     #now that we have all the models, we can start the conversation
     input_message = input("Your Req: ")
     for model in all_models:
-        response = model.chat_with_gpt_cumulative(input_message, method=Methodology.STANDARD, behavior_instructions_type=behavior_instructions_type, demoMode=True)
+        response = model.chat_with_gpt_cumulative(input_message, method=Methodology.STANDARD, behavior_instructions_type=behavior_instructions_type)
         print("ChatGPT:", response)
     
     # return history
@@ -779,7 +779,7 @@ def remove_requirement(file_path_of_generated_code, output_file_path):
                                        
 def modify_requirement(file_path_of_generated_code, output_file_path):
     original_history = loadPreviousHistory(file_path_of_generated_code)
-    behavior_instructions_type = select_behavior_instructions_type()[0]
+    behavior_instructions_type = select_behavior_instructions_type(allowAll=False)[0]
 
     #First, we will ask the user what requirement he wants to modify
     for i, message in enumerate(original_history):
@@ -842,7 +842,61 @@ def modify_requirement(file_path_of_generated_code, output_file_path):
 
 
 
+def add_behavioral_requirement_for_graph_generation(file_path_of_generated_code, output_file_path):
+    history = loadPreviousHistory(file_path_of_generated_code)
+    behavior_instructions_type = select_behavior_instructions_type(allowAll=False)[0]
+    model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)
+    behavior_instructions_file_path = behavior_instructions_type.value
+    model.history = history
+    #add first value to be system instructions
+    instructions = ""
+    with open(behavior_instructions_file_path, "r") as file:
+            instructions = file.read()
+    model.history.insert(0, {"role": "system", "content": instructions})
+    model.History_For_Output = history.copy()
+    # all_models.append(model)
+    #now that we have the model set we can start the conversation
+    input_message = input("Your Req(enter exit to stop): ")
+    while input_message != "exit":
+        
+        input_message += "\n\n"+"use only existing events, dont declare new ones. Keep using bthreads" 
+        response = model.chat_with_gpt_cumulative(input_message, method=Methodology.STANDARD, behavior_instructions_type=behavior_instructions_type)
+        print("ChatGPT:", response)
+        #in the last users message, remove the added text
+        model.history[-2]["content"] = model.history[-2]["content"].replace("\n\n"+"use only existing events, dont declare new ones. Keep using bthreads", "")
+        model.History_For_Output[-2]["content"] = model.History_For_Output[-2]["content"].replace("\n\n"+"use only existing events, dont declare new ones. Keep using bthreads", "")
+        input_message = input("Your Req(enter exit to stop):*Only behavioral requirements are allowed* ")
+    # return history
+    #now we need to export the code
+ 
+    model.export_to_code(full_output_path=output_file_path)
 
+def add_entity_requirement_for_graph_generation(file_path_of_generated_code, output_file_path):
+    history = loadPreviousHistory(file_path_of_generated_code)
+    model = MyOpenAIApi(model="gpt-4-turbo-2024-04-09", temp=0)
+    entity_instructions_file_path = os.getcwd() + "/src/BP_code_generation/Instructions/Entity Bot Instructions"
+    model.history = history
+    #add first value to be system instructions
+    instructions = ""
+    with open(entity_instructions_file_path, "r") as file:
+        instructions = file.read()
+    model.history.insert(0, {"role": "system", "content": instructions})
+    model.History_For_Output = history.copy()
+    #now that we have the model set we can start the conversation
+    input_message = input("Your Req(enter exit to stop):")
+    while input_message != "exit":
+        
+        input_message += "\n\n"+"Use only declared constructor functions" 
+        response = model.chat_with_gpt_cumulative(input_message)
+        print("ChatGPT:", response)
+        #in the last users message, remove the added text
+        model.history[-2]["content"] = model.history[-2]["content"].replace("\n\n"+"Use only declared constructor functions", "")
+        model.History_For_Output[-2]["content"] = model.History_For_Output[-2]["content"].replace("\n\n"+"Use only declared constructor functions", "")
+        input_message = input("Your Req(enter exit to stop):*Only entity requirements are allowed* ")
+    # return history
+    #now we need to export the code
+ 
+    model.export_to_code(full_output_path=output_file_path)
 
 
 
