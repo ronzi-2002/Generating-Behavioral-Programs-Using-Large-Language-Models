@@ -216,7 +216,7 @@ class BPProgramMenu(Menu):
 
             import shutil
             print(shutil.copy(file_path, "src/main_client_server_java/src/main/resources"))
-        
+        self.file_path_of_Bp_Program = "src/main_client_server_java/src/main/resources/" + file_name
         #check if there is a gui for this file. The gui file should be named the same as the file with .html instead of .js 
         self.GUIFile_path =str(os.getcwd())+ "/src/main_client_server_java/src/main/UI_Resources/DefaultGUI_"+file_name.replace(".js", ".html")
         optionalFiles = os.listdir("src/main_client_server_java/src/main/UI_Resources")
@@ -293,15 +293,31 @@ class BPProgramMenu(Menu):
     def generate_graph(self, file_name):
         import os
         #Before generating the graph, we need to ask the user if they want to add the external events
-        choice = input("Do you want to add additional behavior/entity to the graph? (b for behavior, e for entity, n for none): ")
-        if choice == "b":
-            #we can use the add requirement function
-            editBPMenu = EditBPProgramMenu()
-            editBPMenu.add_requirement()
-        elif choice == "e":
-            pass
-        else:#nothing is needed to be done.
-            pass
+        choice = input("Do you want to add additional behavior/entity to the graph? (b for behavior, e for entity, else for none): ")
+        if not (choice == "b" or choice == "e"):
+            pass#nothing is needed to be done. before generating the graph
+        else:
+            self.output_file_path = self.file_path_of_Bp_Program.replace(".js", "_editedAt"+time.strftime("%Y%m%d-%H%M%S")+".js")
+        
+            #copy the file to the output file, create the output file if it does not exist
+            import os
+            if not os.path.exists(self.output_file_path):
+                open(self.output_file_path, "w").close()
+            import shutil
+            shutil.copy(self.file_path_of_Bp_Program, self.output_file_path)
+            self.file_path_of_Bp_Program =self.output_file_path
+
+            print("Your edits will be saved in ", self.output_file_path)
+            print("This file will be used to generate the graph")
+            while choice == "b" or choice == "e":
+                if choice == "b":
+                    myOpenAiApi.add_behavioral_requirement_for_graph_generation(self.file_path_of_Bp_Program, self.output_file_path)
+                elif choice == "e":
+                    myOpenAiApi.add_entity_requirement_for_graph_generation(self.file_path_of_Bp_Program, self.output_file_path)
+                choice = input("Do you want to add additional behavior/entity to the graph? (b for behavior, e for entity, else for none): ")
+            file_name = self.output_file_path.split("/")[-1].split("\\")[-1]
+
+
 
 
         # Compile the Java code
