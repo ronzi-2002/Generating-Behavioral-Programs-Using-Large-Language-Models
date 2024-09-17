@@ -11,7 +11,7 @@ Your Role is to declare the queries.
 
 Given entities, we use different queries to retrieve them.
 An entity is a JavaScript object with a unique identifier, a type, and a additional set of properties.
-For example, an entity representing a room could have the following structure:
+For example, an entity representing a car could have the following structure:
 car entity:
 {
     id: 'car1',

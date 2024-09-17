@@ -2,12 +2,14 @@
 There are rooms. each room has a type(bedroom, kitchen and so on), some rooms have a tap.
 
 
+
 */
 function room(id, roomType, hasTap) {
     return ctx.Entity(id, 'room', {roomType: roomType, hasTap: hasTap});
 }
 // ctx.populateContext([lightBulb('lightBulb1', 'off')]);
 ctx.populateContext([room('room1', 'kitchen', true)]);
+
 
 
 /*
@@ -17,14 +19,17 @@ Needed queries:
   3. kitchen
 
 
+
 */
 ctx.registerQuery('room', entity => entity.type == 'room');
 ctx.registerQuery('room.withTap', entity => entity.type == 'room' && entity.hasTap);
 ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.roomType == 'kitchen');
 
 
+
 /*
 For each room with a tap, when the tap's button is pressed, pour hot water three times.
+
 
 
 */
@@ -46,8 +51,10 @@ ctx.bthread('Pour hot water three times when tap button is pressed', 'room.withT
 });
 
 
+
 /*
 For each room with a tap, when the tap's button is pressed, pour cold water three times.
+
 
 
 */
@@ -65,8 +72,10 @@ ctx.bthread('Pour cold water three times when tap button is pressed', 'room.with
 });
 
 
+
 /*
 Do not perform two consecutive pouring actions of the same type in kitchens
+
 
 
 */
@@ -81,8 +90,10 @@ ctx.bthread('Do not perform two consecutive pouring actions of the same type in 
 });
 
 
+
 /*
 No water can be poured after an emergency button is pressed
+
 
 
 */
@@ -94,6 +105,7 @@ bthread('Block water pouring after emergency button is pressed', function () {
     sync({waitFor: [emergencyButtonPressedEvent()]});
     sync({block: [anyEventNameWithData("pourHotWaterEvent"), anyEventNameWithData("pourColdWaterEvent")]});
 });
+
 
 
 

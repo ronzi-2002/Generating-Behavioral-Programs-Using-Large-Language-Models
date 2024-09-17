@@ -6,9 +6,8 @@ There are rooms. each room has a type(bedroom, kitchen and so on), some rooms ha
 Query INSTRUCTIONS:
 
 Needed queries:
-  1. room
-  2. room with tap
-  3. kitchen
+  1. room with tap
+  2. kitchen
 
 Behavior INSTRUCTIONS:
 
