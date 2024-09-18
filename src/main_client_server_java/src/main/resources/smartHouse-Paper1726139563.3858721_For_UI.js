@@ -4,6 +4,8 @@ There are rooms. each room has a type(bedroom, kitchen and so on), some rooms ha
 function room(id, roomType, hasTap) {
     return ctx.Entity(id, 'room', {roomType: roomType, hasTap: hasTap});
 }
+
+ctx.populateContext([room('kitchen1', 'kitchen', true)]);
 /*
 Needed queries:
   2. room with tap

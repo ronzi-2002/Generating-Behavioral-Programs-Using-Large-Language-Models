@@ -14,6 +14,9 @@ The events you can send and listen to are detailed at the end of the file. You d
   * Implement the system fully. If not stated explicitly, don't use placeholders
 
 #### Using Events ####
+For communication with the backend, you will use a socket. Declare the socket as follows:
+let socket = new WebSocket('ws://localhost:8001');
+
 ### Sending Events:
 
 Given an event: 
@@ -83,19 +86,24 @@ if (event.name === 'getEntityByIdResponse') {
 #### Exisiting Entities and Events ####
 
 ### Entities:
+Entity: room
+  Fields: ['id', 'roomType', 'hasTap']
+  Instances:
+    - {'id': "'kitchen1'", 'roomType': "'kitchen'", 'hasTap': 'true'}
+
 
 
 ###Events You need to send:
--motionDetectedEvent()
--lockHouseEvent()
+-tapButtonPressedEvent(roomId)
+-emergencyButtonPressedEvent()
 
 
 ###Events you need to listen/react to and cant never send:
--turnOnLightEvent(lightId)
--turnOffLightEvent(lightId)
--notifyUserEvent()
+*There are no events you can listen to and cant never send
 
 
 
-
+Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:
+-pourHotWaterEvent(roomId)
+-pourColdWaterEvent(roomId)
 

@@ -15,7 +15,52 @@ def extract_Queries(file_path= None, code=None):
     query_names = re.findall(r"ctx\.registerQuery\('([^']+)'", code)
 
     return query_names
+# Function to extract entities and their fields (including id)
+def extract_entities(file_path= None, code=None):
+    if file_path:
+        with open(file_path, 'r') as file:
+            code = file.read()
+    entity_pattern = r"ctx\.Entity\(\s*(\w+)\s*,\s*'(\w+)'\s*,\s*\{(.*?)\}\s*\);"
 
+    entities = {}
+    matches = re.findall(entity_pattern, code)
+    for match in matches:
+        entity_id, entity_name, fields = match
+        field_pairs = [f.strip() for f in fields.split(',')]
+        entity_fields = ['id'] + [pair.split(':')[0].strip() for pair in field_pairs]  # Add 'id' as the first field
+        entities[entity_name] = {
+            'id': entity_id,
+            'fields': entity_fields,
+            'instances': []
+        }
+    return entities
+
+# Function to extract instances for each entity and store as a dictionary
+def extract_instances(file_path= None, code=None, entities=None):
+    if file_path:
+        with open(file_path, 'r') as file:
+            code = file.read()
+    instance_pattern = r"ctx\.populateContext\(\[(.*?)\]\);"
+    instance_details_pattern = r"(\w+)\((.*?)\)"
+    instance_matches = re.search(instance_pattern, code)
+    if instance_matches:
+        instances_str = instance_matches.group(1)
+        instance_list = re.findall(instance_details_pattern, instances_str)
+        for instance in instance_list:
+            entity_name, params = instance
+            param_values = [param.strip() for param in params.split(',')]
+            if entity_name in entities:
+                # Create a dictionary for each instance, mapping fields (including id) to values
+                instance_dict = dict(zip(entities[entity_name]['fields'], param_values))
+                entities[entity_name]['instances'].append(instance_dict)
+    return entities
+def extract_entitiesAndInstances(file_path= None, code=None):
+    if file_path:
+        with open(file_path, 'r') as file:
+            code = file.read()
+    entities = extract_entities(code= code)
+    entities_with_instances = extract_instances(code= code, entities= entities)
+    return entities_with_instances
 def extract_events(file_path= None, code=None):
     events = []
     

@@ -1,0 +1,79 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Home Water System</title>
+<style>
+  .room {
+    border: 1px solid black;
+    padding: 10px;
+    margin: 10px;
+    display: inline-block;
+  }
+  .water-icon {
+    font-size: 24px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div id="rooms">
+  <div class="room" id="kitchen1">
+    <h2>Kitchen</h2>
+    <button class="tap-button" onclick="tapButtonPressed('kitchen1')">Tap</button>
+    <span class="water-icon" id="water-icon-kitchen1"></span>
+  </div>
+</div>
+<button id="emergency-button" onclick="emergencyButtonPressed()">Emergency</button>
+
+<script>
+let socket = new WebSocket('ws://localhost:8001');
+
+let waterQueue = [];
+let isDisplaying = false;
+
+function tapButtonPressed(roomId) {
+  socket.send(JSON.stringify({
+    name: 'tapButtonPressedEvent',
+    data: { roomId: roomId }
+  }));
+}
+
+function emergencyButtonPressed() {
+  socket.send(JSON.stringify({
+    name: 'emergencyButtonPressedEvent'
+  }));
+}
+
+socket.onmessage = function(eventMessage) {
+  console.log('Received: ' + eventMessage.data);
+  let event = JSON.parse(eventMessage.data);
+
+  if (event.name === 'pourHotWaterEvent' || event.name === 'pourColdWaterEvent') {
+    waterQueue.push({ roomId: event.data.roomId, type: event.name });
+    displayWaterEffect();
+  }
+};
+
+function displayWaterEffect() {
+  if (isDisplaying || waterQueue.length === 0) return;
+  isDisplaying = true;
+
+  let { roomId, type } = waterQueue.shift();
+  let icon = document.getElementById(`water-icon-${roomId}`);
+  icon.style.display = 'inline';
+  icon.textContent = type === 'pourHotWaterEvent' ? '🔥' : '💧';
+
+  setTimeout(() => {
+    icon.style.display = 'none';
+    setTimeout(() => {
+      isDisplaying = false;
+      displayWaterEffect();
+    }, 100);
+  }, 500);
+}
+</script>
+</body>
+</html>
+```

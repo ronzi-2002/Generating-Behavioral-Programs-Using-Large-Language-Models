@@ -339,7 +339,7 @@ class MyOpenAIApi:
             
 
             exportTo = directory + "/" + file_name
-            file = open(exportTo, "w")
+            file = open(exportTo, "w", encoding='utf-8')
             file.write(string_to_write)
             file.close()
             print("code has been exported to " + exportTo)

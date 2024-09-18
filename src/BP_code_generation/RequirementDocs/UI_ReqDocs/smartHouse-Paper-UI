@@ -1,0 +1,10 @@
+The Scene:
+Create a Screen that shows a room for each room in the house. If the room has a tap, show a tap button in the room and a tap icon.
+- You will need to visualize the pouring of hot and cold water in the room. For cold water show 💧, and for hot water show 🔥. Make sure to show one icon at a time, keeping for 0.5 seconds, before showing the next one.
+
+In addition, provide one emergency button.
+
+
+
+Actions:
+ - user can press the tap button and the emergency button.

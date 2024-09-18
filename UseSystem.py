@@ -158,6 +158,25 @@ class BPLLMMenu(Menu):
             ui_instructions = ui_instructions.replace("Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:", "")
         else:
             ui_instructions = ui_instructions.replace("Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:", "Additional events you can refer to, you can both wait to receive them from the backend or send them yourself:\n"+"\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in requestedAndWaitedEvents]))
+        #Handeling Entities:
+        entities_with_instances = exctracting_events.extract_entitiesAndInstances(BP_code_file_path)
+        # Output the results
+        entity_instances = ""
+        for entity, details in entities_with_instances.items():
+            # print(f"Entity: {entity}")
+            # print(f"  Fields: {details['fields']}")
+            # print(f"  Instances:")
+            # for instance in details['instances']:
+            #     print(f"    - {instance}")
+            entity_instances += f"Entity: {entity}\n"
+            entity_instances += f"  Fields: {details['fields']}\n"
+            entity_instances += f"  Instances:\n"
+            for instance in details['instances']:
+                entity_instances += f"    - {instance}\n"
+
+        ui_instructions = ui_instructions.replace("### Entities:", "### Entities:\n" + entity_instances)
+
+        
         #save to some temporary file for debugging
         with open("temp_instructions.txt", "w") as file:
             file.write(ui_instructions)
