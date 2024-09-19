@@ -12,7 +12,7 @@ Needed queries:
   3. kitchen
 */
 ctx.registerQuery('room.withTap', entity => entity.type == 'room' && entity.hasTap);
-ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.subtype == 'kitchen');
+ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.roomType == 'kitchen');
 /*
 For each room with a tap, when the tap's button is pressed, pour hot water three times.
 */
@@ -66,7 +66,14 @@ function emergencyButtonPressedEvent() {
     return Event("emergencyButtonPressedEvent");
 }
 
-ctx.bthread('Block water pouring after emergency button is pressed', function () {
+bthread('Block water pouring after emergency button is pressed', function () {
     sync({waitFor: [emergencyButtonPressedEvent()]});
     sync({block: [anyEventNameWithData("pourHotWaterEvent"), anyEventNameWithData("pourColdWaterEvent")]});
+});
+
+/*
+press on the tap button in every room
+*/
+ctx.bthread('Press on the tap button in every room', 'room.withTap', function (room) {
+    sync({request: [tapButtonPressedEvent(room.id)]});
 });

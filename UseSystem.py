@@ -271,7 +271,7 @@ class BPProgramMenu(Menu):
         self.add_item("Generate Graph", lambda: self.generate_graph(file_name))
         self.add_item("Change File", lambda: BPProgramMenu)
 
-    def run_BPProgram(self, file_name, compile = True):
+    def run_BPProgram(self, file_name, compile = True, gui_file_path = None):
         #java -jar .\target\DesignlessProgrammin.jar
         import os
         if compile:
@@ -281,11 +281,23 @@ class BPProgramMenu(Menu):
             speedFactor = input("You have time events in your file, do you want to speed up the time? (1 for normal speed, 60 for 60 times faster and so on): ")
             process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -t -s -speedFactor {speedFactor}", shell=True) 
         else:
-            process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} ", shell=True)
+            if gui_file_path == None:
+                process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} ", shell=True)
+            else:#We need to understand what events are used in the ui.
+                events = exctracting_events.extract_events(self.file_path_of_Bp_Program)
+                event_names = [event['EventName'] for event in events]
+                #check if the event is in the gui_file
+                gui_code = open(gui_file_path, "r", encoding="utf-8").read()
+                used_event_names = []
+                for event_name in event_names:
+                    if event_name in gui_code:
+                        used_event_names.append(event_name)
+                process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -e {','.join(used_event_names)}", shell=True)
+
         #if there is a GUI system, open 
     def run_BPProgramWithGUI(self, file_name):
         #open the GUI file in the chrome browser
-        self.run_BPProgram(file_name, True)
+        self.run_BPProgram(file_name, True, self.GUIFile_path)
         import webbrowser
         browsers = webbrowser._browsers.items()
         #if browsers is dict_items([]), empty. 

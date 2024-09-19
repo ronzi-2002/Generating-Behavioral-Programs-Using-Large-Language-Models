@@ -40,6 +40,7 @@ public class main_with_external{
         boolean sleep = false;
         boolean time = false;
         boolean files = false;
+        String eventNames = "";
         long speedingFactor = 1;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("-f")) {
@@ -55,6 +56,9 @@ public class main_with_external{
             }
             if (args[i].equals("-speedFactor")) {
                 speedingFactor = Long.parseLong(args[i + 1]);
+            }
+            if (args[i].equals("-e")) {
+                eventNames = args[i + 1];
             }
         }     
         final long finalSpeedingFactor = speedingFactor;   
@@ -93,7 +97,10 @@ public class main_with_external{
             Server server = new Server(bprog);//Starting a server(with a websocket) that listens to the incoming events from the client.
             ServerListner sl = new ServerListner(server);
             rnr.addListener(sl);//Listening to server event and sending them to the client
-
+            if(eventNames != ""){   
+                bprog.enqueueExternalEvent(new BEvent("UI_Init", eventNames));
+            }
+            
             Thread bpthread = new Thread(new Runnable() {
                 @Override
                 public void run() {

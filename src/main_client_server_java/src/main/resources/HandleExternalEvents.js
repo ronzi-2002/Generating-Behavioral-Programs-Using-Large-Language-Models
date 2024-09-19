@@ -179,3 +179,20 @@ function waitForAll() {
   }
 }
 
+bthread("Handle UI Delays", function () {
+  let event = null;
+  let events = sync({waitFor: anyEventNameWithData("UI_Init")});
+  //Events.data is a string, splited by commas we need a list
+  bp.log.info("Sleeping after events: " + events.data);
+  let eventNames = events.data.split(",");
+  let eventsToWaitFor = EventSet("UI_Related_Events", function (e) {
+    return eventNames.includes(e.name);
+  });
+  while (true) {
+    event = sync({waitFor: eventsToWaitFor});
+    //Now wait for 0.5 seconds using JAVA
+    java.lang.Thread.sleep(500);
+
+  }
+});
+
