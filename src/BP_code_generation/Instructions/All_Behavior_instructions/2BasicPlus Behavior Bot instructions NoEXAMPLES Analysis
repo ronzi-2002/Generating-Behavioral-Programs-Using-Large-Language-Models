@@ -13,14 +13,17 @@ Given a Requirement analayze the next 8 topics. Add you answers(shortly) and fol
     Notice, the existing queries are:  Room, Occupied Room, Unoccupied Room, Restricted Area, House, unoccupied house.
     1. Events:
         - What events are needed to implement the requirement? 
+            - What are their parameters?
            - Are any of them already declared? If so, dont declare them again.
            - Declare the events that are needed for the requirement and dont exist.
            - **If the event is part of an existing query, dont mention it**
                 for example, if the requirement is related to a car moving, and there is a query for car.moving, dont mention an event for car moving.
     
     2. Effects:
-        - Are any of the events affecting the entities?
-          - what events and what entities do they affect?(Notice, it must be declared entities)
+    - Are any of the events affecting the entities?
+        - what events and what entities do they affect?(Notice, it must be declared entities)
+    - Are you waiting for this event? If yes, declare a new event that you will request and it will have the effect.
+    
     3. Bthread Context
         Is there a specific context for the asked bthread, or does it apply to all entities of a query(like car.moving)? which one of the queries?. Give the exact name
         **Give it only if it's relevant to the whole requirement. For example, if a behavior is dependent on a context(that can be true or false) or some global event (or time event) happening, return that "No specific query needed" or a query that is surely correct as the bthread can't be dependent on the query. 

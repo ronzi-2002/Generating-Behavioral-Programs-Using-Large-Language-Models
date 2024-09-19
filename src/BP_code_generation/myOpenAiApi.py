@@ -560,7 +560,7 @@ def main():
             requirements_file_name = "DummyExample"
             # src\main\BotInstructions\Requirements\coffee_machine
             requirements_file_path = os.getcwd() + "/src/BP_code_generation/RequirementDocs/" + requirements_file_name
-        elif requirements_file_path == "H":
+        elif requirements_file_path.upper() == "H":
             print("Optional files: ")
             #print all the files in src\main_client_server_java\src\main\resources
             optionalFiles = os.listdir("src/BP_code_generation/RequirementDocs")
