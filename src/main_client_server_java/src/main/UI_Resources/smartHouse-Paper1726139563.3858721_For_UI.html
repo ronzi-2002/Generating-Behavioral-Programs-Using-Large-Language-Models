@@ -1,9 +1,23 @@
+/*
+The Scene:
+Create a Screen that shows a room for each room in the house. If the room has a tap, show a tap button in the room and a tap icon.
+- You will need to visualize the pouring of hot and cold water in the room. For cold water show ðŸ’§, and for hot water show ðŸ”¥.
+
+In addition, provide one emergency button.
+
+
+
+Actions:
+ - user can press the tap button and the emergency button.
+
+*/
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Smart Home Water System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Room Manager</title>
 <style>
   .room {
     border: 1px solid black;
@@ -13,7 +27,6 @@
   }
   .water-icon {
     font-size: 24px;
-    display: none;
   }
 </style>
 </head>
@@ -21,58 +34,51 @@
 <div id="rooms">
   <div class="room" id="kitchen1">
     <h2>Kitchen</h2>
-    <button class="tap-button" onclick="tapButtonPressed('kitchen1')">Tap</button>
+    <button onclick="tapButtonPressed('kitchen1')">Tap</button>
     <span class="water-icon" id="water-icon-kitchen1"></span>
   </div>
 </div>
-<button id="emergency-button" onclick="emergencyButtonPressed()">Emergency</button>
+<button onclick="emergencyButtonPressed()">Emergency Button</button>
 
 <script>
-let socket = new WebSocket('ws://localhost:8001');
+    let socket = new WebSocket('ws://localhost:8001');
 
-let waterQueue = [];
-let isDisplaying = false;
+  socket.onopen = function() {
+    console.log('WebSocket connection established');
+  };
 
-function tapButtonPressed(roomId) {
-  socket.send(JSON.stringify({
-    name: 'tapButtonPressedEvent',
-    data: { roomId: roomId }
-  }));
-}
+  socket.onmessage = function(eventMessage) {
+    var event = JSON.parse(eventMessage.data);
+    console.log('Received:', event);
 
-function emergencyButtonPressed() {
-  socket.send(JSON.stringify({
-    name: 'emergencyButtonPressedEvent'
-  }));
-}
+    if (event.name === 'pourHotWaterEvent' || event.name === 'pourColdWaterEvent') {
+      var roomId = event.data.roomId;
+      var icon = event.name === 'pourHotWaterEvent' ? '🔥' : '💧';
+      document.getElementById('water-icon-' + roomId).textContent = icon;
 
-socket.onmessage = function(eventMessage) {
-  console.log('Received: ' + eventMessage.data);
-  let event = JSON.parse(eventMessage.data);
+      setTimeout(function() {
+        document.getElementById('water-icon-' + roomId).textContent = '';
+      }, 2000);
+    }
+  };
 
-  if (event.name === 'pourHotWaterEvent' || event.name === 'pourColdWaterEvent') {
-    waterQueue.push({ roomId: event.data.roomId, type: event.name });
-    displayWaterEffect();
+  socket.onerror = function(error) {
+    console.log('WebSocket Error: ' + error);
+  };
+
+  function tapButtonPressed(roomId) {
+    socket.send(JSON.stringify({
+      name: 'tapButtonPressedEvent',
+      data: { roomId: roomId }
+    }));
   }
-};
 
-function displayWaterEffect() {
-  if (isDisplaying || waterQueue.length === 0) return;
-  isDisplaying = true;
+  function emergencyButtonPressed() {
+    socket.send(JSON.stringify({
+      name: 'emergencyButtonPressedEvent'
+    }));
+  }
 
-  let { roomId, type } = waterQueue.shift();
-  let icon = document.getElementById(`water-icon-${roomId}`);
-  icon.style.display = 'inline';
-  icon.textContent = type === 'pourHotWaterEvent' ? '🔥' : '💧';
-
-  setTimeout(() => {
-    icon.style.display = 'none';
-    setTimeout(() => {
-      isDisplaying = false;
-      displayWaterEffect();
-    }, 100);
-  }, 500);
-}
 </script>
 </body>
 </html>
