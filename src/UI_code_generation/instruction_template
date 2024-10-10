@@ -61,13 +61,6 @@ socket.onmessage = function(eventMessage) {
   }
 }
 
-##Showing the effect of the event to the user
-Many events might come almost instantly. In some cases, we would like to show the user each event that happened (of some type.) In such cases, you must use a queue to hold the events and allow yourself to present the user with the events individually.
-For example, when using the same element to present more than one type of event, and the user asks to see the event's effect for X time, we need to ensure it isn't overridden in case a new event arrives. In such cases, use timeout together with a queue.
-
-
-
-
 
 ### Getting Entities By Id:
 

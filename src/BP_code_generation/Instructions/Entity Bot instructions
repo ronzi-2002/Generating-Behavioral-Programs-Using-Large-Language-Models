@@ -15,6 +15,7 @@ function entityA(id,data1, data2) {
 }
 the ctx.Entity function is a constructor that receives the id, the type of the entity, and an object with the properties of the entity.
 
+
 **NEVER use "id" or "type" as a property name, use other such as subtype or more specific name.
 
 for example:
@@ -22,6 +23,12 @@ function car(id, isOpened, fuelLevel) {
     return ctx.Entity(id, 'car', {isOpened: isOpened, fuelLevel: fuelLevel,}) 
 }
 *if no default values were given, receive all values as parameters.
+
+*If a field is a unique identifier, use the "id" field(in addition to the field that is the unique identifier).
+for example a book entity:
+function book(book_serial_number, title, author) { 
+    return ctx.Entity(book_serial_number, 'book', {book_serial_number: book_serial_number, title: title, author: author})
+}
 
 2. if specific values are provided or the declaration of the entity is in a singular form("There is a ..."):
 Next, we create the actual entities and add them to the context:
