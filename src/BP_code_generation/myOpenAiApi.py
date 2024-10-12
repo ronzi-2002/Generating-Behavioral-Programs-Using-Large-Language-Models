@@ -13,6 +13,7 @@ class Methodology(Enum):
     STANDARD = "standard"
     PREPROCESS_AS_PART_OF_PROMPT = "preprocess_as_part_of_prompt"
     PREPROCESS_AS_PART_BEFORE_PROMPT = "preprocess_as_part_before_prompt"
+    ISOALTED = "isolated"
 
 class InstructionPhase(Enum):
     ENTITY_INSTRUCTIONS = "Entity INSTRUCTIONS:"
@@ -111,7 +112,57 @@ class MyOpenAIApi:
             temperature = self.temp
         )
         return self.static_post_process( response.choices[0].message.content)
-    
+    def chat_with_gpt_cumulative_isolated_BP_generation(self,new_message,behavior_instructions_type = BehaviorInstructionType.Basic):
+        #In this version a summary of the events is generated and provided to the model as an additional message.
+
+         # For these instructions, each requirement is a standalone. 
+        allEvents= exctracting_events.extract_events(code=self.export_to_code(exportToFile=False))
+        instructions = ""
+        with open(behavior_instructions_type.value, "r") as file:
+            instructions = file.read()
+        #In the file, there is a line that says "<add the existing events here>"
+        #Add existing events in the format of
+        #-EventA(parameters)
+        #-EventB(parameters)
+        #and so on
+        # if len(allEvents) == 0:
+        #     #delete the line that starts with "Existing Events that were defined before:" 
+        #     lines = instructions.split("\n")
+        #     for i, line in enumerate(lines):
+        #         if line.startswith("Existing Events that were defined before:"):
+        #             del lines[i]
+        #             break
+        #     instructions = "\n".join(lines)
+        # else:
+        #     instructions = "\n\n\n"+instructions.replace("Existing Events that were defined before(you can use them without declaring them again):", "Existing Events that were defined before(you can use them without declaring them again):\n"+ "\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in allEvents]))
+        
+        events_message = "Summary of existing events you can use if needed: + " + "\n + ".join([f"{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in allEvents])
+        
+        # self.set_instructions(instructions)
+        #now we need to add the events_message to the history
+        self.history.append({"role": "user", "content": events_message})
+        #Now after we handled the instructions, we need to call the model,
+        self.history.append({"role": "user", "content": new_message})
+        self.History_For_Output.append({"role": "user", "content": new_message})
+
+        demo_response= ""
+        response = self.client.chat.completions.create(
+            model=self.model,  # You can use any model you prefer
+            messages=self.history,
+            temperature = self.temp
+        )
+
+        response_to_return = response.choices[0].message.content
+
+        #we add the response to the original history but not the processed one
+        self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response_to_return)})
+        #we remove the last user message, and the events message
+        self.history.pop(-1)
+        self.history.pop(-1)
+        return self.static_post_process( response_to_return)
+
+
+        
     def chat_with_gpt_cumulative(self,new_message, method=Methodology.STANDARD, behavior_instructions_type = BehaviorInstructionType.Basic, demoMode = False):
         """
         Chat with GPT-3.5-turbo model using OpenAI API.
@@ -503,6 +554,8 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
         
 
         if current_instruction == InstructionPhase.BEHAVIOR_INSTRUCTIONS:
+            if methodology == Methodology.ISOALTED:
+                response = myOpenAIApi.chat_with_gpt_cumulative_isolated_BP_generation(input_message, behavior_instructions_type=behavior_instructions_type)
             response = myOpenAIApi.chat_with_gpt_cumulative(input_message, method=methodology, behavior_instructions_type=behavior_instructions_type)
         else:
             if entityAndQueriesCache != []:
