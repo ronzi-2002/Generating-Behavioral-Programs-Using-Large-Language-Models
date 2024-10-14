@@ -197,7 +197,15 @@ Never refer to data fields that are not declared in the event.
     }
     8. Wait for any event from a set of event(will resume after one of the events happens):
         sync({waitFor: [A(), B(), C()]})
-    
+    9. Logic based on what event happened:
+        let event = sync({waitFor: [A(), B(), C()]})
+        if (event.name === "A") {
+            //do something
+        } else if (event.name === "B") {
+            //do something else
+        } else {
+            //do something else
+        }
 ### Supporting an asked functionality:
 In some cases, we declare an action that we want to support but we dont know when it will happen. In such cases simple declare the event and the effect, and dont use it in any bthread.
 //Requirement: The user can start the car
