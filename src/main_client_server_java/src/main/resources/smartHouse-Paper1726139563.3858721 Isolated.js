@@ -11,7 +11,7 @@ Needed queries:
   3. room with lightbulb
 */
 ctx.registerQuery('room.withTap', entity => entity.type == 'room' && entity.hasTap);
-ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.subtype == 'kitchen');
+ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.roomType == 'kitchen');
 ctx.registerQuery('room.WithLightBulb', entity => entity.type == 'room' && entity.hasLightbulb);
 /*
 For each room with a tap, when the tap's button is pressed, pour hot water three times.

@@ -12,7 +12,7 @@ Needed queries:
   3. kitchen
 */
 ctx.registerQuery('room.withTap', entity => entity.type == 'room' && entity.hasTap);
-ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.subtype == 'kitchen');
+ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.roomType == 'kitchen');
 /*
 For each room with a tap, when the tap's button is pressed, pour hot water three times.
 */
