@@ -54,15 +54,22 @@ function anyEventNameWithData(eventName, data) {
     //for each <key, value> in data, check if the event has the same key and value
     for (let [key, value] of Object.entries(data)) {
       //if the event does not have the key
-      // if (!e.data.hasOwnProperty(key)) {
-      //   return false;
-      // }
+      if(!e.data)
+        return false;
+      try {
+        if (!e.data.hasOwnProperty(key)) {
+          return false;
+        }
+      }
+        catch (e) {
+            return false;
+        }
 
       if (e.data[key] !== value) {
         return false;
       }
     }
-    return e.name === eventName;
+    return e.name === eventName// && e.data === data;//TODO: check if this is the correct way to compare objects, maybe use JSON.stringify or compare each field
   });
 }
 function getEntitiesByType(type) {
