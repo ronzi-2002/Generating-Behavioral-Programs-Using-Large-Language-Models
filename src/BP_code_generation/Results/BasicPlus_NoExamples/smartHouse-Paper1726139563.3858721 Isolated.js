@@ -33,6 +33,11 @@ ctx.bthread('Pour hot water three times when tap button is pressed', 'room.withT
     }
 });
 /*
+Summary of existing events you can use if needed, without declaring them again. 
+1. tapButtonPressedEvent(roomId)
+2. pourHotWaterEvent(roomId)
+*/
+/*
 For each room with a tap, when the tap's button is pressed, pour cold water three times.
 */
 function pourColdWaterEvent(roomId) {
@@ -48,17 +53,29 @@ ctx.bthread('Pour cold water three times when tap button is pressed', 'room.with
     }
 });
 /*
+Summary of existing events you can use if needed, without declaring them again.
+1. tapButtonPressedEvent(roomId)
+2. pourHotWaterEvent(roomId) 
+3. pourColdWaterEvent(roomId)
+/*
 Do not perform two consecutive pouring actions of the same type in kitchens
 */
 ctx.bthread('Do not perform two consecutive pouring actions of the same type in kitchens', 'kitchen', function (kitchen) {
+    let lastEvent = [];
+    while (true) {
+        lastEvent = sync({waitFor: [pourHotWaterEvent(kitchen.id), pourColdWaterEvent(kitchen.id)], block: lastEvent});
+    }
+})
+/*sometimes generated:(which also works)
+ctx.bthread('Prevent consecutive same pouring actions in kitchens', 'kitchen', function (kitchen) {
     let lastEvent = null;
     while (true) {
-        lastEvent = sync({
-            waitFor: [pourHotWaterEvent(kitchen.id), pourColdWaterEvent(kitchen.id)],
-            block: lastEvent
-        });
+        let event = sync({waitFor: [anyEventNameWithData("pourHotWaterEvent", {roomId: kitchen.id}), anyEventNameWithData("pourColdWaterEvent", {roomId: kitchen.id})], block: lastEvent});
+        lastEvent = event.name === "pourHotWaterEvent" ? anyEventNameWithData("pourHotWaterEvent", {roomId: kitchen.id}) : anyEventNameWithData("pourColdWaterEvent", {roomId: kitchen.id});
     }
 });
+*/
+
 /*
 No water can be poured after an emergency button is pressed
 */
@@ -87,3 +104,4 @@ ctx.bthread('Turn on light when motion is detected', 'room.WithLightBulb', funct
         sync({request: [turnOnLightEvent(room.id)]});
     }
 });
+
