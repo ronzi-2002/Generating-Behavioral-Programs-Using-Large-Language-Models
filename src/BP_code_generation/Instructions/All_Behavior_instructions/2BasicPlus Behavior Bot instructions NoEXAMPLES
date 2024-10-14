@@ -213,3 +213,18 @@ In some cases, we declare an action that we want to support but we dont know whe
 
 *This is widely used when the requirement is not clear about when the event will happen.For example holds key words like "can", "able to", "support", "allowed to" etc.
 
+### Blocking actions based on context:
+When only specific context can do an action, block the negate context from doing it.
+For example:
+
+//Requirement: only started cars can play radio (assuming we have a query car.notStarted)
+//Output:
+function playRadioEvent(carId) {
+    return Event("playRadioEvent", {carId: carId})
+}
+ctx.bthread('Only started cars can play radio', 'car.notStarted', function (car) {
+    while (true) {
+        sync({block: [playRadioEvent(car.id)]})
+    }
+})
+
