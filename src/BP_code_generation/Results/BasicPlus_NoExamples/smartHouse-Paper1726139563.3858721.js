@@ -1,7 +1,7 @@
 /*
 There are rooms. each room has a type(bedroom, kitchen and so on), some rooms have a tap and some rooms have a lightbulb.
 */
-function room(id, roomType, hasTap) {
+function room(id, roomType, hasTap, hasLightbulb) {
     return ctx.Entity(id, 'room', {roomType: roomType, hasTap: hasTap, hasLightbulb: hasLightbulb});
 }
 /*
@@ -12,7 +12,7 @@ Needed queries:
 */
 ctx.registerQuery('room.withTap', entity => entity.type == 'room' && entity.hasTap);
 ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.subtype == 'kitchen');
-ctx.registerQuery('room.withLightbulb', entity => entity.type == 'room' && entity.hasLightbulb);
+ctx.registerQuery('room.WithLightBulb', entity => entity.type == 'room' && entity.hasLightbulb);
 /*
 For each room with a tap, when the tap's button is pressed, pour hot water three times.
 */

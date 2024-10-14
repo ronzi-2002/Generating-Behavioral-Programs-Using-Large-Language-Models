@@ -83,7 +83,7 @@ function emergencyButtonPressedEvent() {
     return Event("emergencyButtonPressedEvent");
 }
 
-ctx.bthread('Block water pouring after emergency button is pressed', function () {
+bthread('Block water pouring after emergency button is pressed', function () {
     sync({waitFor: [emergencyButtonPressedEvent()]});
     sync({block: [anyEventNameWithData("pourHotWaterEvent"), anyEventNameWithData("pourColdWaterEvent")]});
 });
@@ -110,11 +110,11 @@ ctx.bthread('Turn on light when motion is detected', 'room.WithLightBulb', funct
 ctx.populateContext([room('kitchen1', 'kitchen', true)]);
 
 //press the emergency button
-ctx.bthread('Press the emergency button', function () {
+bthread('Press the emergency button', function () {
     sync({request: [emergencyButtonPressedEvent()]});
 });
 
 //press the tap button in the kitchen
-ctx.bthread('Press the tap button in the kitchen', function () {
+bthread('Press the tap button in the kitchen', function () {
     sync({request: [tapButtonPressedEvent('kitchen1')]});
 });

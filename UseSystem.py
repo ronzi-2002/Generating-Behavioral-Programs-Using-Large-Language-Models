@@ -356,7 +356,7 @@ class BPProgramMenu(Menu):
         # if True:  
             # Run the jar and capture output
             process = subprocess.Popen(
-                f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar {file_name} HandleExternalEvents.js",
+                f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar \"{file_name}\" HandleExternalEvents.js",
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
