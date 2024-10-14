@@ -6,11 +6,13 @@ function room(id, roomType, hasTap) {
 }
 /*
 Needed queries:
-  2. room with tap
-  3. kitchen
+  1. room with tap
+  2. kitchen
+  3. room with lightbulb
 */
 ctx.registerQuery('room.withTap', entity => entity.type == 'room' && entity.hasTap);
 ctx.registerQuery('kitchen', entity => entity.type == 'room' && entity.subtype == 'kitchen');
+ctx.registerQuery('room.withLightbulb', entity => entity.type == 'room' && entity.hasLightbulb);
 /*
 For each room with a tap, when the tap's button is pressed, pour hot water three times.
 */
@@ -67,4 +69,21 @@ function emergencyButtonPressedEvent() {
 ctx.bthread('Block water pouring after emergency button is pressed', function () {
     sync({waitFor: [emergencyButtonPressedEvent()]});
     sync({block: [anyEventNameWithData("pourHotWaterEvent"), anyEventNameWithData("pourColdWaterEvent")]});
+});
+/*
+For each room with a lightbulb, turn it on when motion is detected in the room.
+*/
+function motionDetectedEvent(roomId) {
+    return Event("motionDetectedEvent", {roomId: roomId});
+}
+
+function turnOnLightEvent(roomId) {
+    return Event("turnOnLightEvent", {roomId: roomId});
+}
+
+ctx.bthread('Turn on light when motion is detected', 'room.WithLightBulb', function (room) {
+    while (true) {
+        sync({waitFor: [motionDetectedEvent(room.id)]});
+        sync({request: [turnOnLightEvent(room.id)]});
+    }
 });
