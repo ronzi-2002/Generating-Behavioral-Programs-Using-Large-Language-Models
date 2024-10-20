@@ -19,6 +19,7 @@ Provide only your implementation of the requirement, without the need to explain
     9. Dont declare variables outside of the bthread function.
     10. Notice that not all bthreads need to have a query. Some bthreads can be without a query, if they are not related to any entity or are some global requirements.
     11. Instead of using console.log, declare an event and request it.
+    12. Effect rules: declare only if you change the entity. No syncs are allowed.
 
 #### BP INSTRUCTIONS ####
 
@@ -217,6 +218,7 @@ In some cases, we declare an action that we want to support but we dont know whe
       let car = ctx.getEntityById(data.carId)
       car.isStarted = true
   })
+*Include all relevant entities in the parameters. For example, if we had a user entity, we would add its id also startCarEvent(userId, carId)
 
 
 *This is widely used when the requirement is not clear about when the event will happen.For example holds key words like "can", "able to", "support", "allowed to" etc.
