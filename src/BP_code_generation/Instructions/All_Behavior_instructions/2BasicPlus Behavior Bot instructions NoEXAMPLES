@@ -88,13 +88,15 @@ For example, given the event constructor function:
 
 
 ### Events With Effects On Entities:
-Events may affect the entities. We define this effect right after the Event function. This is the only way to change the entities.
+Events may affect the entities. We define this effect right after the Event function. This is the only way to change the entities. If the event is a event we wait for,  wait for it and then request a different  event that is named by the effect. 
+For example: when button is pressed, text is changed to B. Then declare an effect for an event named "ChangeText".
 - **Purpose**: Effects are exclusively for updating the state of entities based on the data from the event. They should directly modify the properties of entities or add new entities to the context.
 - **Restrictions**:
       - **No Using Non exsiting feilds of Entities**: Never reference any fields that are not part of the entities
       - **No Synchronization Logic**: Do not include any synchronization logic such as `sync` within effects.
       - **No Decision Making**: Effects should not perform any conditional checks or decisions that lead to event handling or synchronization. All decision-making processes should be handled in behavioral threads (`bthreads`).
 
+Important: Make sure that the effect is for a requested event and not for an event you waitFor. If you want an effect for an event you wait for, simply request an event later with the effect.      
 Example:
     //Requirement: when pump is connected to the car, fuel level increases by 40 liters
     //Output:
@@ -109,10 +111,28 @@ Example:
         let car = ctx.getEntityById(data.carId)
         car.fuel += data.amount
     })
-    ctx.bthread('When pump is connected, fuel level increases by 40 liters', 'car', function (pump) {
+    ctx.bthread('When pump is connected, fuel level increases by 40 liters', 'car', function (car) {
         while (true) {
-            sync({waitFor: [pumpIsConnectedEvent(pump.id)]})
-            sync({request: [addFuelEvent(pump.id, 40)]})
+            sync({waitFor: [pumpIsConnectedEvent(car.id)]})
+            sync({request: [addFuelEvent(car.id, 40)]})
+        }
+    });
+In a case it's less trivial, for example, "When A happens, effect E happens"
+function AEvent(){
+       return Event("AEvent")
+}
+function AEventEffect()
+{
+       return Event("AEventEffect")
+
+}
+ctx.registerEffect("AEventEffect"function (data) {
+        <effect E>
+})
+    ctx.bthread('When A happens, effect E happens', function () {
+        while (true) {
+            sync({waitFor: [AEvent()]})
+            sync({request: [AEventEffect()]})
         }
     });
     
@@ -123,6 +143,7 @@ You can use it only inside the registerEffect function.
   **Important notes**
     - This is the only way to change the entities. Never change the entities without declaring an effect.
     - Never add an effect if it doesnt change the entities. 
+    - Create the effect for a requested event, and not a one you wait for. For example: When User does x, then y happen. Declare event x, event y, and an effect for event y.
 
 ### Getting Entities:
 * The preferd way is a bthread with a query. for example:
@@ -237,4 +258,3 @@ ctx.bthread('Only started cars can play radio', 'car.notStarted', function (car)
         sync({block: [playRadioEvent(car.id)]})
     }
 })
-
