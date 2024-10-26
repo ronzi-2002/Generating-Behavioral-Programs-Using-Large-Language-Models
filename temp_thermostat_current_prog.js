@@ -492,3 +492,32 @@ ctx.bthread('Temperature Boundaries Enforcement', function () {
     }
 });
 */
+
+/*
+After season is changed, the user is notified
+*/
+
+
+function seasonChangedNotificationEvent(message) {
+    return Event("seasonChangedNotificationEvent", {message: message});
+}
+
+ctx.bthread('Notify user after season change', function () {
+    while (true) {
+        let event = sync({waitFor: [changeSeasonEvent()]});
+        let newSeason = event.data.newSeason;
+        let message = `Season changed to ${newSeason === 's_Heat' ? 'Heat' : newSeason === 's_Cool' ? 'Cool' : 'Off'}.`;
+        sync({request: [seasonChangedNotificationEvent(message)]});
+    }
+});
+
+//Use anyEventNameWithData
+
+ctx.bthread('Notify user after season change', function () {
+    while (true) {
+        let event = sync({waitFor: [anyEventNameWithData("changeSeasonEvent", any)]});
+        let newSeason = event.data.newSeason;
+        let message = `Season changed to ${newSeason === 's_Heat' ? 'Heat' : newSeason === 's_Cool' ? 'Cool' : 'Off'}.`;
+        sync({request: [seasonChangedNotificationEvent(message)]});
+    }
+});
