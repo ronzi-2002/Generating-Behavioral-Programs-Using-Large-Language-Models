@@ -432,18 +432,30 @@ ctx.bthread('Heating Mode Activation', 'heatingMode', function (systemVariables)
     }
 });
 /*
+Off Mode: If the season is set to "Off" (v_season = s_Off), or the fan is off (v_Fan = s_Fan_Off), no heating or cooling appliances can be activated.
+*/
+function blockHeatingCoolingEvent() {
+    return Event("blockHeatingCoolingEvent");
+}
+
+ctx.bthread('Off Mode - Block Heating and Cooling', 'offMode', function (systemVariables) {
+    while (true) {
+        sync({block: [activateHeatingApplianceEvent(), activateCoolingApplianceEvent()]});
+    }
+});
+/*
 Temperature Boundaries: The system shall ensure that the target temperature (v_target_Temp) remains within a valid range, between 5°C (MIN_TEMP) and 35°C (MAX_TEMP). If the temperature exceeds or falls below these limits, the system shall display a warning message and adjust the target temperature to remain within this range.
 */
 function temperatureOutOfRangeEvent() {
     return Event("temperatureOutOfRangeEvent");
 }
 
-function adjustTemperatureEvent(newTemp) {
-    return Event("adjustTemperatureEvent", {newTemp: newTemp});
-}
-
 function displayWarningMessageEvent(message) {
     return Event("displayWarningMessageEvent", {message: message});
+}
+
+function adjustTemperatureEvent(newTemp) {
+    return Event("adjustTemperatureEvent", {newTemp: newTemp});
 }
 
 ctx.registerEffect('adjustTemperatureEvent', function (data) {
@@ -456,10 +468,10 @@ ctx.bthread('Temperature Boundaries Enforcement', function () {
         let systemVariables = ctx.getEntityById('sys1');
         if (systemVariables.v_target_Temp < systemVariables.MIN_TEMP || systemVariables.v_target_Temp > systemVariables.MAX_TEMP) {
             sync({request: [temperatureOutOfRangeEvent()]});
-            let adjustedTemp = Math.max(systemVariables.MIN_TEMP, Math.min(systemVariables.v_target_Temp, systemVariables.MAX_TEMP));
-            sync({request: [adjustTemperatureEvent(adjustedTemp)]});
-            let message = "Warning: Target temperature adjusted to remain within valid range (" + systemVariables.MIN_TEMP + "°C to " + systemVariables.MAX_TEMP + "°C).";
+            let message = "Target temperature is out of range. Adjusting to a valid value.";
             sync({request: [displayWarningMessageEvent(message)]});
+            let adjustedTemp = systemVariables.v_target_Temp < systemVariables.MIN_TEMP ? systemVariables.MIN_TEMP : systemVariables.MAX_TEMP;
+            sync({request: [adjustTemperatureEvent(adjustedTemp)]});
         }
     }
 });

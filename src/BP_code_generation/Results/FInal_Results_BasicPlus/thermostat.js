@@ -386,6 +386,14 @@ ctx.bthread('Heating Mode Activation', 'heating_mode', function (systemVariables
     }
 });
 /*
+Off Mode: If the season is set to "Off" (v_season = s_Off), or the fan is off (v_Fan = s_Fan_Off), no heating or cooling appliances can be activated.
+*/
+ctx.bthread('Block appliance activation in Off Mode', 'off_mode', function (systemVariables) {
+    while (true) {
+        sync({block: [activateCoolingEvent(), activateHeatingEvent()]});
+    }
+});
+/*
 Temperature Boundaries: The system shall ensure that the target temperature (v_target_Temp) remains within a valid range, between 5°C (MIN_TEMP) and 35°C (MAX_TEMP). If the temperature exceeds or falls below these limits, the system shall display a warning message and adjust the target temperature to remain within this range.
 */
 
