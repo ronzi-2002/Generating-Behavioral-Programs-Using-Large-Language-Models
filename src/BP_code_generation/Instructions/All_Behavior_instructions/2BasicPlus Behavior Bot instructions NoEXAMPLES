@@ -136,6 +136,12 @@ ctx.registerEffect("AEventEffect"function (data) {
         }
     });
     
+In case you want to effect an entity that wasn't passed as a parameter in the event, refer to it by its known Id. For example:
+ctx.registerEffect('addFuelEvent', function (data) {
+        let car = ctx.getEntityById('car1')//This is possible only if this car was declared before
+        car.fuel += data.amount
+    })
+    
 *as part of the effect, it is possible to add new entities, to the DB using ctx.populateContext(ctx.Entity(<id>,<entityType>, <additional data>)).
 You can use it only inside the registerEffect function.
 ** Using Sync in the effect is not allowed. The effect should only change the entities.
@@ -157,8 +163,12 @@ You can use it only inside the registerEffect function.
     ctx.getEntityById(carId) will return the entity with the id carId.
     **Important note** Each entity has a different id.
     There are no 2 entities with the same id.
+* In a case you want to get all entities that satisfy a query, you can use the ctx.runQuery function. For example:
+    ctx.runQuery((entity) => entity.type == 'car') will return all entities with the type 'car'. This is mainly used when you need to get all entities in the same bthread(for example to iterate over them).
 
-* Never use any other way to get entities.
+Important: Never use any other way to get entities.
+
+
 
 ### Using Events:
 Don't use Events that weren't declared.
