@@ -22,7 +22,6 @@ You are asked to add functionality to the existing system. As a result some even
 *All parts that aren't code should be in a comment.
  
 ## A Summary of existing events ## 
-
             1. startButtonClickEvent() 
             2. moveToMovieComponentEvent() - has an effect:
                         ctx.registerEffect('moveToMovieComponentEvent', function (data) {
@@ -30,11 +29,15 @@ You are asked to add functionality to the existing system. As a result some even
                               phase.currentComponent = 'movie'; 
                          });
             
+           
 
            
-      * Don't assume the existence of any other functions.
-      * Rememeber that you must create an effect (and an according event) if you want to update an entity. You cant do it without an effect.
-      *Make sure you provide all parameters when calling the function. If you don't know all parameters, use `anyEventNameWithData` function using the function name as the event name. For example: anyEventNameWithData("<EventName>").  If you know all parameters, use the function directly, for example:  <EventName>(param1, param2). 
+      * Don't assume the existence of any other functions or events. 
+
+* Rememeber that you must create an effect (and an according event) if you want to update an entity. You cant do it without an effect.
+*Make sure you provide all parameters when calling the function. If you don't know all parameters, use `anyEventNameWithData` function using the function name as the event name. For example: anyEventNameWithData("<EventName>").  If you know all parameters, use the function directly, for example:  <EventName>(param1, param2). 
+
+
 */
 /*
 
