@@ -1,3 +1,19 @@
+/*
+SYSTEM MESSAGE
+
+The system was already coded, but some new requirements appeared. 
+You are asked to add functionality to the existing system. As a result some events already exist. You can use them if they fit your need. If not, create new events as regular. 
+
+Please, before using them, understand what you need, according to your instructions. Then if one of the existing events works for you, you can use it instead of declaring a new one, if not, all good, just declare a new one.
+
+Your process should be as followed:
+      1. What events are needed? First answer in words, then give them a name. Make sure you don't miss any needed functionality. Remember that if an effect is needed for a waitedFor event, you need to create a new event that has the effect and which you will request.
+      2. Do they already exist?
+ 
+
+A summary of existing events that were declared before and you can use if needed, without declaring them again:
+
+*/
 //A question has its content, 4 options and the index of the right option
 function question(id, content, options, rightOptionIndex) {
     return ctx.Entity(id, 'question', {
@@ -60,25 +76,35 @@ ctx.bthread('Move to movie component on start button click', 'phase.start', func
 });
 
 /*
-  Summary of existing events you can use if needed, without declaring them again:
+API MESSAGE
+
+*You are asked to add functionality to an existing system. As a result some events already exist. You can use them if they fit your need. If not, create new events as regular.
+
+A summary of exisiting events that were decalred before and you can use if needed, without declaring them again:
+
             1. startButtonClickEvent() 
-            2. moveToMovieComponentEvent()
-                     has an effect:
-                     ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
-                               let phase = ctx.getEntityById('gamePhase1);
-                               phase.currentComponent = 'main_menu';
-                     });
+            2. moveToMovieComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMovieComponentEvent', function (data) {
+                              let phase = ctx.getEntityById('gamePhase1'); 
+                              phase.currentComponent = 'movie'; 
+                         });
+            
+      **Make sure you provide all parameters when calling the function. If you don't know all parameters, use `anyEventNameWithData` function using the function name as the event name. For example: anyEventNameWithData("<EventName>").  If you know all parameters, use the function directly, for example:  <EventName>(param1, param2). 
+
+*/
 /*
 Upon entrance to the movie component,  the introductory movie will begin playing.
 After the movie begins playing, if a mouse click is received, this component will terminate the movie and forward  the user to the main menu component. Otherwise, after movie completion, the user will be moved to the main menu. 
 */
 
-function startMovieEvent() {
-    return Event("startMovieEvent");
+//###Implemantation
+
+function movieStartedEvent() {
+    return Event("movieStartedEvent");
 }
 
-function stopMovieEvent() {
-    return Event("stopMovieEvent");
+function movieEndedEvent() {
+    return Event("movieEndedEvent");
 }
 
 function mouseClickEvent() {
@@ -94,117 +120,166 @@ ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
     phase.currentComponent = 'main_menu';
 });
 
-ctx.bthread('Play movie on movie component entrance', 'phase.movie', function (phase) {
-    sync({request: [startMovieEvent()]});
-    let event = sync({waitFor: [mouseClickEvent(), stopMovieEvent()]});
-    if (event.name === 'mouseClickEvent') {
-        sync({request: [stopMovieEvent()]});
+ctx.bthread('Play and handle movie interactions', 'phase.movie', function (phase) {
+    while (true) {
+        sync({request: [movieStartedEvent()]});
+        let event = sync({waitFor: [movieEndedEvent(), mouseClickEvent()]});
+        if (event.name === 'mouseClickEvent') {
+            sync({request: [moveToMainMenuComponentEvent()]});
+            break;
+        } else if (event.name === 'movieEndedEvent') {
+            sync({request: [moveToMainMenuComponentEvent()]});
+            break;
+        }
     }
-    sync({request: [moveToMainMenuComponentEvent()]});
 });
-/*TODO RON: Sometimes it doesnt "stop movie" on mouse click.
-*/
+
 /*
- Summary of existing events you can use if needed, without declaring them again:
-             Summary of existing events you can use if needed, without declaring them again:
+API MESSAGE
+
+*You are asked to add functionality to an existing system. As a result some events already exist. You can use them if they fit your need. If not, create new events as regular.
+
+A summary of existing events that were declared before and you can use if needed, without declaring them again:
+
             1. startButtonClickEvent() 
-            2. moveToMovieComponentEvent()
-                     has an effect:
-                     ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
-                               let phase = ctx.getEntityById('gamePhase1);
-                               phase.currentComponent = 'main_menu';
-                     });
-            3. startMovieEvent()
-            4. stopMovieEvent()
+            2. moveToMovieComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMovieComponentEvent', function (data) {
+                              let phase = ctx.getEntityById('gamePhase1'); 
+                              phase.currentComponent = 'movie'; 
+                         });
+            3. movieStartedEvent()
+            4. movieEndedEvent()
             5. mouseClickEvent()
-            6. moveToMainMenuComponentEvent()
-                     has an effect:
-                     ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
-                               let phase = ctx.getEntityById('gamePhase1);
-                               phase.currentComponent = 'main_menu';
-                     });
-                     
+            6. moveToMainMenuComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
+                                let phase = ctx.getEntityById('gamePhase1');
+                                phase.currentComponent = 'main_menu';
+                        });
+                        
+
+
+            
+      **Make sure you provide all parameters when calling the function. If you don't know all parameters, use `anyEventNameWithData` function using the function name as the event name. For example: anyEventNameWithData("<EventName>").  If you know all parameters, use the function directly, for example:  <EventName>(param1, param2). 
+
+*/                     
 /*
 The main menu component will wait until the user selects a button. At that time, the user will be forwarded to one of the following: game sequence component, math umbrella component, the question updater component or the Denominators' web page depending on the button selected 
 */
-function gameSequenceButtonEvent() {
-    return Event("gameSequenceButtonEvent");
+// Event declarations for button presses
+function gameSequenceButtonPressEvent() {
+    return Event("gameSequenceButtonPressEvent");
 }
 
-function mathUmbrellaButtonEvent() {
-    return Event("mathUmbrellaButtonEvent");
+function mathUmbrellaButtonPressEvent() {
+    return Event("mathUmbrellaButtonPressEvent");
 }
 
-function questionUpdaterButtonEvent() {
-    return Event("questionUpdaterButtonEvent");
+function questionUpdaterButtonPressEvent() {
+    return Event("questionUpdaterButtonPressEvent");
 }
 
-function denominatorsWebPageButtonEvent() {
-    return Event("denominatorsWebPageButtonEvent");
+function denominatorsWebPageButtonPressEvent() {
+    return Event("denominatorsWebPageButtonPressEvent");
 }
 
+// Effects to move to different components
 function moveToGameSequenceComponentEvent() {
     return Event("moveToGameSequenceComponentEvent");
 }
+
+ctx.registerEffect('moveToGameSequenceComponentEvent', function (data) {
+    let phase = ctx.getEntityById('gamePhase1');
+    phase.currentComponent = 'game_sequence';
+});
 
 function moveToMathUmbrellaComponentEvent() {
     return Event("moveToMathUmbrellaComponentEvent");
 }
 
+ctx.registerEffect('moveToMathUmbrellaComponentEvent', function (data) {
+    let phase = ctx.getEntityById('gamePhase1');
+    phase.currentComponent = 'math_umbrella';
+});
+
 function moveToQuestionUpdaterComponentEvent() {
     return Event("moveToQuestionUpdaterComponentEvent");
 }
+
+ctx.registerEffect('moveToQuestionUpdaterComponentEvent', function (data) {
+    let phase = ctx.getEntityById('gamePhase1');
+    phase.currentComponent = 'question_updater';
+});
 
 function openDenominatorsWebPageEvent() {
     return Event("openDenominatorsWebPageEvent");
 }
 
-ctx.registerEffect('moveToGameSequenceComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'game_sequence';
-});
-
-ctx.registerEffect('moveToMathUmbrellaComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'math_umbrella';
-});
-
-ctx.registerEffect('moveToQuestionUpdaterComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'question_updater';
-});
-
-ctx.registerEffect('openDenominatorsWebPageEvent', function (data) {
-    // This effect would typically handle opening a web page, which is outside the scope of this simulation.
-    // Assume the action is handled appropriately.
-});
-
-ctx.bthread('Handle main menu selections', 'phase.mainMenu', function (phase) {
+// Bthread to handle the main menu navigation
+ctx.bthread('Handle main menu navigation', 'phase.mainMenu', function (phase) {
     while (true) {
         let event = sync({waitFor: [
-            gameSequenceButtonEvent(),
-            mathUmbrellaButtonEvent(),
-            questionUpdaterButtonEvent(),
-            denominatorsWebPageButtonEvent()
+            gameSequenceButtonPressEvent(),
+            mathUmbrellaButtonPressEvent(),
+            questionUpdaterButtonPressEvent(),
+            denominatorsWebPageButtonPressEvent()
         ]});
 
         switch (event.name) {
-            case 'gameSequenceButtonEvent':
-                sync({request: [moveToGameSequenceComponentEvent(phase.id)]});
+            case "gameSequenceButtonPressEvent":
+                sync({request: [moveToGameSequenceComponentEvent()]});
                 break;
-            case 'mathUmbrellaButtonEvent':
-                sync({request: [moveToMathUmbrellaComponentEvent(phase.id)]});
+            case "mathUmbrellaButtonPressEvent":
+                sync({request: [moveToMathUmbrellaComponentEvent()]});
                 break;
-            case 'questionUpdaterButtonEvent':
-                sync({request: [moveToQuestionUpdaterComponentEvent(phase.id)]});
+            case "questionUpdaterButtonPressEvent":
+                sync({request: [moveToQuestionUpdaterComponentEvent()]});
                 break;
-            case 'denominatorsWebPageButtonEvent':
+            case "denominatorsWebPageButtonPressEvent":
                 sync({request: [openDenominatorsWebPageEvent()]});
                 break;
         }
     }
 });
 
+/*
+A summary of existing events that were declared before and you can use if needed, without declaring them again:
+
+            1. startButtonClickEvent() 
+            2. moveToMovieComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMovieComponentEvent', function (data) {
+                              let phase = ctx.getEntityById('gamePhase1'); 
+                              phase.currentComponent = 'movie'; 
+                         });
+            3. movieStartedEvent()
+            4. movieEndedEvent()
+            5. mouseClickEvent()
+            6. moveToMainMenuComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
+                                let phase = ctx.getEntityById('gamePhase1');
+                                phase.currentComponent = 'main_menu';
+                        });
+            7. gameSequenceButtonPressEvent()
+            8. mathUmbrellaButtonPressEvent()
+            9. questionUpdaterButtonPressEvent()
+            10. denominatorsWebPageButtonPressEvent()
+            11. moveToGameSequenceComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToGameSequenceComponentEvent', function (data) {
+                            let phase = ctx.getEntityById('gamePhase1');
+                            phase.currentComponent = 'game_sequence';
+                        });
+            12. moveToMathUmbrellaComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMathUmbrellaComponentEvent', function (data) {
+                            let phase = ctx.getEntityById('gamePhase1');
+                            phase.currentComponent = 'math_umbrella';
+                        });
+            13. moveToQuestionUpdaterComponentEvent() - has an effect:  
+                        ctx.registerEffect('moveToQuestionUpdaterComponentEvent', function (data) {
+                            let phase = ctx.getEntityById('gamePhase1');
+                            phase.currentComponent = 'question_updater';
+                        });
+            14. openDenominatorsWebPageEvent()
+
+*/
 /*
 The game sequence component will display a question, and then wait until the user chooses an answer. If the user selects the correct answer, a message to this effect will be displayed and the component will move to the next question. If its his first answer to the question he will receive 1 point. If the incorrect answer is selected, this component will inform the user of   this and give them another chance to answer the question. However, their score will not count this question as being answered correctly.  After the user has proceeded through a set number of questions, they will be directed to the ending scene component.
 */

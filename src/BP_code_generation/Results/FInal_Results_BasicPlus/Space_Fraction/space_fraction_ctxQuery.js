@@ -215,6 +215,11 @@ ctx.registerEffect('addScoreEvent', function (data) {
     scoreEntity.value += 1;
 });
 
+function addScoreEvent() {
+    return Event("addScoreEvent");
+}
+
+
 ctx.bthread('Game sequence logic', 'phase.gameSequence', function (phase) {
     const questions = ctx.runQuery(entity => entity.type == 'question');
     let questionIndex = 0;
@@ -243,68 +248,7 @@ ctx.bthread('Game sequence logic', 'phase.gameSequence', function (phase) {
 User: Compilation error at:             let answerEvent = sync({waitFor: [userAnswerEvent(questions[questionIndex].id, any)]});
  Provide a full corrected implementation, without additional explanation. 
 ---------------------------------------------------------------------------------------------------------------------
-function displayQuestionEvent(questionId) {
-    return Event("displayQuestionEvent", {questionId: questionId});
-}
 
-function userAnswerEvent(questionId, selectedOptionIndex) {
-    return Event("userAnswerEvent", {questionId: questionId, selectedOptionIndex: selectedOptionIndex});
-}
-
-function correctAnswerMessageEvent() {
-    return Event("correctAnswerMessageEvent");
-}
-
-function incorrectAnswerMessageEvent() {
-    return Event("incorrectAnswerMessageEvent");
-}
-
-function moveToNextQuestionEvent() {
-    return Event("moveToNextQuestionEvent");
-}
-
-function moveToEndingSceneComponentEvent() {
-    return Event("moveToEndingSceneComponentEvent");
-}
-
-ctx.registerEffect('moveToEndingSceneComponentEvent', function (data) {
-    let phase = ctx.getEntityById('gamePhase1');
-    phase.currentComponent = 'ending_scene';
-});
-
-ctx.registerEffect('addScoreEvent', function (data) {
-    let scoreEntity = ctx.getEntityById('score1');
-    scoreEntity.value += 1;
-});
-
-ctx.bthread('Game sequence logic', 'phase.gameSequence', function (phase) {
-    const questions = ctx.runQuery(entity => entity.type == 'question');
-    let questionIndex = 0;
-    let firstAttempt = true;
-
-    while (questionIndex < questions.length) {
-        sync({request: [displayQuestionEvent(questions[questionIndex].id)]});
-        let answerEvent = sync({waitFor: [anyEventNameWithData("userAnswerEvent", {questionId: questions[questionIndex].id})]});
-
-        if (answerEvent.data.selectedOptionIndex === questions[questionIndex].rightOptionIndex) {
-            sync({request: [correctAnswerMessageEvent()]});
-            if (firstAttempt) {
-                sync({request: [addScoreEvent()]});
-            }
-            questionIndex++;
-            firstAttempt = true; // Reset for next question
-        } else {
-            sync({request: [incorrectAnswerMessageEvent()]});
-            firstAttempt = false;
-        }
-    }
-
-    sync({request: [moveToEndingSceneComponentEvent()]});
-});
----------------------------------------------------------------------------------------------------------------------
-User: Compilation error at:                            sync({request: [addScoreEvent()]});
- Provide a full corrected implementation, without additional explanation.  
----------------------------------------------------------------------------------------------------------------------
 */
 
 function displayQuestionEvent(questionId) {
@@ -331,9 +275,6 @@ function moveToEndingSceneComponentEvent() {
     return Event("moveToEndingSceneComponentEvent");
 }
 
-function addScoreEvent() {
-    return Event("addScoreEvent");
-}
 
 ctx.registerEffect('moveToEndingSceneComponentEvent', function (data) {
     let phase = ctx.getEntityById('gamePhase1');
@@ -344,6 +285,10 @@ ctx.registerEffect('addScoreEvent', function (data) {
     let scoreEntity = ctx.getEntityById('score1');
     scoreEntity.value += 1;
 });
+
+function addScoreEvent() {
+    return Event("addScoreEvent");
+}
 
 ctx.bthread('Game sequence logic', 'phase.gameSequence', function (phase) {
     const questions = ctx.runQuery(entity => entity.type == 'question');

@@ -62,9 +62,9 @@ ctx.bthread('Move to movie component on start button click', 'phase.start', func
 /*
 Upon entrance to the movie component, the introductory movie will begin playing.
 If a mouse click is received, this component will terminate the movie and forward
-the user to the main menu component.
-Otherwise, the movie will continue to its completion and the user will be moved to the main menu.
+the user to the main menu component. Otherwise, the movie will continue to its completion and the user will be moved to the main menu.
 */
+//Ron: The requirement can be updated to "if a mouse click is received after movie is started"
 
 function movieStartEvent() {
     return Event("movieStartEvent");
@@ -79,18 +79,18 @@ function moveToMainMenuComponentEvent() {
 }
 
 ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'main_menu';
+    let phaseEntity = ctx.getEntityById('gamePhase1');
+    phaseEntity.currentComponent = 'main_menu';
 });
 
-ctx.bthread('Start movie on entering movie component', 'phase.movie', function (phase) {
+ctx.bthread('Start movie on movie component entrance', 'phase.movie', function (phase) {
     sync({request: [movieStartEvent()]});
-    let event = sync({waitFor: [mouseClickEvent(), movieCompletionEvent()]});
-    sync({request: [moveToMainMenuComponentEvent(phase.id)]});
+    let event = sync({waitFor: [mouseClickEvent(), movieEndEvent()]});
+    sync({request: [moveToMainMenuComponentEvent()]});
 });
 
-function movieCompletionEvent() {
-    return Event("movieCompletionEvent");
+function movieEndEvent() {
+    return Event("movieEndEvent");
 }
 /*TODO RON: When space is deleted, it generates this:
 (check it later when isolating)
@@ -141,43 +141,32 @@ function openDenominatorsWebPageEvent() {
 }
 
 ctx.registerEffect('moveToGameSequenceComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'game_sequence';
+    let phaseEntity = ctx.getEntityById('gamePhase1');
+    phaseEntity.currentComponent = 'game_sequence';
 });
 
 ctx.registerEffect('moveToMathUmbrellaComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'math_umbrella';
+    let phaseEntity = ctx.getEntityById('gamePhase1');
+    phaseEntity.currentComponent = 'math_umbrella';
 });
 
 ctx.registerEffect('moveToQuestionUpdaterComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'question_updater';
-});
-
-ctx.registerEffect('openDenominatorsWebPageEvent', function (data) {
-    // This effect would typically handle opening a web page, which is outside the scope of this simulation.
-    // Assume the action is handled appropriately.
+    let phaseEntity = ctx.getEntityById('gamePhase1');
+    phaseEntity.currentComponent = 'question_updater';
 });
 
 ctx.bthread('Handle main menu selections', 'phase.mainMenu', function (phase) {
     while (true) {
-        let event = sync({waitFor: [
-            gameSequenceButtonEvent(),
-            mathUmbrellaButtonEvent(),
-            questionUpdaterButtonEvent(),
-            denominatorsWebPageButtonEvent()
-        ]});
-
+        let event = sync({waitFor: [gameSequenceButtonEvent(), mathUmbrellaButtonEvent(), questionUpdaterButtonEvent(), denominatorsWebPageButtonEvent()]});
         switch (event.name) {
             case 'gameSequenceButtonEvent':
-                sync({request: [moveToGameSequenceComponentEvent(phase.id)]});
+                sync({request: [moveToGameSequenceComponentEvent()]});
                 break;
             case 'mathUmbrellaButtonEvent':
-                sync({request: [moveToMathUmbrellaComponentEvent(phase.id)]});
+                sync({request: [moveToMathUmbrellaComponentEvent()]});
                 break;
             case 'questionUpdaterButtonEvent':
-                sync({request: [moveToQuestionUpdaterComponentEvent(phase.id)]});
+                sync({request: [moveToQuestionUpdaterComponentEvent()]});
                 break;
             case 'denominatorsWebPageButtonEvent':
                 sync({request: [openDenominatorsWebPageEvent()]});
@@ -185,7 +174,6 @@ ctx.bthread('Handle main menu selections', 'phase.mainMenu', function (phase) {
         }
     }
 });
-
 /*
 The game sequence component will display a question, and then wait until the user chooses an answer. If the user selects the correct answer, a message to this effect will be displayed and the component will move to the next question. If its his first answer to the question he will receive 1 point. If the incorrect answer is selected, this component will inform the user of   this and give them another chance to answer the question. However, their score will not count this question as being answered correctly.  After the user has proceeded through a set number of questions, they will be directed to the ending scene component.
 */
@@ -215,46 +203,49 @@ function moveToEndingSceneComponentEvent() {
 }
 
 ctx.registerEffect('moveToEndingSceneComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'ending_scene';
+    let phaseEntity = ctx.getEntityById('gamePhase1');
+    phaseEntity.currentComponent = 'ending_scene';
 });
 
-ctx.registerEffect('updateScore', function (data) {
-    let score = ctx.getEntityById(data.scoreId);
-    score.value += data.increment;
+ctx.registerEffect('addScoreEvent', function (data) {
+    let scoreEntity = ctx.getEntityById('score1');
+    scoreEntity.value += 1;
 });
 
 ctx.bthread('Game sequence logic', 'phase.gameSequence', function (phase) {
-    const questions = ctx.getEntitiesByType('question');
+    const questions = ctx.getEntityById('allQuestions1').questions;
     let questionIndex = 0;
-    let attempts = 0;
+    let firstAttempt = true;
 
     while (questionIndex < questions.length) {
         sync({request: [displayQuestionEvent(questions[questionIndex].id)]});
-        let answerEvent = sync({waitFor: [answerSelectedEvent(questions[questionIndex].id)]});
-        let selectedOption = answerEvent.data.selectedOptionIndex;
-        let correctOption = questions[questionIndex].rightOptionIndex;
-
-        if (selectedOption === correctOption) {
+        let answerEvent = sync({waitFor: [anyEventNameWithData("answerSelectedEvent", {questionId: questions[questionIndex].id})]});
+        
+        if (answerEvent.data.selectedOptionIndex === questions[questionIndex].rightOptionIndex) {
             sync({request: [correctAnswerEvent()]});
-            if (attempts === 0) { // First attempt
-                sync({request: [updateScore('score1', 1)]});
+            if (firstAttempt) {
+                sync({request: [addScoreEvent()]});
             }
             questionIndex++;
-            attempts = 0; // Reset attempts for next question
-            sync({request: [moveToNextQuestionEvent()]});
+            firstAttempt = true;
+            if (questionIndex < questions.length) {
+                sync({request: [moveToNextQuestionEvent()]});
+            } else {
+                sync({request: [moveToEndingSceneComponentEvent()]});
+                break;
+            }
         } else {
             sync({request: [incorrectAnswerEvent()]});
-            attempts++;
+            firstAttempt = false;
         }
     }
-
-    sync({request: [moveToEndingSceneComponentEvent(phase.id)]});
 });
+
 -----------------------------------------------------------------
-User: Compilation error at:         let event = sync({waitFor: [answerSelectedEvent(questions[currentQuestionIndex], any)]});.
- Provide a full corrected implementation, without additional explanation.
------------------------------------------------------------------
+User: Compilation error at:  sync({request: [addScoreEvent()]});
+ Provide a full corrected implementation, providing all functions, without additional explanation.
+ */
+
 function displayQuestionEvent(questionId) {
     return Event("displayQuestionEvent", {questionId: questionId});
 }
@@ -279,113 +270,45 @@ function moveToEndingSceneComponentEvent() {
     return Event("moveToEndingSceneComponentEvent");
 }
 
-ctx.registerEffect('moveToEndingSceneComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'ending_scene';
-});
-
-ctx.registerEffect('updateScore', function (data) {
-    let score = ctx.getEntityById(data.scoreId);
-    score.value += data.increment;
-});
-
-ctx.bthread('Game sequence handling', 'phase.gameSequence', function (phase) {
-    const questions = ['q1', 'q2', 'q3', 'q4']; // Assuming these are the IDs of the questions
-    let currentQuestionIndex = 0;
-    let attempts = 0;
-
-    while (currentQuestionIndex < questions.length) {
-        sync({request: [displayQuestionEvent(questions[currentQuestionIndex])]});
-        let event = sync({waitFor: [anyEventNameWithData("answerSelectedEvent", {questionId: questions[currentQuestionIndex]})]});
-
-        let question = ctx.getEntityById(event.data.questionId);
-        if (event.data.selectedOptionIndex === question.rightOptionIndex) {
-            sync({request: [correctAnswerEvent()]});
-            if (attempts === 0) { // First attempt
-                sync({request: [updateScore({scoreId: 'score1', increment: 1})]});
-            }
-            attempts = 0; // Reset attempts for next question
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
-                sync({request: [moveToNextQuestionEvent()]});
-            } else {
-                sync({request: [moveToEndingSceneComponentEvent(phase.id)]});
-            }
-        } else {
-            sync({request: [incorrectAnswerEvent()]});
-            attempts++;
-        }
-    }
-});
------------------------------------------------------------------
-User: Compilation error at:                        sync({request: [updateScore({scoreId: 'score1', increment: 1})]});
- Provide a full corrected implementation, without additional explanation.
-*/
-
-
- function displayQuestionEvent(questionId) {
-    return Event("displayQuestionEvent", {questionId: questionId});
-}
-
-function answerSelectedEvent(questionId, selectedOptionIndex) {
-    return Event("answerSelectedEvent", {questionId: questionId, selectedOptionIndex: selectedOptionIndex});
-}
-
-function correctAnswerEvent() {
-    return Event("correctAnswerEvent");
-}
-
-function incorrectAnswerEvent() {
-    return Event("incorrectAnswerEvent");
-}
-
-function moveToNextQuestionEvent() {
-    return Event("moveToNextQuestionEvent");
-}
-
-function moveToEndingSceneComponentEvent() {
-    return Event("moveToEndingSceneComponentEvent");
-}
-
-function updateScoreEvent(scoreId, increment) {
-    return Event("updateScoreEvent", {scoreId: scoreId, increment: increment});
+function addScoreEvent() {
+    return Event("addScoreEvent");
 }
 
 ctx.registerEffect('moveToEndingSceneComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'ending_scene';
+    let phaseEntity = ctx.getEntityById('gamePhase1');
+    phaseEntity.currentComponent = 'ending_scene';
 });
 
-ctx.registerEffect('updateScoreEvent', function (data) {
-    let score = ctx.getEntityById(data.scoreId);
-    score.value += data.increment;
+ctx.registerEffect('addScoreEvent', function (data) {
+    let scoreEntity = ctx.getEntityById('score1');
+    scoreEntity.value += 1;
 });
 
-ctx.bthread('Game sequence handling', 'phase.gameSequence', function (phase) {
-    const questions = ['q1', 'q2', 'q3', 'q4']; // Assuming these are the IDs of the questions
-    let currentQuestionIndex = 0;
-    let attempts = 0;
+ctx.bthread('Game sequence logic', 'phase.gameSequence', function (phase) {
+    const questions = ctx.getEntityById('allQuestions1').questions;
+    let questionIndex = 0;
+    let firstAttempt = true;
 
-    while (currentQuestionIndex < questions.length) {
-        sync({request: [displayQuestionEvent(questions[currentQuestionIndex])]});
-        let event = sync({waitFor: [anyEventNameWithData("answerSelectedEvent", {questionId: questions[currentQuestionIndex]})]});
-
-        let question = ctx.getEntityById(event.data.questionId);
-        if (event.data.selectedOptionIndex === question.rightOptionIndex) {
+    while (questionIndex < questions.length) {
+        sync({request: [displayQuestionEvent(questions[questionIndex].id)]});
+        let answerEvent = sync({waitFor: [anyEventNameWithData("answerSelectedEvent", {questionId: questions[questionIndex].id})]});
+        
+        if (answerEvent.data.selectedOptionIndex === questions[questionIndex].rightOptionIndex) {
             sync({request: [correctAnswerEvent()]});
-            if (attempts === 0) { // First attempt
-                sync({request: [updateScoreEvent('score1', 1)]});
+            if (firstAttempt) {
+                sync({request: [addScoreEvent()]});
             }
-            attempts = 0; // Reset attempts for next question
-            currentQuestionIndex++;
-            if (currentQuestionIndex < questions.length) {
+            questionIndex++;
+            firstAttempt = true;
+            if (questionIndex < questions.length) {
                 sync({request: [moveToNextQuestionEvent()]});
             } else {
-                sync({request: [moveToEndingSceneComponentEvent(phase.id)]});
+                sync({request: [moveToEndingSceneComponentEvent()]});
+                break;
             }
         } else {
             sync({request: [incorrectAnswerEvent()]});
-            attempts++;
+            firstAttempt = false;
         }
     }
 });
@@ -393,6 +316,7 @@ ctx.bthread('Game sequence handling', 'phase.gameSequence', function (phase) {
 /*
 The ending scene will wait until the user selects either to return to the main menu or to exit the game. After receiving the user's input, the component will act accordingly.
 */
+//RON sometimes it declare moveToMainMenuComponentEvent() again.
 function returnToMainMenuButtonEvent() {
     return Event("returnToMainMenuButtonEvent");
 }
@@ -401,37 +325,28 @@ function exitGameButtonEvent() {
     return Event("exitGameButtonEvent");
 }
 
-function moveToMainMenuComponentEvent() {
-    return Event("moveToMainMenuComponentEvent");
+function exitGameEvent() {
+    return Event("exitGameEvent");
 }
 
-ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
-    let phase = ctx.getEntityById(data.phaseId);
-    phase.currentComponent = 'main_menu';
-});
-
-ctx.bthread('Handle ending scene selections', 'phase.endingScene', function (phase) {
+ctx.bthread('Ending scene user choices', 'phase.endingScene', function (phase) {
     while (true) {
         let event = sync({waitFor: [returnToMainMenuButtonEvent(), exitGameButtonEvent()]});
         if (event.name === 'returnToMainMenuButtonEvent') {
-            sync({request: [moveToMainMenuComponentEvent(phase.id)]});
+            sync({request: [moveToMainMenuComponentEvent()]});
         } else if (event.name === 'exitGameButtonEvent') {
-            exitGame();
+            sync({request: [exitGameEvent()]});
+            break;
         }
     }
 });
 
-function exitGame() {
-    // Simulated function to exit the game
-    window.close();
-}
-
 //From here, using version 13.13
 
 /*
-The Question Updater component will wait for the user to submit new questions. After the button is clicked, the component will add the new question to the question database.
+The Question Updater component will wait for the user to submit new questions, providing all info. After the button is clicked, the component will add the new question to the question database. 
 */
-
+//Ron: added "providing all info" to the requirement, without it, it sometimes didnt take parameters in submitNewQuestionEvent.
 function submitNewQuestionEvent(questionId, content, options, rightOptionIndex) {
     return Event("submitNewQuestionEvent", {questionId: questionId, content: content, options: options, rightOptionIndex: rightOptionIndex});
 }
@@ -453,21 +368,60 @@ ctx.bthread('Add new questions on submission', 'phase.questionUpdater', function
     }
 });
 
+/*An alternative:
+The Question Updater component will wait for the user to submit new questions, providing the correct answer as first option. After the button is clicked, the component will add the new question to the question database, setting the correct option randomly.
+
+function submitNewQuestionEvent(content, options) {
+    return Event("submitNewQuestionEvent", {content: content, options: options});
+}
+
+function addNewQuestionEvent(questionId, content, options, rightOptionIndex) {
+    return Event("addNewQuestionEvent", {questionId: questionId, content: content, options: options, rightOptionIndex: rightOptionIndex});
+}
+
+ctx.registerEffect('addNewQuestionEvent', function (data) {
+    let allQuestions = ctx.getEntityById('allQuestions1');
+    allQuestions.questions.push({
+        id: data.questionId,
+        content: data.content,
+        options: data.options,
+        rightOptionIndex: data.rightOptionIndex
+    });
+});
+
+ctx.bthread('Question Updater logic', 'phase.questionUpdater', function (phase) {
+    while (true) {
+        let submitEvent = sync({waitFor: [submitNewQuestionEvent()]});
+        let content = submitEvent.data.content;
+        let options = submitEvent.data.options;
+        let rightOptionIndex = Math.floor(Math.random() * options.length); // Randomize the correct answer index
+
+        // Rotate the options array so that the correct answer is at the randomized index
+        let correctOption = options[0];
+        options.splice(0, 1); // Remove the correct answer from the beginning
+        options.splice(rightOptionIndex, 0, correctOption); // Insert it at the new index
+
+        let newQuestionId = `q${ctx.getEntityById('allQuestions1').questions.length + 1}`;
+        sync({request: [addNewQuestionEvent(newQuestionId, content, options, rightOptionIndex)]});
+    }
+});
+*/
+
 /*
 The Math Umbrella component will wait for a user to click a link, and then follow that link.
 */
 
-function userClicksLinkEvent(linkUrl) {
-    return Event("userClicksLinkEvent", {linkUrl: linkUrl});
+function linkClickEvent(url) {
+    return Event("linkClickEvent", {url: url});
 }
 
-function followLinkEvent(linkUrl) {
-    return Event("followLinkEvent", {linkUrl: linkUrl});
+function followLinkEvent(url) {
+    return Event("followLinkEvent", {url: url});
 }
 
-ctx.bthread('Handle link clicks in Math Umbrella component', 'phase.mathUmbrella', function (phase) {
-    while(true){
-        let event = sync({waitFor: [anyEventNameWithData("userClicksLinkEvent", {})]});
-        sync({request: [followLinkEvent(event.data.linkUrl)]});
+ctx.bthread('Follow link on click', 'phase.mathUmbrella', function (phase) {
+    while (true) {
+        let event = sync({waitFor: [anyEventNameWithData("linkClickEvent")]});
+        sync({request: [followLinkEvent(event.data.url)]});
     }
 });

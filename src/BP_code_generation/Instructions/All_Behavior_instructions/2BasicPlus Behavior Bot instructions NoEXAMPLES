@@ -141,6 +141,17 @@ ctx.registerEffect('addFuelEvent', function (data) {
         let car = ctx.getEntityById('car1')//This is possible only if this car was declared before
         car.fuel += data.amount
     })
+
+In case you created an effect for an event you didn't declare by mistake, you must declare the event right after.
+For example:
+    ctx.registerEffect('eventA', function (data) {
+          <Some effect>
+    })
+    function eventA()
+    {
+      Event("eventA")
+    }   
+
     
 *as part of the effect, it is possible to add new entities, to the DB using ctx.populateContext(ctx.Entity(<id>,<entityType>, <additional data>)).
 You can use it only inside the registerEffect function.

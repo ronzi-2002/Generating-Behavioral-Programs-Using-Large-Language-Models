@@ -60,25 +60,33 @@ ctx.bthread('Move to movie component on start button click', 'phase.start', func
 });
 
 /*
-  Summary of existing events you can use if needed, without declaring them again:
+API MESSAGE
+
+*You are asked to add functionality to an existing system. As a result some events already exist. You can use them if they fit your need. If not, create new events as regular.
+
+A summary of exisiting events that were decalred before and you can use if needed, without declaring them again:
+
             1. startButtonClickEvent() 
-            2. moveToMovieComponentEvent()
-                     has an effect:
-                     ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
-                               let phase = ctx.getEntityById('gamePhase1);
-                               phase.currentComponent = 'main_menu';
-                     });
+            2. moveToMovieComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMovieComponentEvent', function (data) {
+                              let phase = ctx.getEntityById('gamePhase1'); 
+                              phase.currentComponent = 'movie'; 
+                         });
+            
+      **Make sure you provide all parameters when calling the function. If you don't know all parameters, use `anyEventNameWithData` function using the function name as the event name. For example: anyEventNameWithData("<EventName>").  If you know all parameters, use the function directly, for example:  <EventName>(param1, param2). 
+
+*/
 /*
 Upon entrance to the movie component,  the introductory movie will begin playing.
 After the movie begins playing, if a mouse click is received, this component will terminate the movie and forward  the user to the main menu component. Otherwise, after movie completion, the user will be moved to the main menu. 
 */
 
-function startMovieEvent() {
-    return Event("startMovieEvent");
+function movieStartedEvent() {
+    return Event("movieStartedEvent");
 }
 
-function stopMovieEvent() {
-    return Event("stopMovieEvent");
+function movieCompletedEvent() {
+    return Event("movieCompletedEvent");
 }
 
 function mouseClickEvent() {
@@ -94,36 +102,42 @@ ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
     phase.currentComponent = 'main_menu';
 });
 
-ctx.bthread('Play movie on movie component entrance', 'phase.movie', function (phase) {
-    sync({request: [startMovieEvent()]});
-    let event = sync({waitFor: [mouseClickEvent(), stopMovieEvent()]});
+ctx.bthread('Play movie on movie component entry', 'phase.movie', function (phase) {
+    sync({request: [movieStartedEvent()]});
+    let event = sync({waitFor: [movieCompletedEvent(), mouseClickEvent()]});
     if (event.name === 'mouseClickEvent') {
-        sync({request: [stopMovieEvent()]});
+        sync({request: [moveToMainMenuComponentEvent()]});
+    } else if (event.name === 'movieCompletedEvent') {
+        sync({request: [moveToMainMenuComponentEvent()]});
     }
-    sync({request: [moveToMainMenuComponentEvent()]});
 });
-/*TODO RON: Sometimes it doesnt "stop movie" on mouse click.
-*/
+
 /*
- Summary of existing events you can use if needed, without declaring them again:
-             Summary of existing events you can use if needed, without declaring them again:
+API MESSAGE
+
+*You are asked to add functionality to an existing system. As a result some events already exist. You can use them if they fit your need. If not, create new events as regular.
+
+A summary of exisiting events that were decalred before and you can use if needed, without declaring them again:
+
             1. startButtonClickEvent() 
-            2. moveToMovieComponentEvent()
-                     has an effect:
-                     ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
-                               let phase = ctx.getEntityById('gamePhase1);
-                               phase.currentComponent = 'main_menu';
-                     });
-            3. startMovieEvent()
-            4. stopMovieEvent()
+            2. moveToMovieComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMovieComponentEvent', function (data) {
+                              let phase = ctx.getEntityById('gamePhase1'); 
+                              phase.currentComponent = 'movie'; 
+                         });
+            3. movieStartedEvent()
+            4. movieCompletedEvent()
             5. mouseClickEvent()
-            6. moveToMainMenuComponentEvent()
-                     has an effect:
-                     ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
-                               let phase = ctx.getEntityById('gamePhase1);
-                               phase.currentComponent = 'main_menu';
-                     });
-                     
+            6. moveToMainMenuComponentEvent() - has an effect:
+                        ctx.registerEffect('moveToMainMenuComponentEvent', function (data) {
+                                let phase = ctx.getEntityById('gamePhase1');
+                                phase.currentComponent = 'main_menu';
+                        });
+
+            
+      **Make sure you provide all parameters when calling the function. If you don't know all parameters, use `anyEventNameWithData` function using the function name as the event name. For example: anyEventNameWithData("<EventName>").  If you know all parameters, use the function directly, for example:  <EventName>(param1, param2). 
+
+*/                     
 /*
 The main menu component will wait until the user selects a button. At that time, the user will be forwarded to one of the following: game sequence component, math umbrella component, the question updater component or the Denominators' web page depending on the button selected 
 */
