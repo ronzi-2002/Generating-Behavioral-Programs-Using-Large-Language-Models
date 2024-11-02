@@ -22,6 +22,8 @@ car entity:
     }
 }
 
+You can refer to the fields directly. For example: entity.capacity
+
 We can have a query that retrieves all the entities of type 'car'.
 ctx.registerQuery('car', entity => entity.type == 'car');
 another example, we can have a query that retrieves all the entities of type 'car' and a capacity of 2.
