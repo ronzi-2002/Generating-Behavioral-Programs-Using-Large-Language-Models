@@ -227,10 +227,11 @@ Never refer to data fields that are not declared in the event.
         sync({block: [A()], waitFor: [B()]})
     5. Event A cant happen before B
         sync({block: [A()], waitFor: [B()]})
-    6. Allow only a certain order between events: This will Enforce A, B, C order
-        sync({waitFor: [A()], block: [B(), C()]})
-        sync({waitFor: [B()], block: [A(), C()]})
-        sync({waitFor: [C()], block: [A(), B()]})
+    6. Enforce the events order, or turns between events: This will Enforce A, B, C order
+             sync({waitFor: [A()], block: [B(), C()]})
+             sync({waitFor: [B()], block: [A(), C()]})
+             sync({waitFor: [C()], block: [A(), B()]})
+     Important: When you are requested to enforce an order, don't requested the event.
     7. Dont let an event to happen twice in a row:
     bthread('Dont let an event to happen twice in a row', function () {
         lastEvent = null
