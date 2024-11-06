@@ -25,7 +25,9 @@ ctx.populateContext([
 ]);
 
 
-//In addition, there is a phase to the game that holds the current component of the game, starting with "game_start" at the beginning and a score entity
+/*
+In addition, there is a phase to the game that holds the current component of the game, starting with "game_start" at the beginning and a score entity
+*/
 function phase(id, currentComponent) {
     return ctx.Entity(id, 'phase', {currentComponent: currentComponent});
 }
@@ -222,7 +224,7 @@ ctx.bthread('Game sequence logic', 'phase.gameSequence', function (phase) {
 
     while (questionIndex < questions.length) {
         sync({request: [displayQuestionEvent(questions[questionIndex].id)]});
-        let answerEvent = sync({waitFor: [answerSelectedEvent(questions[questionIndex].id, any)]});
+        let answerEvent = sync({waitFor: [answerSelectedEvent(questions[questionIndex].id)]});
 
         if (answerEvent.data.selectedOptionIndex === questions[questionIndex].rightOptionIndex) {
             sync({request: [correctAnswerEvent()]});
