@@ -278,6 +278,11 @@ function updateScoreEvent() {
     return Event("updateScoreEvent");
 }
 
+ctx.registerEffect('moveToEndingSceneComponentEvent', function (data) {
+    let phaseEntity = ctx.getEntityById('gamePhase1');
+    phaseEntity.currentComponent = 'ending_scene';
+});
+
 ctx.registerEffect('updateScoreEvent', function (data) {
     let scoreEntity = ctx.getEntityById('score1');
     scoreEntity.value += 1;
