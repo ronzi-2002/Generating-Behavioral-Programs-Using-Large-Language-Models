@@ -1,4 +1,6 @@
-//A question has its content, 4 options and the index of the right option
+/*
+A question has its content, 4 options and the index of the right option 
+*/
 function question(id, content, options, rightOptionIndex) {
     return ctx.Entity(id, 'question', {
         content: content,
@@ -6,14 +8,22 @@ function question(id, content, options, rightOptionIndex) {
         rightOptionIndex: rightOptionIndex
     });
 }
+/*
+There is one entity called "AllQuestions" which will hold 4 questions about the USA history(place the right answer at a random position)
+*/
+function AllQuestions(id, questions) {
+    return ctx.Entity(id, 'AllQuestions', { questions: questions });
+}
 
-//Generate 4 questions about the USA history(place the right answer at a random position)
 ctx.populateContext([
-    question('q1', 'Who was the first President of the United States?', ['George Washington', 'Thomas Jefferson', 'Abraham Lincoln', 'Theodore Roosevelt'], 0),
-    question('q2', 'What year did the American Civil War begin?', ['1850', '1861', '1877', '1845'], 1),
-    question('q3', 'Which document declared the independence of the United States from Britain?', ['The Constitution', 'The Bill of Rights', 'The Declaration of Independence', 'The Federalist Papers'], 2),
-    question('q4', 'Who was the president during the Louisiana Purchase?', ['John Adams', 'Andrew Jackson', 'James Monroe', 'Thomas Jefferson'], 3)
+    AllQuestions('allQuestions1', [
+        question('q1', 'Who was the first President of the United States?', ['George Washington', 'Thomas Jefferson', 'Abraham Lincoln', 'Theodore Roosevelt'], 0),
+        question('q2', 'What year did the United States declare independence?', ['1776', '1492', '1607', '1865'], 0),
+        question('q3', 'What is the capital of the United States?', ['New York City', 'Los Angeles', 'Washington D.C.', 'Miami'], 2),
+        question('q4', 'Which event began on April 12, 1861?', ['World War I', 'The Great Depression', 'The Civil War', 'The Declaration of Independence'], 2)
+    ])
 ]);
+
 
 //In addition, there is a phase to the game that holds the current component of the game, starting with "game_start" at the beginning and a score entity
 function phase(id, currentComponent) {
