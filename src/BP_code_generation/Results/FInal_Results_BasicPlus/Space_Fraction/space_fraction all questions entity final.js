@@ -65,7 +65,6 @@ ctx.bthread('Move to movie component on start button click', 'phase.start', func
 Upon entrance to the movie component, the introductory movie will begin playing. 
 After the movie begins playing, If a mouse click is received, this component will terminate the movie and forward  the user to the main menu component. Otherwise, the movie will continue to its completion and the user will be moved to the main menu. 
 */
-//Ron: added "After the movie begins playing," to the requirement, without it, it sometimes didnt request movieStartEvent.(because it assumes it was started externally)
 
 function movieStartEvent() {
     return Event("movieStartEvent");
@@ -328,9 +327,8 @@ function exitGameEvent() {
 
 
 /*
-The Question Updater component will wait for the user to submit new questions, providing all info. After the button is clicked, the component will add the new question to the question database. 
+Question Updater component will wait for the user to submit new questions. After the button is clicked, the component will check that 4 options were given and all are different, if they are, it will add the new question.
 */
-//Ron: added "providing all info" to the requirement, without it, it sometimes didnt take parameters in submitNewQuestionEvent.
 /*
 function submitNewQuestionEvent(content, options, rightOptionIndex) {
     return Event("submitNewQuestionEvent", {content: content, options: options, rightOptionIndex: rightOptionIndex});
@@ -345,16 +343,20 @@ ctx.registerEffect('addNewQuestionEvent', function (data) {
     allQuestions.questions.push(question(data.questionId, data.content, data.options, data.rightOptionIndex));
 });
 
-ctx.bthread('Question Updater logic', 'phase.questionUpdater', function (phase) {
+ctx.bthread('Handle new question submissions', 'phase.questionUpdater', function (phase) {
     while (true) {
-        let submitEvent = sync({waitFor: [submitNewQuestionEvent()]});
-        let newQuestionId = `q${ctx.getEntityById('allQuestions1').questions.length + 1}`;
-        sync({request: [addNewQuestionEvent(newQuestionId, submitEvent.data.content, submitEvent.data.options, submitEvent.data.rightOptionIndex)]});
+        let event = sync({waitFor: [submitNewQuestionEvent()]});
+        let {content, options, rightOptionIndex} = event.data;
+
+        if (options.length === 4 && new Set(options).size === 4) { // Check if all options are provided and are unique
+            let newQuestionId = `q${ctx.getEntityById('allQuestions1').questions.length + 1}`;
+            sync({request: [addNewQuestionEvent(newQuestionId, content, options, rightOptionIndex)]});
+        }
     }
 });
 
-User: submitNewQuestionEvent() called without all parameters in  let submitEvent = sync({waitFor: [submitNewQuestionEvent()]});
-Provide a full corrected implementation, without additional explanation.
+submitNewQuestionEvent() called without all parameters in  let submitEvent = sync({waitFor: [submitNewQuestionEvent()]}); 
+Provide a full (providing all needed code) corrected implementation, without additional explanation. 
 */
 
 function submitNewQuestionEvent(content, options, rightOptionIndex) {
@@ -370,11 +372,15 @@ ctx.registerEffect('addNewQuestionEvent', function (data) {
     allQuestions.questions.push(question(data.questionId, data.content, data.options, data.rightOptionIndex));
 });
 
-ctx.bthread('Question Updater logic', 'phase.questionUpdater', function (phase) {
+ctx.bthread('Handle new question submissions', 'phase.questionUpdater', function (phase) {
     while (true) {
         let submitEvent = sync({waitFor: [anyEventNameWithData("submitNewQuestionEvent")]});
-        let newQuestionId = `q${ctx.getEntityById('allQuestions1').questions.length + 1}`;
-        sync({request: [addNewQuestionEvent(newQuestionId, submitEvent.data.content, submitEvent.data.options, submitEvent.data.rightOptionIndex)]});
+        let {content, options, rightOptionIndex} = submitEvent.data;
+
+        if (options.length === 4 && new Set(options).size === 4) { // Check if all options are provided and are unique
+            let newQuestionId = `q${ctx.getEntityById('allQuestions1').questions.length + 1}`;
+            sync({request: [addNewQuestionEvent(newQuestionId, content, options, rightOptionIndex)]});
+        }
     }
 });
 
