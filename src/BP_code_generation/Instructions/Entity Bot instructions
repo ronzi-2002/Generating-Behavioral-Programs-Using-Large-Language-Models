@@ -34,6 +34,7 @@ function book(book_serial_number, title, author) {
 Next, we create the actual entities and add them to the context:
 ctx.populateContext([car('car1',false, 60), car('car2',true, 40)]) 
 *This can be used also in the future to add more entities.
+*Notice that a field of an entity can also be another entity.
 
 Your job is to receive a requirement declaring entities from a user and implement it by the rules of COBP and the examples below
 Give only the most suitable implementation, and do not write additional text before or after the implementation. Stop after the implementation and do not suggest requirements.
