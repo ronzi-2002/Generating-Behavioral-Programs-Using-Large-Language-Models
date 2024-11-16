@@ -63,30 +63,6 @@ function addApplesEvent(storeId, amount) {
 For example, if the store entity wasnt declared, dont declare an event with storeId as a parameter. Because their is no way to get a storeId.
 Events with same name but different data are considered different events. 
 
-**Calling Events Without all Parameters** 
-It is important to call the event function with all arguments. If not all arguments are provided, use the anyEventNameWithData function.
-For gathering events, we use The "anyEventNameWithData" Function. For example:
-AnyEventNameWithData("addApplesEvent", {storeId: storeId}) will gather all events with the name "addApplesEvent" and the data field storeId equal to the storeId provided.
-
-** anyEventNameWithData(eventName, data)
-The function returns an event set that contains all events whose name is eventName and data object existing fields match the field values in filterData.
-Use it ONLY when you dont know the exact data of the event, but you know some of the data.
-
-Never Call A Function Without All Arguments. If not all arguments are provided, use the anyEventNameWithData function.
-
-
-The `anyEventNameWithData` function is very usefull when you want to wait or block a group of events, with similiar properties.
-For example, given the event constructor function:
-    function addApplesEvent(storeId, amount) {
-        return Event("addApplesEvent", {storeId: storeId, amount: amount})
-    }
-    if you want to wait for any addApplesEvent to storeId(no matter the amount), you can use the `anyEventNameWithData` function
-    waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId})]
-    waiting for any addApples event to storeId with amount higher than 10:
-    waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId, amount: (amount) => amount > 10})]
-    
-*Use it only if you dont have all parameters of the event. If you have all parameters, use the event constructor function.
-
 
 
 ### Events With Effects On Entities:
@@ -184,6 +160,15 @@ Important: Never use any other way to get entities.
 
 ### Using Events:
 Don't use Events that weren't declared.
+Before using an event, understand if you have all the parameters. In case you dont, use the "anyEventNameWithData" function. For example:
+anyEventNameWithData("addApplesEvent", {storeId: storeId}) will gather all events with the name "addApplesEvent" and the data field storeId equal to the storeId provided.
+
+** anyEventNameWithData(eventName, data)
+The function returns an array of events that contains all events whose name is eventName and data object existing fields match the field values in the data parameter.
+Use it ONLY when you dont know the exact data of the event.
+
+Never Call A Function Without All Arguments. If not all arguments are provided, use the anyEventNameWithData function.
+
 
 Events can be:
 1. requested:
@@ -197,6 +182,19 @@ Events can be:
 You will use this when something is not allowed to happen.
 
 Note that any combination is legal, and you may use one "sync" for both waiting for an event and requesting another. In this case, the thread will move on when the first reason for transition happens (as stated before).
+
+The `anyEventNameWithData` function is very usefull when you want to wait or block a group of events, with similiar properties.
+For example, given the event constructor function:
+    function addApplesEvent(storeId, amount) {
+        return Event("addApplesEvent", {storeId: storeId, amount: amount})
+    }
+    if you want to wait for any addApplesEvent to storeId(no matter the amount), you can use the `anyEventNameWithData` function
+    waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId})]
+    waiting for any addApples event to storeId with amount higher than 10:
+    waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId, amount: (amount) => amount > 10})]
+    
+*Use it only if you dont have all parameters of the event. If you have all parameters, use the event constructor function.
+
 
 An important Note:
 When you sync an action that only blocks, it will stay like that forever(Which can be needed if some event is never allowed). 
@@ -212,6 +210,8 @@ amount = data.amount
 
 
 Never refer to data fields that are not declared in the event.
+
+
 
 ### Popular templates are:(dont forget to declare the events and effects before using them)
     1. request A or B(If one of them happens, the thread will resume) dont use this template if you want both events to happen
