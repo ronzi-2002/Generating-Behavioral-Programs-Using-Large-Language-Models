@@ -1,47 +1,44 @@
 /*
-system_variables: v_season(s_Heat, s_Cool, s_Off), v_Fan(s_Fan_On,s_Fan_Off), v_target_Temp,  MIN_TEMP=5, MAX_TEMP=35, v_curr_temp, v_MainState(s_Operate, s_Exit, s_Program), idle_time. 
-There is one entity that describes the system variables. default values: v_season(s_off), v_Fan(s_Fan_Off), v_target_Temp=20, v_curr_temp=20, v_MainState(s_Operate), idle_time=0, MIN_TEMP=5, MAX_TEMP=35. 
-
+System. Includes all thermostat related system variables: v_season (s_Heat, s_Cool, s_Off),
+v_Fan (s_Fan_On, s_Fan_Off), v_target_Temp, MIN_TEMP=5, MAX_TEMP=35, v_curr_temp,
+v_MainState (s_Operate, s_Exit, s_Program), idle_time. Default values: s_Off, s_Fan_Off,
+v_target_Temp=20, v_curr_temp=20, s_Operate, idle_time=0
 */
-function systemVariables(id, v_season, v_Fan, v_target_Temp, v_curr_temp, v_MainState, idle_time, MIN_TEMP, MAX_TEMP) {
-    return ctx.Entity(id, 'systemVariables', {
+function System(id, v_season='s_Off', v_Fan='s_Fan_Off', v_target_Temp=20, v_curr_temp=20, v_MainState='s_Operate', idle_time=0) {
+    return ctx.Entity(id, 'System', {
         v_season: v_season,
         v_Fan: v_Fan,
         v_target_Temp: v_target_Temp,
+        MIN_TEMP: 5,
+        MAX_TEMP: 35,
         v_curr_temp: v_curr_temp,
         v_MainState: v_MainState,
-        idle_time: idle_time,
-        MIN_TEMP: MIN_TEMP,
-        MAX_TEMP: MAX_TEMP
+        idle_time: idle_time
     });
 }
 
-ctx.populateContext([systemVariables('sys1', 's_Off', 's_Fan_Off', 20, 20, 's_Operate', 0, 5, 35)]);
+ctx.populateContext([System('system1')]);
 /*
-program: programId(integer between 1 and 8). ii_WeekDay, i_Time and i_Temp, where i_WeekDay corresponds to a specific week day chosen from {MONDAY, TUESDAY, …, FRIDAY}, i_time corresponds to 24hr based day-time specifying the beginning of the time period (e.g. 2020) and i_Temp corresponds to the target temperature provided in degrees Celsius. The value of i_Temp. There are 8 programs(id from 1 to 8) which are all Monday, 8000, 20. 
+Program. The system has configurable temperature-control programs, each has the following data: programId (1, ..., 8), ii_WeekDay (MONDAY, ..., FRIDAY), i_Time (representing the time period beginning) and i_Temp (representing to the target temperature in Celsius). By default, there are 8 programs (id from 1 to 8), which are all Monday, 1000, 20.
 */
 
-function program(programId, i_WeekDay, i_Time, i_Temp) {
-    return ctx.Entity(programId, 'program', {
-        i_WeekDay: i_WeekDay,
+function Program(programId, ii_WeekDay='MONDAY', i_Time=1000, i_Temp=20) {
+    return ctx.Entity(programId, 'Program', {
+        programId: programId,
+        ii_WeekDay: ii_WeekDay,
         i_Time: i_Time,
         i_Temp: i_Temp
     });
 }
 
 ctx.populateContext([
-    program(1, 'MONDAY', 8000, 20),
-    program(2, 'MONDAY', 8000, 20),
-    program(3, 'MONDAY', 8000, 20),
-    program(4, 'MONDAY', 8000, 20),
-    program(5, 'MONDAY', 8000, 20),
-    program(6, 'MONDAY', 8000, 20),
-    program(7, 'MONDAY', 8000, 20),
-    program(8, 'MONDAY', 8000, 20),
+    Program(1), Program(2), Program(3), Program(4),
+    Program(5), Program(6), Program(7), Program(8)
 ]);
 
 /*
-External Data: This entity holds the data about the world, specifically the current weekday, hour. start with Monday as current day, ,and 8000 as hour
+
+External Data. External information, including the current weekday and hour. Defaults with Monday as current day, and 1000 as hour. 
 */
 function externalData(id, currentWeekday, currentHour) {
     return ctx.Entity(id, 'externalData', {
@@ -59,13 +56,17 @@ Needed Queries:
     2. cooling mode =  fan_on and s_cool season
     3. Heating mode = fan_on and s_heat season   
     4. off mode = fan_off and s_off season
-    
 
 */
+
 ctx.registerQuery('program', entity => entity.type == 'program');
-ctx.registerQuery('cooling_mode', entity => entity.type == 'systemVariables' && entity.v_Fan == 's_Fan_On' && entity.v_season == 's_Cool');
-ctx.registerQuery('heating_mode', entity => entity.type == 'systemVariables' && entity.v_Fan == 's_Fan_On' && entity.v_season == 's_Heat');
-ctx.registerQuery('off_mode', entity => entity.type == 'systemVariables' && entity.v_Fan == 's_Fan_Off' && entity.v_season == 's_Off');
+
+ctx.registerQuery('coolingMode', entity => entity.type == 'System' && entity.v_Fan == 's_Fan_On' && entity.v_season == 's_Cool');
+
+ctx.registerQuery('heatingMode', entity => entity.type == 'System' && entity.v_Fan == 's_Fan_On' && entity.v_season == 's_Heat');
+
+ctx.registerQuery('offMode', entity => entity.type == 'System' && entity.v_Fan == 's_Fan_Off' && entity.v_season == 's_Off');
+
 /*
 Enter to view program: upon pressing the button View Programs in UI01, this operation causes the system to enter to its s_Program state and the value of the variable idle_Time to be set to its initial value
 */
@@ -74,45 +75,45 @@ function viewProgramsEvent() {
     return Event("viewProgramsEvent");
 }
 
-function enterProgramModeEvent() {
-    return Event("enterProgramModeEvent");
+function enterProgramStateEvent() {
+    return Event("enterProgramStateEvent");
 }
 
-ctx.registerEffect('enterProgramModeEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    systemVariables.v_MainState = 's_Program';
-    systemVariables.idle_time = 0;
+ctx.registerEffect('enterProgramStateEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    system.v_MainState = 's_Program';
+    system.idle_time = 0;
 });
 
 ctx.bthread('Enter to view program', function () {
     while (true) {
         sync({waitFor: [viewProgramsEvent()]});
-        sync({request: [enterProgramModeEvent()]});
+        sync({request: [enterProgramStateEvent()]});
     }
 });
 /*
-Enter to background mode: upon pressing the button Enter Background Mode, this operation  causes the system to enter to s_Exit state.
+Enter to background mode: upon pressing the button Enter Background Mode, this operation causes the system to enter the s_Exit state, and suspend the system to a background mode.
 */
+//Ron: Removed the part of "minimize UO1"
 function enterBackgroundModeEvent() {
     return Event("enterBackgroundModeEvent");
 }
 
-function exitSystemEvent() {
-    return Event("exitSystemEvent");
+function suspendSystemEvent() {
+    return Event("suspendSystemEvent");
 }
 
-ctx.registerEffect('exitSystemEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    systemVariables.v_MainState = 's_Exit';
+ctx.registerEffect('suspendSystemEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    system.v_MainState = 's_Exit';
 });
 
 ctx.bthread('Enter to background mode', function () {
     while (true) {
         sync({waitFor: [enterBackgroundModeEvent()]});
-        sync({request: [exitSystemEvent()]});
+        sync({request: [suspendSystemEvent()]});
     }
 });
-
 /*
 Display program details: Given a valid program identifier (1≤programID≤8), this operation shall display the values for the weekday, time, and temperature corresponding to the program identifier on the screen.
 */

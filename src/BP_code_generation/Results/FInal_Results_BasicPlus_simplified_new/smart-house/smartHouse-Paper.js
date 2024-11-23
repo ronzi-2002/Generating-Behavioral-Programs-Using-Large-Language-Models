@@ -29,11 +29,11 @@ function pourHotWaterEvent(roomId) {
     return Event("pourHotWaterEvent", {roomId: roomId});
 }
 
-ctx.bthread('Pour hot water three times when tap button is pressed', 'room.withTap', function (room) {
+ctx.bthread('Pour hot water three times when tap button is pressed', 'room.withTap', function (roomWithTap) {
     while (true) {
-        sync({waitFor: [tapButtonPressedEvent(room.id)]});
+        sync({waitFor: [tapButtonPressedEvent(roomWithTap.id)]});
         for (let i = 0; i < 3; i++) {
-            sync({request: [pourHotWaterEvent(room.id)]});
+            sync({request: [pourHotWaterEvent(roomWithTap.id)]});
         }
     }
 });
@@ -44,11 +44,11 @@ function pourColdWaterEvent(roomId) {
     return Event("pourColdWaterEvent", {roomId: roomId});
 }
 
-ctx.bthread('Pour cold water three times when tap button is pressed', 'room.withTap', function (room) {
+ctx.bthread('Pour cold water three times when tap button is pressed', 'room.withTap', function (roomWithTap) {
     while (true) {
-        sync({waitFor: [tapButtonPressedEvent(room.id)]});
+        sync({waitFor: [tapButtonPressedEvent(roomWithTap.id)]});
         for (let i = 0; i < 3; i++) {
-            sync({request: [pourColdWaterEvent(room.id)]});
+            sync({request: [pourColdWaterEvent(roomWithTap.id)]});
         }
     }
 });
@@ -72,6 +72,11 @@ ctx.bthread('Block water pouring after emergency button is pressed', function ()
     sync({waitFor: [emergencyButtonPressedEvent()]});
     sync({block: [anyEventWithData(pourHotWaterEvent), anyEventWithData(pourColdWaterEvent)]});
 });
+
+
+//Additional requirements(1):
+
+//Based on code above(1)
 /*
 For each room with a lightbulb, turn it on when motion is detected in the room.
 */
@@ -87,5 +92,36 @@ ctx.bthread('Turn on light when motion is detected', 'room.WithLightBulb', funct
     while (true) {
         sync({waitFor: [motionDetectedEvent(room.id)]});
         sync({request: [turnOnLightEvent(room.id)]});
+    }
+});
+
+//Modifying the "Do not perform two consecutive pouring..."
+
+/*
+In kitchens, allow pouring water only in the following order: C, C, H, C, C, H, and so on, where C represents cold water, and H represents hot water
+*/
+ctx.bthread('Enforce water pouring order in kitchens', 'room.kitchen', function (kitchen) {
+    while (true) {
+        sync({waitFor: [pourColdWaterEvent(kitchen.id)], block: [pourHotWaterEvent(kitchen.id)]});
+        sync({waitFor: [pourColdWaterEvent(kitchen.id)], block: [pourHotWaterEvent(kitchen.id)]});
+        sync({waitFor: [pourHotWaterEvent(kitchen.id)], block: [pourColdWaterEvent(kitchen.id)]});
+    }
+});
+/*
+After pouring water from a tap in a kitchen 100 times, it should be cleaned
+*/
+function cleanTapEvent(roomId) {
+    return Event("cleanTapEvent", {roomId: roomId});
+}
+
+ctx.bthread('Clean tap after 100 pours in a kitchen', 'room.kitchen', function (kitchen) {
+    let pourCount = 0;
+    while (true) {
+        sync({waitFor: [pourHotWaterEvent(kitchen.id), pourColdWaterEvent(kitchen.id)]});
+        pourCount++;
+        if (pourCount >= 100) {
+            sync({request: [cleanTapEvent(kitchen.id)]});
+            pourCount = 0; // Reset the counter after cleaning
+        }
     }
 });
