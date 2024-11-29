@@ -365,7 +365,7 @@ ctx.bthread('Decrease temperature', function () {
     }
 });
 /*
-Cooling Mode: If the season is set to “Cool” (v_season = s_Cool) and the fan is on (v_Fan = s_Fan_On), the system shall activate the cooling appliance, if the current temperature is higher than the target. The system shall deactivate the cooling appliance when the target temperature is lower (or equal) than the current.
+Cooling Mode: If the season is set to “Cool” (v_season = s_Cool) and the fan is on (v_Fan = s_Fan_On), the system shall activate the cooling appliance, if the current temperature is higher than the target. The system shall deactivate the cooling appliance when the current temperature is lower (or equal) than the target.
 */
 
 function activateCoolingEvent() {
@@ -386,7 +386,7 @@ ctx.bthread('Manage cooling mode', 'coolingMode', function (system) {
     }
 });
 /*
-Heating Mode: If the season is set to “Heat” (v_season = s_Heat) and the fan is on (v_Fan = s_Fan_On), the system shall activate the heating appliance, if the current temperature is lower than the target. The system shall deactivate the heating appliance when the target temperature is higher (or equal) than the current.
+Heating Mode: If the season is set to “Heat” (v_season = s_Heat) and the fan is on (v_Fan = s_Fan_On), the system shall activate the heating appliance, if the current temperature is lower than the target. The system shall deactivate the heating appliance when the current temperature is higher (or equal) than the target.
 */  
 function activateHeatingEvent() {
     return Event("activateHeatingEvent");
