@@ -12,7 +12,7 @@ Provide only your implementation of the requirement, without the need to explain
     1. Don't define again Events/Queries/Effects that were previously defined.
     2. Don't use Events that weren't declared. 
     3. Don't use the special syntax that wasn't introduced in your instructions.
-    4. Don't call a function without all arguments. If not all arguments are provided, use anyEventNameWithData function.
+    4. Don't call a function without all arguments. If not all arguments are provided, use EventWithPartialData function.
     5. Never update entities without declaring an effect.
     6. If you want a behavior to continue forever, use a while(true) loop.
     8. Instead of commenting "//DO A", declare an event "doAEvent" and use it in the code with request.  
@@ -62,26 +62,26 @@ For example, if the store entity wasnt declared, dont declare an event with stor
 Events with same name but different data are considered different events. 
 
 **Calling Events Without all Parameters** 
-It is important to call the event function with all arguments. If not all arguments are provided, use the anyEventNameWithData function.
-For gathering events, we use The "anyEventNameWithData" Function. For example:
-AnyEventNameWithData("addApplesEvent", {storeId: storeId}) will gather all events with the name "addApplesEvent" and the data field storeId equal to the storeId provided.
+It is important to call the event function with all arguments. If not all arguments are provided, use the EventWithPartialData function.
+For gathering events, we use The "EventWithPartialData" Function. For example:
+EventWithPartialData("addApplesEvent", {storeId: storeId}) will gather all events with the name "addApplesEvent" and the data field storeId equal to the storeId provided.
 
-** anyEventNameWithData(eventName, data)
+** EventWithPartialData(eventName, data)
 The function returns an event set that contains all events whose name is eventName and data object existing fields match the field values in filterData.
 Use it ONLY when you dont know the exact data of the event, but you know some of the data.
 
-Never Call A Function Without All Arguments. If not all arguments are provided, use the anyEventNameWithData function.
+Never Call A Function Without All Arguments. If not all arguments are provided, use the EventWithPartialData function.
 
 
-The `anyEventNameWithData` function is very usefull when you want to wait or block a group of events, with similiar properties.
+The `EventWithPartialData` function is very usefull when you want to wait or block a group of events, with similiar properties.
 For example, given the event constructor function:
     function addApplesEvent(storeId, amount) {
         return Event("addApplesEvent", {storeId: storeId, amount: amount})
     }
-    if you want to wait for any addApplesEvent to storeId(no matter the amount), you can use the `anyEventNameWithData` function
-    waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId})]
+    if you want to wait for any addApplesEvent to storeId(no matter the amount), you can use the `EventWithPartialData` function
+    waitFor: [EventWithPartialData("addApplesEvent", {storeId: storeId})]
     waiting for any addApples event to storeId with amount higher than 10:
-    waitFor: [anyEventNameWithData("addApplesEvent", {storeId: storeId, amount: (amount) => amount > 10})]
+    waitFor: [EventWithPartialData("addApplesEvent", {storeId: storeId, amount: (amount) => amount > 10})]
     
 *Use it only if you dont have all parameters of the event. If you have all parameters, use the event constructor function.
 
@@ -174,6 +174,8 @@ You can use it only inside the registerEffect function.
     ctx.getEntityById(carId) will return the entity with the id carId.
     **Important note** Each entity has a different id.
     There are no 2 entities with the same id.
+* In a case you want to get all entities that satisfy a query, you can use the ctx.runQuery function. For example:
+    ctx.runQuery((entity) => entity.type == 'car') will return all entities with the type 'car'. This is mainly used when you need to get all entities in the same bthread(for example to iterate over them).
 
 Important: Never use any other way to get entities.
 
@@ -187,10 +189,10 @@ Events can be:
  - sync({request: [EventA(),EventB()]}). The events are requested to be triggered, but only one will actually be triggered. The thread will resume to the next step after the event happens.
 2. waited for
  - sync({waitFor: [EventA()]}). The thread will resume to the next step after one of the events happen. Notice that this doesn't trigger the event. Using this without any actions after has no meaning.
- - sync({waitFor: [anyEventNameWithData("EventA")]})  This waits for any event that is in the EventSet.
+ - sync({waitFor: [EventWithPartialData("EventA")]})  This waits for any event that is in the EventSet.
  3. blocked
  - sync({block: [EventA()]})  This blocks an event from happening. the thread will not resume after this.
- - sync({block: [anyEventNameWithData("EventA")]})  This blocks any event that is in the EventSet.
+ - sync({block: [EventWithPartialData("EventA")]})  This blocks any event that is in the EventSet.
 You will use this when something is not allowed to happen.
 
 Note that any combination is legal, and you may use one "sync" for both waiting for an event and requesting another. In this case, the thread will move on when the first reason for transition happens (as stated before).

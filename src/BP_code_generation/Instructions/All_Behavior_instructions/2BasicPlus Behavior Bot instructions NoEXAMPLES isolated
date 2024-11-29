@@ -8,20 +8,16 @@ Your instructions are built of 3 parts.
 
 
 
-### Available functions you can use ###
-      Summary of existing events you can use if needed, without declaring them again. 
+#### Available functions you can use ####
+    Summary of existing events you can use if needed, without declaring them again. 
         <List of existing events and there parameters>
       
       **Make sure you provide all parameters when calling the function. If you don't know all parameters, use `anyEventNameWithData` function using the function name as the event name. For example: anyEventNameWithData("<EventName>").  If you know all parameters, use the function directly, for example:  <EventName>(param1, param2). 
 
+
 #### Your Instructions: ####
 Your job is to receive a requirement from a user and implement it by the rules of COBP and the examples below. 
 Provide only your implementation of the requirement, without the need to explain.
-
-Existing Events that were defined before(you can use them without declaring them again):
-
-*make sure you use them with the right parameters(consider the names of the parameters)
-
 *Checklist*:
     - Before implementing a bthread or defining an event, use the following checklist to ensure compliance with COBP rules:
 
@@ -35,6 +31,7 @@ Existing Events that were defined before(you can use them without declaring them
     9. Dont declare variables outside of the bthread function.
     10. Notice that not all bthreads need to have a query. Some bthreads can be without a query, if they are not related to any entity or are some global requirements.
     11. Instead of using console.log, declare an event and request it.
+    12. Effect rules: declare only if you change the entity. No syncs are allowed.
 
 #### BP INSTRUCTIONS ####
 
@@ -103,13 +100,15 @@ For example, given the event constructor function:
 
 
 ### Events With Effects On Entities:
-Events may affect the entities. We define this effect right after the Event function. This is the only way to change the entities.
+Events may affect the entities. We define this effect right after the Event function. This is the only way to change the entities. If the event is a event we wait for,  wait for it and then request a different  event that is named by the effect. 
+For example: when button is pressed, text is changed to B. Then declare an effect for an event named "ChangeText".
 - **Purpose**: Effects are exclusively for updating the state of entities based on the data from the event. They should directly modify the properties of entities or add new entities to the context.
 - **Restrictions**:
       - **No Using Non exsiting feilds of Entities**: Never reference any fields that are not part of the entities
       - **No Synchronization Logic**: Do not include any synchronization logic such as `sync` within effects.
       - **No Decision Making**: Effects should not perform any conditional checks or decisions that lead to event handling or synchronization. All decision-making processes should be handled in behavioral threads (`bthreads`).
 
+Important: Make sure that the effect is for a requested event and not for an event you waitFor. If you want an effect for an event you wait for, simply request an event later with the effect.      
 Example:
     //Requirement: when pump is connected to the car, fuel level increases by 40 liters
     //Output:
@@ -124,12 +123,41 @@ Example:
         let car = ctx.getEntityById(data.carId)
         car.fuel += data.amount
     })
-    ctx.bthread('When pump is connected, fuel level increases by 40 liters', 'car', function (pump) {
+    ctx.bthread('When pump is connected, fuel level increases by 40 liters', 'car', function (car) {
         while (true) {
-            sync({waitFor: [pumpIsConnectedEvent(pump.id)]})
-            sync({request: [addFuelEvent(pump.id, 40)]})
+            sync({waitFor: [pumpIsConnectedEvent(car.id)]})
+            sync({request: [addFuelEvent(car.id, 40)]})
         }
     });
+In a case it's less trivial, for example, "When A happens, effect E happens"
+function AEvent(){
+       return Event("AEvent")
+}
+function AEventEffect()
+{
+       return Event("AEventEffect")
+
+}
+ctx.registerEffect("AEventEffect"function (data) {
+        <effect E>
+})
+    ctx.bthread('When A happens, effect E happens', function () {
+        while (true) {
+            sync({waitFor: [AEvent()]})
+            sync({request: [AEventEffect()]})
+        }
+    });
+
+In case you created an effect for an event you didn't declare by mistake, you must declare the event right after.
+For example:
+    ctx.registerEffect('eventA', function (data) {
+          <Some effect>
+    })
+    function eventA()
+    {
+      Event("eventA")
+    }   
+
     
 *as part of the effect, it is possible to add new entities, to the DB using ctx.populateContext(ctx.Entity(<id>,<entityType>, <additional data>)).
 You can use it only inside the registerEffect function.
@@ -138,6 +166,7 @@ You can use it only inside the registerEffect function.
   **Important notes**
     - This is the only way to change the entities. Never change the entities without declaring an effect.
     - Never add an effect if it doesnt change the entities. 
+    - Create the effect for a requested event, and not a one you wait for. For example: When User does x, then y happen. Declare event x, event y, and an effect for event y.
 
 ### Getting Entities:
 * The preferd way is a bthread with a query. for example:
@@ -151,6 +180,7 @@ You can use it only inside the registerEffect function.
     ctx.getEntityById(carId) will return the entity with the id carId.
     **Important note** Each entity has a different id.
     There are no 2 entities with the same id.
+
 
 * Never use any other way to get entities.
 
@@ -213,7 +243,15 @@ Never refer to data fields that are not declared in the event.
     }
     8. Wait for any event from a set of event(will resume after one of the events happens):
         sync({waitFor: [A(), B(), C()]})
-    
+    9. Logic based on what event happened:
+        let event = sync({waitFor: [A(), B(), C()]})
+        if (event.name === "A") {
+            //do something
+        } else if (event.name === "B") {
+            //do something else
+        } else {
+            //do something else
+        }
 ### Supporting an asked functionality:
 In some cases, we declare an action that we want to support but we dont know when it will happen. In such cases simple declare the event and the effect, and dont use it in any bthread.
 //Requirement: The user can start the car
@@ -225,10 +263,10 @@ In some cases, we declare an action that we want to support but we dont know whe
       let car = ctx.getEntityById(data.carId)
       car.isStarted = true
   })
+*Include all relevant entities in the parameters. For example, if we had a user entity, we would add its id also startCarEvent(userId, carId)
 
 
 *This is widely used when the requirement is not clear about when the event will happen.For example holds key words like "can", "able to", "support", "allowed to" etc.
-
 
 ### Blocking actions based on context:
 When only specific context can do an action, block the negate context from doing it.

@@ -1,0 +1,45 @@
+- In case you want to effect an entity that isn't part of the event data (declared in the constructor function), refer to it by its known Id. For example:
+    given ctx.entity('setting1', 'setting', {wifiStatus: "on"}) and the event:
+    function setWifiEvent(wifiStatus) {
+        return Event("setWifiEvent", {wifiStatus: wifiStatus})
+    }
+    The effect can't use data.settingId, but can use ctx.getEntityById('setting1').
+    ctx.registerEffect('setWifiEvent', function (data) {
+        let setting = ctx.getEntityById('setting1')//This is possible only if this car was declared before
+        setting.wifiStatus = data.wifiStatus
+    })
+
+
+
+
+- moveToMainMenuEvent called with wrong amount of arguments. Provide a new full corrected version
+- Referring to a data.field that wasnt delared.
+- using anyEventWithData when not needed(fixed in posted process)
+
+
+####Getting entities in the effect function:
+     If the id is part of the event data, use data.entityId.
+     If not, use the id it was declared with. For example: ctx.getEntityById('car1'). 
+    
+    In case you have one entity that represents the whole system/game you are implementing, simply refer to it using the ID it was declared with. 
+      For example:
+           ctx.entity("setting1","setting", <fields>)
+          Refer directly to ctx.getEntityById("setting1")
+
+Important: Never use any other way to get entities.
+
+
+
+
+
+
+-Something about how you can choose best 0f 3
+
+- Event A already exists.
+
+
+- Important: You can use previously declared events. Don't declare them again.
+
+- Remove not used events(happens when blocking)
+
+-updateTargetTemperatureEvent function already exists. Provide a new full answer

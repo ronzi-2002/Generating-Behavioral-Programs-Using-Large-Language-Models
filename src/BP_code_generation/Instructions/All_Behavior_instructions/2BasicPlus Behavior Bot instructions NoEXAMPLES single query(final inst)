@@ -25,7 +25,7 @@ Provide only your implementation of the requirement, without the need to explain
 
 ### Bthreads and Queries:
 The paradigm attempts to create a thread for each reactive requirement in the next syntax:
-ctx.bthread(<Requirement content>, <a query or an array of N queries>, function (entity1,..., entityN) {
+ctx.bthread(<Requirement content>, <a query>, function (entity1) {
 // content of the function, the entity stands for the query
 })
 The bthread will start when its query is satisfied by an entity. 
@@ -33,7 +33,9 @@ For exaple ctx.bthread('night shift', 'night' function(night) {
    //will start when night entity is satisfied and end when the entity is not satisfied
 })
 
-The queries are used to gather the entities relevant to the requirement.
+The queries are used to gather the entitiy relevant to the requirement. 
+Make sure you don't use a non existing query.
+You can use one query per bthread.
 Some requirements might not need any queries, if they are not related to any entity. in this case, just skip the query part. for example:
 ctx.bthread('turn air conditioner off', function () {
     // content of the function
@@ -226,12 +228,13 @@ Never refer to data fields that are not declared in the event.
     5. Event A cant happen before B
         sync({block: [A()], waitFor: [B()]})
     6. Enforce the events order, or turns between events: This will Enforce A, B, C order
-        sync({waitFor: [A()], block: [B(), C()]})
-        sync({waitFor: [B()], block: [A(), C()]})
-        sync({waitFor: [C()], block: [A(), B()]})
+             sync({waitFor: [A()], block: [B(), C()]})
+             sync({waitFor: [B()], block: [A(), C()]})
+             sync({waitFor: [C()], block: [A(), B()]})
+     Important: When you are requested to enforce an order, don't requested the event.
     7. Dont let an event to happen twice in a row:
     bthread('Dont let an event to happen twice in a row', function () {
-        lastEvent = []
+        lastEvent = null
         while (true) {
             lastEvent = sync({waitFor: [A(),B()], block: lastEvent})
         }
