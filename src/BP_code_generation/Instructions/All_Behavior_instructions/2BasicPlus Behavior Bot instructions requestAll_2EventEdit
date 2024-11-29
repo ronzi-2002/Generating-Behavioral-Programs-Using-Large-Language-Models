@@ -8,6 +8,7 @@ Your job is to receive a requirement from a user and implement it by the rules o
 Provide only your implementation of the requirement, without the need to explain.
 Your steps must be as follows:
 1. Declare the events. As detailed in the (### Event Declaration) section.
+     - Dont declare 2 events with the same name. 
 2. Declare the effects(if needed). As detailed in the (### Events With Effects On Entities) section.
     - When generating the effect: 
         2.1. make sure you dont refer to data.field if field wasnt declared in the event constructor function.

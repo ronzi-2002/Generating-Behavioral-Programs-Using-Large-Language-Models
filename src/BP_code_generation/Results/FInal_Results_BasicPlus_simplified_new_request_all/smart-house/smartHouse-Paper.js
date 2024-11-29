@@ -33,7 +33,7 @@ ctx.bthread('Pour hot water three times when tap button is pressed', 'room.withT
     while (true) {
         sync({waitFor: [tapButtonPressedEvent(roomWithTap.id)]});
         for (let i = 0; i < 3; i++) {
-            sync({request: [pourHotWaterEvent(roomWithTap.id)]});
+            sync({requestOne: [pourHotWaterEvent(roomWithTap.id)]});
         }
     }
 });
@@ -48,7 +48,7 @@ ctx.bthread('Pour cold water three times when tap button is pressed', 'room.with
     while (true) {
         sync({waitFor: [tapButtonPressedEvent(roomWithTap.id)]});
         for (let i = 0; i < 3; i++) {
-            sync({request: [pourColdWaterEvent(roomWithTap.id)]});
+            sync({requestOne: [pourColdWaterEvent(roomWithTap.id)]});
         }
     }
 });
@@ -61,6 +61,21 @@ ctx.bthread('Do not perform two consecutive pouring actions of the same type in 
         lastEvent = sync({waitFor: [pourHotWaterEvent(kitchen.id), pourColdWaterEvent(kitchen.id)], block: lastEvent});
     }
 });
+
+
+
+//Additional requirements(1):
+//Based on code above(1)
+/*
+No water can be poured after an tap button is pressed 
+*/
+ctx.bthread('Block pouring water after tap button is pressed', function () {
+    while (true) {
+        sync({waitFor: [anyEventWithData(tapButtonPressedEvent)]});
+        sync({block: [anyEventWithData(pourHotWaterEvent), anyEventWithData(pourColdWaterEvent)]});
+    }
+});
+//Based on code above(1)
 /*
 No water can be poured after an emergency button is pressed
 */
@@ -68,30 +83,36 @@ function emergencyButtonPressedEvent() {
     return Event("emergencyButtonPressedEvent");
 }
 
-ctx.bthread('Block water pouring after emergency button is pressed', function () {
+ctx.bthread('Block pouring water after emergency button is pressed', function () {
     sync({waitFor: [emergencyButtonPressedEvent()]});
     sync({block: [anyEventWithData(pourHotWaterEvent), anyEventWithData(pourColdWaterEvent)]});
 });
-
-
-//Additional requirements(1):
-
 //Based on code above(1)
 /*
-For each room with a lightbulb, turn it on when motion is detected in the room.
+For each room with a motion sensor, turn the lights on once a motion is detected, and off once it stops.
 */
 function motionDetectedEvent(roomId) {
     return Event("motionDetectedEvent", {roomId: roomId});
 }
 
-function turnOnLightEvent(roomId) {
-    return Event("turnOnLightEvent", {roomId: roomId});
+function motionStoppedEvent(roomId) {
+    return Event("motionStoppedEvent", {roomId: roomId});
 }
 
-ctx.bthread('Turn on light when motion is detected', 'room.WithLightBulb', function (room) {
+function turnLightsOnEvent(roomId) {
+    return Event("turnLightsOnEvent", {roomId: roomId});
+}
+
+function turnLightsOffEvent(roomId) {
+    return Event("turnLightsOffEvent", {roomId: roomId});
+}
+
+ctx.bthread('Turn lights on when motion is detected and off when it stops', 'room.withMotionSensor', function (roomWithSensor) {
     while (true) {
-        sync({waitFor: [motionDetectedEvent(room.id)]});
-        sync({request: [turnOnLightEvent(room.id)]});
+        sync({waitFor: [motionDetectedEvent(roomWithSensor.id)]});
+        sync({requestOne: [turnLightsOnEvent(roomWithSensor.id)]});
+        sync({waitFor: [motionStoppedEvent(roomWithSensor.id)]});
+        sync({requestOne: [turnLightsOffEvent(roomWithSensor.id)]});
     }
 });
 
@@ -107,20 +128,22 @@ ctx.bthread('Enforce water pouring order in kitchens', 'room.kitchen', function 
         sync({waitFor: [pourHotWaterEvent(kitchen.id)], block: [pourColdWaterEvent(kitchen.id)]});
     }
 });
+
+//Based on code above(1)
 /*
 After pouring water from a tap in a kitchen 100 times, it should be cleaned
 */
-function cleanTapEvent(roomId) {
-    return Event("cleanTapEvent", {roomId: roomId});
+function cleanKitchenTapEvent(roomId) {
+    return Event("cleanKitchenTapEvent", {roomId: roomId});
 }
 
-ctx.bthread('Clean tap after 100 pours in a kitchen', 'room.kitchen', function (kitchen) {
+ctx.bthread('Clean kitchen tap after 100 pours', 'room.kitchen', function (kitchen) {
     let pourCount = 0;
     while (true) {
         sync({waitFor: [pourHotWaterEvent(kitchen.id), pourColdWaterEvent(kitchen.id)]});
         pourCount++;
         if (pourCount >= 100) {
-            sync({request: [cleanTapEvent(kitchen.id)]});
+            sync({requestOne: [cleanKitchenTapEvent(kitchen.id)]});
             pourCount = 0; // Reset the counter after cleaning
         }
     }

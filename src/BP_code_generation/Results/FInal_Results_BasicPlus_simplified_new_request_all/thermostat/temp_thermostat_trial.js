@@ -203,45 +203,43 @@ ctx.bthread('Display previous program', 'program', function (program) {
 });
 
 /*
-Run program: upon pressing the Run Program button in UI02 given the program id and given the values of current weekday and time, this operation sets the varialbe v_target_Temp accordingly and returns to the main menu (update the temp If current time is as stated by the program). In addition, this operation shall change the system state back to s_Operate from s_Program. 
+Run program: upon pressing the Run Program button in UI02 given the program id and given the values of current weekday and time, if the current time in external data is as stated by the program, this operation sets the variable v target Temp accordingly and returns to the main menu. In addition, this operation returns to the main menu and shall change the system state back to s Operate from s Program.
 */
 function runProgramEvent(programId) {
     return Event("runProgramEvent", {programId: programId});
 }
 
-function updateTargetTempEvent(programId, temp) {
-    return Event("updateTargetTempEvent", {programId: programId, temp: temp});
+function setTargetTempEvent(temp) {
+    return Event("setTargetTempEvent", {temp: temp});
 }
 
 function returnToMainMenuEvent() {
     return Event("returnToMainMenuEvent");
 }
 
-ctx.registerEffect('updateTargetTempEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    let program = ctx.getEntityById(data.programId);
-    let external = ctx.getEntityById('externalData1');
-
-    if (external.currentWeekday === program.i_WeekDay && external.currentHour === program.i_Time) {
-        systemVariables.v_target_Temp = data.temp;
-    }
+ctx.registerEffect('setTargetTempEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    system.v_target_Temp = data.temp;
 });
 
 ctx.registerEffect('returnToMainMenuEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    systemVariables.v_MainState = 's_Operate';
+    let system = ctx.getEntityById('system1');
+    system.v_MainState = 's_Operate';
 });
 
-ctx.bthread('Run program and return to main menu', 'program', function (program) {
+ctx.bthread('Run program and set target temperature', 'program', function (program) {
     while (true) {
-        let event = sync({waitFor: [anyEventNameWithData("runProgramEvent", {programId: program.id})]});
-        sync({request: [updateTargetTempEvent(program.id, program.i_Temp)]});
-        sync({request: [returnToMainMenuEvent()]});
+        sync({waitFor: [runProgramEvent(program.id)]});
+        let external = ctx.getEntityById('externalData1');
+        if (external.currentWeekday === program.i_WeekDay && external.currentHour === program.i_Time) {
+            sync({requestOne: [setTargetTempEvent(program.i_Temp)]});
+        }
+        sync({requestOne: [returnToMainMenuEvent()]});
     }
 });
 
 /*
-Change season: Upon changing the Season Switch position in UI01 this operation shall change the v_Season system variable to the corresponding stateID ( stateID ∈{s _ Heat,s _Cool,s _ Off}). 
+Change season: Upon changing the Season Switch position in UI01, this operation shall change the v_Season system variable to the corresponding stateID.
 */
 /*
 function changeSeasonEvent(seasonStateId) {
@@ -249,138 +247,111 @@ function changeSeasonEvent(seasonStateId) {
 }
 
 ctx.registerEffect('changeSeasonEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    systemVariables.v_season = data.seasonStateId;
+    let system = ctx.getEntityById('system1');
+    system.v_season = data.seasonStateId;
 });
 
-ctx.bthread('Change season', function () {
+ctx.bthread('Change season mode', function () {
     while (true) {
         let event = sync({waitFor: [changeSeasonEvent()]});
     }
 });
 
-\\User: changeSeasonEvent called without all parameter. Provide a fixed code without any additional explanation.
-
+User: changeSeasonEvent called without all parameters in let event = sync({waitFor: [changeSeasonEvent()]});. Provide a full fixed code without any additional explanation.
 */
 function changeSeasonEvent(seasonStateId) {
     return Event("changeSeasonEvent", {seasonStateId: seasonStateId});
 }
 
 ctx.registerEffect('changeSeasonEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    systemVariables.v_season = data.seasonStateId;
+    let system = ctx.getEntityById('system1');
+    system.v_season = data.seasonStateId;
 });
 
-ctx.bthread('Change season', function () {
+ctx.bthread('Change season mode', function () {
     while (true) {
-        let event = sync({waitFor: [anyEventNameWithData("changeSeasonEvent")]});
+        let event = sync({waitFor: [anyEventWithData(changeSeasonEvent)]});
     }
 });
 
 /*
-Switch fan state: checks the current fan state and based on the result, switches to the alternative state. Only two states are possible – {s_FanAuto, s_FanOn}. This operation shall be evoked when the Operator changes the Fan Switch position in UI01.
-*/
-/*
-function switchFanStateEvent() {
-    return Event("switchFanStateEvent");
-}
-
-function updateFanStateEvent(newState) {
-    return Event("updateFanStateEvent", {newState: newState});
-}
-
-ctx.registerEffect('updateFanStateEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    systemVariables.v_Fan = data.newState;
-});
-
-ctx.bthread('Switch fan state', 'systemVariables', function (systemVariables) {
-    while (true) {
-        sync({waitFor: [switchFanStateEvent()]});
-        let newState = (systemVariables.v_Fan === 's_Fan_On') ? 's_Fan_Auto' : 's_Fan_On';
-        sync({request: [updateFanStateEvent(newState)]});
-    }
-});
-
-\\User: systemVariables query doesnt exist.
+switch fan state: checks the current fan state and, based on the result, switches to the alternative state. Only two states are possible – {s_FanAuto, s_FanOn}. This operation shall be evoked when the operator changes the Fan Switch position in UI01.
 */
 function switchFanStateEvent() {
     return Event("switchFanStateEvent");
 }
 
-function updateFanStateEvent(newState) {
-    return Event("updateFanStateEvent", {newState: newState});
+function setFanStateEvent(fanState) {
+    return Event("setFanStateEvent", {fanState: fanState});
 }
 
-ctx.registerEffect('updateFanStateEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    systemVariables.v_Fan = data.newState;
+ctx.registerEffect('setFanStateEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    system.v_Fan = data.fanState;
 });
 
 ctx.bthread('Switch fan state', function () {
     while (true) {
         sync({waitFor: [switchFanStateEvent()]});
-        let systemVariables = ctx.getEntityById('sys1');
-        let newState = (systemVariables.v_Fan === 's_Fan_On') ? 's_Fan_Auto' : 's_Fan_On';
-        sync({request: [updateFanStateEvent(newState)]});
+        let system = ctx.getEntityById('system1');
+        let newState = system.v_Fan === 's_Fan_On' ? 's_Fan_Auto' : 's_Fan_On';
+        sync({requestOne: [setFanStateEvent(newState)]});
     }
 });
 
 /*
-Increase Temperature: allows the Operator to increase the value of v_target_Temp by one degree given that this value will not be above MAX_TEMP. This operation shall be evoked when the operator presses Temperature Up button in UI01.
+Increase Temperature: allows the operator to increase the value of v_target_Temp by one degree, given that this value will not exceed MAX_TEMP. This operation shall be evoked when the operator presses the Temperature Up button in UI01.
 */
 
 function increaseTemperatureEvent() {
     return Event("increaseTemperatureEvent");
 }
 
-function updateTemperatureEvent(newTemp) {
-    return Event("updateTemperatureEvent", {newTemp: newTemp});
+function updateTargetTemperatureEvent(temp) {
+    return Event("updateTargetTemperatureEvent", {temp: temp});
 }
 
-ctx.registerEffect('updateTemperatureEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    if (data.newTemp <= systemVariables.MAX_TEMP) {
-        systemVariables.v_target_Temp = data.newTemp;
+ctx.registerEffect('updateTargetTemperatureEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    if (system.v_target_Temp < system.MAX_TEMP) {
+        system.v_target_Temp = data.temp;
     }
 });
 
-ctx.bthread('Increase temperature', function () {
+ctx.bthread('Increase target temperature', function () {
     while (true) {
         sync({waitFor: [increaseTemperatureEvent()]});
-        let systemVariables = ctx.getEntityById('sys1');
-        let newTemp = systemVariables.v_target_Temp + 1;
-        if (newTemp <= systemVariables.MAX_TEMP) {
-            sync({request: [updateTemperatureEvent(newTemp)]});
+        let system = ctx.getEntityById('system1');
+        if (system.v_target_Temp < system.MAX_TEMP) {
+            sync({requestOne: [updateTargetTemperatureEvent(system.v_target_Temp + 1)]});
         }
     }
 });
 /*
-Decrease Temperature: allows the operator to decrease the value of v_target_Temp by one degree given that this value will not be less than MIN_TEMP. This operation shall be evoked when the Operator presses Temperature Down button in UI01. 
+Decrease Temperature: allows the operator to decrease the value of v_target_Temp by one degree, given that this value will not be less than MIN_TEMP. This operation shall be evoked when the operator presses the Temperature Down button in UI01.
 */
 
 function decreaseTemperatureEvent() {
     return Event("decreaseTemperatureEvent");
 }
 
-function updateTemperatureEvent(newTemp) {
-    return Event("updateTemperatureEvent", {newTemp: newTemp});
+function updateTargetTemperatureEvent(temp) {
+    return Event("updateTargetTemperatureEvent", {temp: temp});
 }
 
-ctx.registerEffect('updateTemperatureEvent', function (data) {
-    let systemVariables = ctx.getEntityById('sys1');
-    if (data.newTemp >= systemVariables.MIN_TEMP) {
-        systemVariables.v_target_Temp = data.newTemp;
+ctx.registerEffect('updateTargetTemperatureEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    if (system.v_target_Temp > system.MIN_TEMP) {
+        system.v_target_Temp = data.temp;
     }
 });
 
 ctx.bthread('Decrease temperature', function () {
     while (true) {
         sync({waitFor: [decreaseTemperatureEvent()]});
-        let systemVariables = ctx.getEntityById('sys1');
-        let newTemp = systemVariables.v_target_Temp - 1;
-        if (newTemp >= systemVariables.MIN_TEMP) {
-            sync({request: [updateTemperatureEvent(newTemp)]});
+        let system = ctx.getEntityById('system1');
+        if (system.v_target_Temp > system.MIN_TEMP) {
+            sync({requestOne: [updateTargetTemperatureEvent(system.v_target_Temp - 1)]});
         }
     }
 });
