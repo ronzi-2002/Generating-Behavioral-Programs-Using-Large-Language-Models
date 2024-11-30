@@ -440,3 +440,103 @@ ctx.bthread('Ensure temperature boundaries', function () {
     }
 });
 
+
+
+//Alternate:
+
+//Cooling Mode: while the season is set to “Cool” (v_season = s_Cool) and the fan is on (v_Fan = s_Fan_On), the system shall move to off mode when the current temperature is lower than the target one.
+function moveToOffModeEvent() {
+    return Event("moveToOffModeEvent");
+}
+
+ctx.registerEffect('moveToOffModeEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    system.v_season = 's_Off';
+    system.v_Fan = 's_Fan_Off';
+});
+
+ctx.bthread('Cooling mode to off mode transition', 'coolingMode', function (coolingMode) {
+    while (true) {
+        if (coolingMode.v_curr_temp < coolingMode.v_target_Temp) {
+            sync({requestOne: [moveToOffModeEvent()]});
+        }
+    }
+});
+
+
+//Heating Mode: while the season is set to “Heat” (v_season = s_Heat) and the fan is on (v_Fan = s_Fan_On), the system shall move to off mode when the current temperature is higher than the target one.
+function moveToOffModeFromHeatEvent() {
+    return Event("moveToOffModeFromHeatEvent");
+}
+
+ctx.registerEffect('moveToOffModeFromHeatEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    system.v_season = 's_Off';
+    system.v_Fan = 's_Fan_Off';
+});
+
+ctx.bthread('Heating mode to off mode transition', 'heatingMode', function (heatingMode) {
+    while (true) {
+        if (heatingMode.v_curr_temp > heatingMode.v_target_Temp) {
+            sync({requestOne: [moveToOffModeFromHeatEvent()]});
+        }
+    }
+});
+
+//Off Mode: if the season is set to “Off” (v_season = s_Off), and the fan is off (v_Fan = s_Fan_Off), if the current temperature is higher than the target one, the system shall move to heating mode, and if the current temperature is lower than the target one, the system shall move to cooling mode.
+function moveToHeatingModeEvent() {
+    return Event("moveToHeatingModeEvent");
+}
+
+function moveToCoolingModeEvent() {
+    return Event("moveToCoolingModeEvent");
+}
+
+ctx.registerEffect('moveToHeatingModeEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    system.v_season = 's_Heat';
+    system.v_Fan = 's_Fan_On';
+});
+
+ctx.registerEffect('moveToCoolingModeEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    system.v_season = 's_Cool';
+    system.v_Fan = 's_Fan_On';
+});
+
+ctx.bthread('Off mode temperature adjustments', 'offMode', function (offMode) {
+    while (true) {
+        if (offMode.v_curr_temp > offMode.v_target_Temp) {
+            sync({requestOne: [moveToHeatingModeEvent()]});
+        } else if (offMode.v_curr_temp < offMode.v_target_Temp) {
+            sync({requestOne: [moveToCoolingModeEvent()]});
+        }
+    }
+});
+
+//Temperature Boundaries: The system shall ensure that the target temperature (v_target_Temp) remains within a valid range, between 5°C (MIN_TEMP) and 35°C (MAX_TEMP). If the temperature exceeds or falls below these limits, the system adjust the target temperature to remain within this range.
+function adjustTemperatureWithinBoundsEvent() {
+    return Event("adjustTemperatureWithinBoundsEvent");
+}
+
+ctx.registerEffect('adjustTemperatureWithinBoundsEvent', function (data) {
+    let system = ctx.getEntityById('system1');
+    if (system.v_target_Temp < system.MIN_TEMP) {
+        system.v_target_Temp = system.MIN_TEMP;
+    } else if (system.v_target_Temp > system.MAX_TEMP) {
+        system.v_target_Temp = system.MAX_TEMP;
+    }
+});
+
+ctx.bthread('Ensure target temperature is within boundaries', function () {
+    while (true) {
+        let system = ctx.getEntityById('system1');
+        if (system.v_target_Temp < system.MIN_TEMP || system.v_target_Temp > system.MAX_TEMP) {
+            sync({requestOne: [adjustTemperatureWithinBoundsEvent()]});
+        }
+    }
+});
+
+
+
+
