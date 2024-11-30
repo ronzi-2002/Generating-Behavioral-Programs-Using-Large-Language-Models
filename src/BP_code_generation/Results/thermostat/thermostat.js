@@ -514,7 +514,7 @@ ctx.bthread('Off mode temperature adjustments', 'offMode', function (offMode) {
     }
 });
 
-//Temperature Boundaries: The system shall ensure that the target temperature (v_target_Temp) remains within a valid range, between 5°C (MIN_TEMP) and 35°C (MAX_TEMP). If the temperature exceeds or falls below these limits, the system adjust the target temperature to remain within this range.
+//Temperature Boundaries: The system shall ensure that the target temperature (v_target_Temp) remains within a valid range, between 5°C (MIN_TEMP) and 35°C (MAX_TEMP). If the temperature exceeds or falls below these limits, the system adjusts the target temperature to remain within this range.
 function adjustTemperatureWithinBoundsEvent() {
     return Event("adjustTemperatureWithinBoundsEvent");
 }
