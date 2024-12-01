@@ -364,87 +364,11 @@ ctx.bthread('Decrease temperature', function () {
         sync({requestOne: [setDecreasedTemperatureEvent()]});
     }
 });
+
+
 /*
-Cooling Mode: If the season is set to “Cool” (v_season = s_Cool) and the fan is on (v_Fan = s_Fan_On), the system shall activate the cooling appliance, if the current temperature is higher than the target. The system shall deactivate the cooling appliance when the current temperature is lower (or equal) than the target.
+Cooling Mode: while the season is set to “Cool” (v_season = s_Cool) and the fan is on (v_Fan = s_Fan_On), the system shall move to off mode when the current temperature is lower than the target one.
 */
-
-function activateCoolingEvent() {
-    return Event("activateCoolingEvent");
-}
-
-function deactivateCoolingEvent() {
-    return Event("deactivateCoolingEvent");
-}
-
-ctx.bthread('Manage cooling mode', 'coolingMode', function (system) {
-    while (true) {
-        if (system.v_curr_temp > system.v_target_Temp) {
-            sync({requestOne: [activateCoolingEvent()]});
-        } else if (system.v_curr_temp <= system.v_target_Temp) {
-            sync({requestOne: [deactivateCoolingEvent()]});
-        }
-    }
-});
-/*
-Heating Mode: If the season is set to “Heat” (v_season = s_Heat) and the fan is on (v_Fan = s_Fan_On), the system shall activate the heating appliance, if the current temperature is lower than the target. The system shall deactivate the heating appliance when the current temperature is higher (or equal) than the target.
-*/  
-function activateHeatingEvent() {
-    return Event("activateHeatingEvent");
-}
-
-function deactivateHeatingEvent() {
-    return Event("deactivateHeatingEvent");
-}
-
-ctx.bthread('Heating Mode', 'heating_mode', function (systemVariables) {
-    while (true) {
-        if (systemVariables.v_curr_temp < systemVariables.v_target_Temp) {
-            sync({request: [activateHeatingEvent()]});
-        } else if (systemVariables.v_curr_temp >= systemVariables.v_target_Temp) {
-            sync({request: [deactivateHeatingEvent()]});
-        }
-    }
-});
-/*
-Off Mode: If the season is set to “Off” (v_season = s_Off), or the fan is off (v_Fan = s_Fan_Off), no heating or cooling appliances can be activated.
-*/
-function blockHeatingCoolingEvent() {
-    return Event("blockHeatingCoolingEvent");
-}
-
-ctx.bthread('Off Mode operation', 'offMode', function (system) {
-    while (true) {
-        sync({block: [activateCoolingApplianceEvent(), activateHeatingEvent()]});
-    }
-});
-/*
-Temperature Boundaries: The system shall ensure that the target temperature (v_target_Temp) remains within a valid range, between 5°C (MIN_TEMP) and 35°C (MAX_TEMP). If the temperature exceeds or falls below these limits, the system adjust the target temperature to remain within this range.
-*/
-
-function adjustTemperatureEvent() {
-    return Event("adjustTemperatureEvent");
-}
-
-ctx.registerEffect('adjustTemperatureEvent', function (data) {
-    let system = ctx.getEntityById('system1');
-    if (system.v_target_Temp < system.MIN_TEMP) {
-        system.v_target_Temp = system.MIN_TEMP;
-    } else if (system.v_target_Temp > system.MAX_TEMP) {
-        system.v_target_Temp = system.MAX_TEMP;
-    }
-});
-
-ctx.bthread('Ensure temperature boundaries', function () {
-    while (true) {
-        sync({requestOne: [adjustTemperatureEvent()]});
-    }
-});
-
-
-
-//Alternate:
-
-//Cooling Mode: while the season is set to “Cool” (v_season = s_Cool) and the fan is on (v_Fan = s_Fan_On), the system shall move to off mode when the current temperature is lower than the target one.
 function moveToOffModeEvent() {
     return Event("moveToOffModeEvent");
 }
@@ -463,8 +387,9 @@ ctx.bthread('Cooling mode to off mode transition', 'coolingMode', function (cool
     }
 });
 
-
-//Heating Mode: while the season is set to “Heat” (v_season = s_Heat) and the fan is on (v_Fan = s_Fan_On), the system shall move to off mode when the current temperature is higher than the target one.
+/*
+Heating Mode: while the season is set to “Heat” (v_season = s_Heat) and the fan is on (v_Fan = s_Fan_On), the system shall move to off mode when the current temperature is higher than the target one.
+*/
 function moveToOffModeFromHeatEvent() {
     return Event("moveToOffModeFromHeatEvent");
 }
@@ -482,8 +407,9 @@ ctx.bthread('Heating mode to off mode transition', 'heatingMode', function (heat
         }
     }
 });
-
-//Off Mode: if the season is set to “Off” (v_season = s_Off), and the fan is off (v_Fan = s_Fan_Off), if the current temperature is higher than the target one, the system shall move to heating mode, and if the current temperature is lower than the target one, the system shall move to cooling mode.
+/*
+Off Mode: if the season is set to “Off” (v_season = s_Off), and the fan is off (v_Fan = s_Fan_Off), if the current temperature is higher than the target one, the system shall move to heating mode, and if the current temperature is lower than the target one, the system shall move to cooling mode.
+*/
 function moveToHeatingModeEvent() {
     return Event("moveToHeatingModeEvent");
 }
@@ -513,8 +439,9 @@ ctx.bthread('Off mode temperature adjustments', 'offMode', function (offMode) {
         }
     }
 });
-
-//Temperature Boundaries: The system shall ensure that the target temperature (v_target_Temp) remains within a valid range, between 5°C (MIN_TEMP) and 35°C (MAX_TEMP). If the temperature exceeds or falls below these limits, the system adjusts the target temperature to remain within this range.
+/*
+Temperature Boundaries: The system shall ensure that the target temperature (v_target_Temp) remains within a valid range, between 5°C (MIN_TEMP) and 35°C (MAX_TEMP). If the temperature exceeds or falls below these limits, the system adjusts the target temperature to remain within this range.
+*/
 function adjustTemperatureWithinBoundsEvent() {
     return Event("adjustTemperatureWithinBoundsEvent");
 }
