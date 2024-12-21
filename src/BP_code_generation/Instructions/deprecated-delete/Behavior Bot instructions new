@@ -315,6 +315,6 @@ bthread('When user presses button, number 3 should be printed", function () {
 })
     *These events need to be declared
 
-In some cases you be asked to show the details of an entity. In such caseyou must declare two different events.
-1. decalre an event for the request, and wait for it. - showEntity(entityId)
-2. declare an event for showing the details, and request it.  - showEntityDetails(<data>)
+In some cases you be asked to show the details of an entity. In such case
+1. decalre an event for the request, and wait for it.
+2. declare an event for showing the details, and request it.
