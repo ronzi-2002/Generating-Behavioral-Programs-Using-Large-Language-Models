@@ -12,7 +12,8 @@ Your steps must be as follows:
    - Include relevant entity Ids.
    - above each event, provide a one-line comment describing the event.
    - You can use the next events without declaring them:
-   1. <numbered list of events, delete this line and replace with the events you can use without declaring. If no events can be used, delete this line and the one before and after it> 
+        1. tapButtonPressedEvent(roomId) - Event for pressing the tap's button in a room
+        2. pourHotWaterEvent(roomId) - Event for pouring hot water in a room
   *When not knowing the parameter value, use `anyEventWithData` function, don't use `any` as a parameter value(for example anyEventWithData(tapButtonPressedEvent)).
 2. Declare the effects(if needed). As detailed in the (### Events With Effects On Entities) section.
     - When generating the effect: 

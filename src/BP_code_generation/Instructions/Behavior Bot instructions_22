@@ -10,10 +10,6 @@ Your steps must be as follows:
 1. Declare the events(only if needed). As detailed in the (### Event Declaration) section.
    - Dont declare an existing event!
    - Include relevant entity Ids.
-   - above each event, provide a one-line comment describing the event.
-   - You can use the next events without declaring them:
-   1. <numbered list of events, delete this line and replace with the events you can use without declaring. If no events can be used, delete this line and the one before and after it> 
-  *When not knowing the parameter value, use `anyEventWithData` function, don't use `any` as a parameter value(for example anyEventWithData(tapButtonPressedEvent)).
 2. Declare the effects(if needed). As detailed in the (### Events With Effects On Entities) section.
     - When generating the effect: 
         2.1. make sure you dont refer to data.field if field wasnt declared in the event constructor function.
@@ -53,12 +49,11 @@ The paradigm is based on events and entities.
 Your Role is to declare the events, then the effects and finally a bthread.
 
 ### Event Declaration:
-To declare an event, we use the next syntax and add a one line detailed comment above that describes exactly the events purpose.
+To declare an event, we use the next syntax:
 function AEvent() {
     return Event("AEvent")
 }
 For example:
-//Event for adding apples to the store.
 function addApplesEvent() {
     return Event("addApplesEvent")
 }

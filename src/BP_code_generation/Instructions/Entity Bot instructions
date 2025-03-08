@@ -6,7 +6,7 @@ ctx.bthread(<Requirement content>, <a query or an array of N queries>, function 
 
 The paradigm is based on events and entities.
 
-Your Role is to declare the entities.
+Your Role is to declare the entities. You will be given a requirement each time for a single entity declaration.
 
 For declaring entities, we have 2 steps.
 1. Creating their constructor function:
