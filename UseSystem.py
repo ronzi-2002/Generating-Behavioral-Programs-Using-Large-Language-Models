@@ -262,6 +262,9 @@ class BPProgramMenu(Menu):
                 eventsForGUI[event_name] = params            #create the GUI file
             generateDefultHtml.generate(eventsForGUI, self.GUIFile_path)
 
+
+        file_name = self.generated_code_to_BP_engine_adapted(self.file_path_of_Bp_Program).split("/")[-1].split("\\")[-1]
+        print("The file name is: ", file_name)
         self.isTimeInvolved = self.isTimeInvolved(file_name)
         super().__init__("BPProgram Menu For " + file_name)
         self.add_item("Run BPProgram With Server", lambda: self.run_BPProgram(file_name))
@@ -270,13 +273,46 @@ class BPProgramMenu(Menu):
         
         self.add_item("Generate Graph", lambda: self.generate_graph(file_name))
         self.add_item("Change File", lambda: BPProgramMenu)
+    
+    def generated_code_to_BP_engine_adapted(self,generated_code_path):
+        '''
+        We need to make a static post processing to the generated code to make it compatible with the BP engine.
+        The BP engine does not support the following:
+        1. The use of the 'requestOne' inside the sync. For example, the following code is not supported: sync({requestOne: [<list of events>]}); We need to change it to sync({request: [<list of events>]}).
+        2. The use of the 'requestAll' inside the sync. For example, the following code is not supported: sync({requestAll: [<list of events>]}); We need to change it to 'RequestAll(<list of events>)'.
+            *IF request all is asked together with block/wait we dont support it yet.
+        *The function currently supports only if requestOne and requestAll are asked first in the sync. TODO: support if they are asked later in the sync.
+        '''
+        with open(generated_code_path, "r") as file:
+            lines = file.readlines()
+        for index, line in enumerate(lines):
+            if "sync({requestOne:" in line:
+                #replace the line
+                lines[index] = line.replace("sync({requestOne:", "sync({request:")
+            if "sync({requestAll:" in line:
+                # Extract the list of events
+                start_index = line.find("[")
+                end_index = line.find("]") + 1
+                events_list = line[start_index:end_index]
+                # Replace the line with RequestAll
+                lines[index] = f"RequestAll{events_list};\n"
+        # Write the lines back to a new file
+        adapted_file_path = generated_code_path.replace(".js", "_adaptedForBPEngine.js")
+        with open(adapted_file_path, "w") as file:
+            for line in lines:
+                file.write(line)
+        return adapted_file_path
 
     def run_BPProgram(self, file_name, compile = True, gui_file_path = None):
         #java -jar .\target\DesignlessProgrammin.jar
         import os
         if compile:
             #first check if you have maven installed
-            os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pom.xml")
+            if os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pom.xml") == 0:
+                print("Compiled successfully")
+            else:
+                print("Error in compiling the Java code")
+                return
         if self.isTimeInvolved:
             speedFactor = input("You have time events in your file, do you want to speed up the time? (1 for normal speed, 60 for 60 times faster and so on): ")
             process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -t -s -speedFactor {speedFactor}", shell=True) 
@@ -350,6 +386,7 @@ class BPProgramMenu(Menu):
 
 
 
+        fileDir = ""
 
         # Compile the Java code
         if os.system("mvn package -P\"uber-jar\" -f src/main_client_server_java/pomGraph.xml") == 0:
@@ -365,7 +402,6 @@ class BPProgramMenu(Menu):
 
             # Store the output and error
             stdout, stderr = process.communicate()
-            fileDir = ""
             if process.returncode == 0:
                 print("Output:")
                 print(stdout)  # Or store it in a variable for further use
@@ -413,3 +449,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
