@@ -22,14 +22,10 @@ class InstructionPhase(Enum):
     ORIGINAL_REQUIREMENTS = "Original Requirements:"
 
 class BehaviorInstructionType(Enum):
-    Basic = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/1Basic Behavior Bot instructions"
-    BasicPlus = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/2BasicPlus Behavior Bot instructions"
-    BasicPlus_NoExamples = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/2BasicPlus Behavior Bot instructions NoEXAMPLES"
-    DSL = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/3DSLs Behavior Bot instructions"
-    DSL_Isolated= os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/3_5DSLs and isolation Behavior Bot instructions"
-    Analysis = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/4Analysis Behavior Bot instructions"
-    # Default = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions"
-    Default = BasicPlus_NoExamples
+    Basic = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions.md"
+    Isolated = os.getcwd() + "/src/BP_code_generation/Instructions/Behavior Bot Instructions_isolated"
+    # Analysis = os.getcwd() + "/src/BP_code_generation/Instructions/All_Behavior_Instructions/4Analysis Behavior Bot instructions"
+    Default = Basic
 class MyOpenAIApi:
     def __init__(self, model= "gpt-4-turbo-2024-04-09",api_key=None, instructions= None, temp=0.5, post_process_function=None):#todo add temperature actual default, max_tokens, top_p, frequency_penalty, presence_penalty, stop, and other parameters
         self.api_key = api_key
@@ -112,7 +108,7 @@ class MyOpenAIApi:
             temperature = self.temp
         )
         return self.static_post_process( response.choices[0].message.content)
-    def chat_with_gpt_cumulative_isolated_BP_generation(self,new_message,behavior_instructions_type = BehaviorInstructionType.Basic):
+    def chat_with_gpt_cumulative_isolated_BP_generation(self,new_message,behavior_instructions_type = BehaviorInstructionType.Basic): 
         #In this version a summary of the events is generated and provided to the model as an additional message.
 
          # For these instructions, each requirement is a standalone. 
@@ -186,59 +182,11 @@ class MyOpenAIApi:
         print("ChatGPT:", response)#will print: "What is the capital of France?"
         """
         if method == Methodology.STANDARD:
-            if behavior_instructions_type == BehaviorInstructionType.DSL_Isolated:
-                # For these instructions, each requirement is a standalone. However, we need to update the instructions themself, adding existing requirements.
-                allEvents= exctracting_events.extract_events(code=self.export_to_code(exportToFile=False))
-                instructions = ""
-                with open(behavior_instructions_type.value, "r") as file:
-                    instructions = file.read()
-                #In the file, there is a line that says "<add the existing events here>"
-                #Add existing events in the format of
-                #-EventA(parameters)
-                #-EventB(parameters)
-                #and so on
-                if len(allEvents) == 0:
-                    #delete the line that starts with "Existing Events that were defined before:" 
-                    lines = instructions.split("\n")
-                    for i, line in enumerate(lines):
-                        if line.startswith("Existing Events that were defined before:"):
-                            del lines[i]
-                            break
-                    instructions = "\n".join(lines)
-                else:
-                    instructions = "\n\n\n"+instructions.replace("Existing Events that were defined before(you can use them without declaring them again):", "Existing Events that were defined before(you can use them without declaring them again):\n"+ "\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in allEvents]))
-                self.set_instructions(instructions)
-                #Now after we handled the instructions, we need to call the model,
-                self.history.append({"role": "user", "content": new_message})
-                self.History_For_Output.append({"role": "user", "content": new_message})
-
-                demo_response= ""
-                response = self.client.chat.completions.create(#TODO this was commented for offline mode
-                    model=self.model,  # You can use any model you prefer
-                    messages=self.history,
-                    temperature = self.temp
-                )
-                with open("simulation_text_ui", "r") as file:
-                    demo_response = file.read() 
-                response_to_return = response.choices[0].message.content
-
-                #we add the response to the original history but not the processed one
-                self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response_to_return)})
-                #we remove the last user message, 
-                self.history.pop(-1)
-                return self.static_post_process( response_to_return)
-
-
-            elif behavior_instructions_type == BehaviorInstructionType.Analysis:
-                #in this case, we need to add a simple string to the requirement.
-                # this will result the analysis to appear in the assistant's response. 
-                #TODO this analysis and the added string will appear in the history. We can(should) remove it after the response is generated(as done in the second methodology)
-                new_message += "\n\n Make sure it obeys your 8 response steps"
             self.history.append({"role": "user", "content": new_message})
             self.History_For_Output.append({"role": "user", "content": new_message})
             demo_response= "DEMO RESPONSE FOR TESTING"
             if not demoMode:
-                response = self.client.chat.completions.create(#TODO uncomment this
+                response = self.client.chat.completions.create(
                     model=self.model,  # You can use any model you prefer
                     messages=self.history,
                     temperature = self.temp
@@ -249,86 +197,8 @@ class MyOpenAIApi:
                 #     demo_response = file.read() 
                 response_to_return = demo_response
 
-           
-
-            #TODO figure out how to use post_process_function currently it is not used
-            # if self.post_process_function:
-            #     post_process_answer = self.post_process_function(js_code= self.export_to_code(exportToFile=False), last_resp=response.choices[0].message.content)
-            #     if post_process_answer == "":#No corrections needed
-            #         self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-            #         self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response.choices[0].message.content)})
-            #     else:#TODO make sure it doesnt get stuck in the recursive loop
-            #         self.history.append({"role": "assistant", "content": response.choices[0].message.content})
-            #         self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response.choices[0].message.content)})
-            #         new_response = self.chat_with_gpt_cumulative(post_process_answer)
-            #         #pre last assistant message is the one that needs to be corrected
-            #         self.history.pop(-3)
-            #         #remove last user message
-            #         self.history.pop(-2)
-                    
-            #         return new_response
-            
-            # else:
             self.history.append({"role": "assistant", "content": response_to_return})
             self.History_For_Output.append({"role": "assistant", "content": self.static_post_process( response_to_return)})
-        elif method == Methodology.PREPROCESS_AS_PART_OF_PROMPT:
-            allEvents= exctracting_events.extract_events(code=self.export_to_code(exportToFile=False))
-            preProcessString = ""
-            with open("src/BP_code_generation/Pre_Process_text.txt", "r") as file:
-                preProcessString = file.read()
-            #In the file, there is a line that says "<add the existing events here>(if there are no existing events, just write "No existing events")"
-            #Add existing events in the format of
-            #-EventA(parameters)
-            #-EventB(parameters)
-            #and so on
-            if len(allEvents) == 0:
-                #delete the line that starts with "###Which Events are needed?" and delete the two lines after it 
-                lines = preProcessString.split("\n")
-                for i, line in enumerate(lines):
-                    if line.startswith("###Which Events are needed?"):
-                        del lines[i:i+5]
-                        break
-                preProcessString = "\n".join(lines)
-            else:
-                preProcessString = "\n\n\n"+preProcessString.replace("<add the existing events here>(if there are no existing events, just write \"No existing events\")", "\n".join([f"-{event['EventName']}({','.join(list(event['parameters'].keys()))})" for event in allEvents]))
-            
-            #In the preProcessString, there is a line that says Is there a specific context for the asked bthread? which one of the queries is it(out of: ) . Give the exact name
-            #add the existing queries in the parenthesis, in the format of queryA, queryB, queryC
-            existingQueries = exctracting_events.extract_Queries(code=self.export_to_code(exportToFile=False))
-            if len(existingQueries) == 0:#TODO
-                pass
-            else:
-                preProcessString = preProcessString.replace("which one of the queries is it(out of: )", "which one of the queries is it(out of: "", ".join(existingQueries)+")")
-
-            
-            
-            print(new_message + preProcessString)
-            self.history.append({"role": "user", "content": new_message + preProcessString})
-            self.History_For_Output.append({"role": "user", "content": new_message})
-            response = self.client.chat.completions.create(
-                model=self.model,  # You can use any model you prefer
-                messages=self.history,
-                temperature = self.temp
-            )
-            #Now we need to do 2 things, we need to change the user message to the original message, removing the preProcessString. In addition in the assistant message, we need to remove all text before /implementation
-            self.history[-1]["content"] = new_message
-            assistant_response = response.choices[0].message.content
-            print("\n\n\n\n\n\n assistant_response", assistant_response)
-            if assistant_response.startswith("```javascript"):
-                assistant_response = assistant_response[13:]
-                assistant_response = assistant_response[:-3]
-            print("\n\n\n\n\n\n assistant_response after javascript", assistant_response)
-            
-            assistant_response = assistant_response[assistant_response.lower().find("implementation"):].replace("implementation", "").replace("Implementation", "")
-            print("\n\n\n\n\n\n FINAL RESPONSE", assistant_response)
-
-            self.history.append({"role": "assistant", "content": assistant_response})
-            self.History_For_Output.append({"role": "assistant", "content": self.static_post_process(response.choices[0].message.content)})
-            return self.static_post_process(response.choices[0].message.content)
-
-
-            
-            #add to the user message: 
         else: 
             print("Methodology not supported "+method)
             exit()
@@ -345,7 +215,7 @@ class MyOpenAIApi:
         if self.history and self.history[0]["role"] == "system":
             self.history[0]["content"] = instructions
         elif len(self.history) > 0:
-            self.history.insert(0, {"role": "system", "content": instructions}) #TODO make sure it is the best to make it the first element
+            self.history.insert(0, {"role": "system", "content": instructions}) 
         else:
             self.history.append({"role": "system", "content": instructions})
     def export_to_code(self, directory=os.getcwd(), file_name=None,exportToFile=True, methodology=Methodology.STANDARD, behavior_instructions_type=BehaviorInstructionType.Basic, full_output_path = None):
@@ -462,17 +332,7 @@ class MyOpenAIApi:
 
 
 
-# client = openai.OpenAI()
 
-# response = client.chat.completions.create(
-#     model="gpt-3.5-turbo",
-#     messages=[
-#         {"role": "system", "content": "You are a helpful assistant."},
-#         {"role": "user", "content": "Who won the world series in 2020?"},
-#         {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
-#         {"role": "user", "content": "Where was it played?"}
-#     ]
-# )
 
 
 def example_for_usage():
@@ -594,21 +454,14 @@ def file_to_array(file_path):
 
 
 def main():
-    instructions_file_path = os.getcwd() + "/src/main/BotInstructions/v_10/Bot Instructions"
-
-
     # operation_mode = input("Enter 1 for interactive mode, 2 for array mode")
     operation_mode = "2"
     if operation_mode == "1":
         print("Currently not supported")
         # bot_usage_interactive(instructions_file_path=instructions_file_path)
-
     else:
-
-        
         # ask user for the file name or use the default one
         requirements_file_path = input("Enter the requirements file path(or enter: D for default, H for optional examples): ")
-
         if requirements_file_path == "D":
             requirements_file_name = "DummyExample"
             # src\main\BotInstructions\Requirements\coffee_machine
@@ -698,37 +551,38 @@ def loadPreviousHistory(file_path_of_generated_code):
 def select_behavior_instructions_type(allowAll = True):
     behavior_instructions_types = []
     while True:
-        behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus(recommended), \n2.5 for BasicPlus without examples(recommended), \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
+        # behavior_instructions_type = input("\n\n\Select behavior instructions type: \n1 for Basic, \n2 for BasicPlus(recommended), \n2.5 for BasicPlus without examples(recommended), \n3 for DSL, \n3.5 for DSL_Isolated, \n4 for Analysis, \n5 for Default, \n6 for all \n see readme for more information\n your choice:")
+        behavior_instructions_type = "1"
         if behavior_instructions_type == "1":
             behavior_instructions_types = [BehaviorInstructionType.Basic]
             break
-        elif behavior_instructions_type == "2":
-            behavior_instructions_types = [BehaviorInstructionType.BasicPlus]
-            break
-        elif behavior_instructions_type == "2.5":
-            behavior_instructions_types = [BehaviorInstructionType.BasicPlus_NoExamples]
-            break
-        elif behavior_instructions_type == "3":
-            behavior_instructions_types = [BehaviorInstructionType.DSL]
-            break
-        elif behavior_instructions_type == "3.5":
-            behavior_instructions_types = [BehaviorInstructionType.DSL_Isolated]
-            break
-        elif behavior_instructions_type == "4":
-            behavior_instructions_types = [BehaviorInstructionType.Analysis]
-            break
-        elif behavior_instructions_type == "5":
-            behavior_instructions_types = [BehaviorInstructionType.Default]
-            break
-        elif behavior_instructions_type == "6":
-            if allowAll:
-                behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.DSL_Isolated, BehaviorInstructionType.Analysis]
-                break
-            else:
-                print("Using more than one behavior instructions type is not allowed in this case")
+        # elif behavior_instructions_type == "2":
+        #     behavior_instructions_types = [BehaviorInstructionType.BasicPlus]
+        #     break
+        # elif behavior_instructions_type == "2.5":
+        #     behavior_instructions_types = [BehaviorInstructionType.BasicPlus_NoExamples]
+        #     break
+        # elif behavior_instructions_type == "3":
+        #     behavior_instructions_types = [BehaviorInstructionType.DSL]
+        #     break
+        # elif behavior_instructions_type == "3.5":
+        #     behavior_instructions_types = [BehaviorInstructionType.DSL_Isolated]
+        #     break
+        # elif behavior_instructions_type == "4":
+        #     behavior_instructions_types = [BehaviorInstructionType.Analysis]
+        #     break
+        # elif behavior_instructions_type == "5":
+        #     behavior_instructions_types = [BehaviorInstructionType.Default]
+        #     break
+        # elif behavior_instructions_type == "6":
+        #     if allowAll:
+        #         behavior_instructions_types = [BehaviorInstructionType.Basic, BehaviorInstructionType.BasicPlus, BehaviorInstructionType.DSL, BehaviorInstructionType.DSL_Isolated, BehaviorInstructionType.Analysis]
+        #         break
+        #     else:
+        #         print("Using more than one behavior instructions type is not allowed in this case")
 
-        else:
-            print("Invalid option. Please try again.")
+        # else:
+        #     print("Invalid option. Please try again.")
     return behavior_instructions_types
 
 def additional_requirements_generation(file_path_of_generated_code):
