@@ -86,6 +86,6 @@ ctx.bthread('Press tap button once for every room with a tap', 'room.withTap', f
 /*
 press on the emergency button
 */
-bthread('Press the emergency button', function () {
-    sync({request: [emergencyButtonPressedEvent()]});
-});
+// bthread('Press the emergency button', function () {
+//     sync({request: [emergencyButtonPressedEvent()]});
+// });
