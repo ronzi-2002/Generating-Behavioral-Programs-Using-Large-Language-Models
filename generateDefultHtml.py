@@ -151,6 +151,8 @@ def generate(events, outputFilePath):
     html_content = html_template.format(event_options=event_options, event_parameters=event_parameters)
 
     # Write the HTML content to a file
+    # Ensure the file ex
+
     with open(outputFilePath, "w") as file:
         file.write(html_content)
 

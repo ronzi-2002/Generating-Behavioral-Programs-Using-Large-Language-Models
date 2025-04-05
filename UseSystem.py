@@ -51,7 +51,7 @@ class EditBPProgramMenu(Menu):
         super().__init__("Edit BPProgram Menu")
         #first we need to get the file name of the BPProgram
         self.file_path_of_Bp_Program = input("Enter the file path of the previously generated code: \n Notice that your file should be in the format that the requirements are between \\* and */: , as generated in the new versions\n")
-        self.output_file_path = self.file_path_of_Bp_Program.replace(".js", "_editedAt"+time.strftime("%Y%m%d-%H%M%S")+".js")
+        self.output_file_path = self.file_path_of_Bp_Program.replace(".js", "_EAt"+time.strftime("%Y%m%d-%H%M%S")+".js")#Edited At
         
         #copy the file to the output file, create the output file if it does not exist
         import os
@@ -297,7 +297,7 @@ class BPProgramMenu(Menu):
                 # Replace the line with RequestAll
                 lines[index] = f"RequestAll{events_list};\n"
         # Write the lines back to a new file
-        adapted_file_path = generated_code_path.replace(".js", "_adaptedForBPEngine.js")
+        adapted_file_path = generated_code_path.replace(".js", "_ABPE.js")#Adapted for BP engine
         with open(adapted_file_path, "w") as file:
             for line in lines:
                 file.write(line)
@@ -366,7 +366,7 @@ class BPProgramMenu(Menu):
         if not (choice == "b" or choice == "e"):
             pass#nothing is needed to be done. before generating the graph
         else:
-            self.output_file_path = self.file_path_of_Bp_Program.replace(".js", "_editedAt"+time.strftime("%Y%m%d-%H%M%S")+".js")
+            self.output_file_path = self.file_path_of_Bp_Program.replace(".js", "_EAt"+time.strftime("%Y%m%d-%H%M%S")+".js")
         
             #copy the file to the output file, create the output file if it does not exist
             import os
