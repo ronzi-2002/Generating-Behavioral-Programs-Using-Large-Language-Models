@@ -358,6 +358,8 @@ class BPProgramMenu(Menu):
         return False
 
     def generate_graph(self, file_name):
+        print("currently under fix, because of mvn problems with the StateSpaceMapper version")
+        return
         import os
         #Before generating the graph, we need to ask the user if they want to add the external events
         choice = input("Do you want to add additional behavior/entity to the graph? (b for behavior, e for entity, else for none): ")
