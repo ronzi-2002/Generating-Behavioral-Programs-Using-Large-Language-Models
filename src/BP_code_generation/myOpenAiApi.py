@@ -9,6 +9,8 @@ from src.BP_code_generation.post_process import post_process
 from enum import Enum
 import src.UI_code_generation.exctracting_events as exctracting_events
 import re
+
+DEBUG_MODE = False
 class Methodology(Enum):
     STANDARD = "standard"
     PREPROCESS_AS_PART_OF_PROMPT = "preprocess_as_part_of_prompt"
@@ -193,7 +195,7 @@ class MyOpenAIApi:
                 )
                 response_to_return = response.choices[0].message.content
             else:
-                # with open("simulation_text_ui", "r") as file:
+                # with open("src\UI_code_generation\simulation_text_ui", "r") as file:
                 #     demo_response = file.read() 
                 response_to_return = demo_response
 
@@ -410,7 +412,8 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
         elif input_message == "Original Requirements:":
             current_instruction = InstructionPhase.ORIGINAL_REQUIREMENTS
             break
-        temp_file.write("\\\\" + input_message)
+        if DEBUG_MODE:
+            temp_file.write("\\\\" + input_message)
         
 
         if current_instruction == InstructionPhase.BEHAVIOR_INSTRUCTIONS:
@@ -422,10 +425,10 @@ def bot_usage_from_array(instructions= None, entity_instructions_file_path=None,
                 continue#this is to avoid reprocessing the same entity and queries instructions
             response = myOpenAIApi.chat_with_gpt_cumulative(input_message)
         print("ChatGPT:", response)
-
-        temp_file.write(myOpenAIApi.get_pretty_response_string(-1))
-        temp_file.write("\n")
-        temp_file.flush()
+        if DEBUG_MODE:
+            temp_file.write(myOpenAIApi.get_pretty_response_string(-1))
+            temp_file.write("\n")
+            temp_file.flush()
     if output_directory:
         currTime = time.time()
         generated_code_path = myOpenAIApi.export_to_code(directory=output_directory, file_name=file_name + str(currTime)+".js",methodology=methodology,behavior_instructions_type=behavior_instructions_type)

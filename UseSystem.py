@@ -2,8 +2,9 @@ import subprocess
 import time
 import src.UI_code_generation.exctracting_events as exctracting_events
 import src.BP_code_generation.myOpenAiApi as myOpenAiApi
-import generateDefultHtml 
+import UI_code_generation.generateDefaultHtml as generateDefaultHtml 
 import threading
+DEBUG_MODE = False
 class MenuItem:
     def __init__(self, name, function):
         self.name = name
@@ -100,9 +101,10 @@ class BPLLMMenu(Menu):
         history = myOpenAiApi.additional_requirements_generation(file_path)
         # print("history: ", history)
         #export the history to a file
-        with open("History.txt", "w") as file:
-            for line in history:
-                file.write(str(line) + "\n")
+        if DEBUG_MODE:
+            with open("History.txt", "w") as file:
+                for line in history:
+                    file.write(str(line) + "\n")
         
     def generate_UI_code(self):
         #whould we generate the UI code for the last generated code?
@@ -178,8 +180,9 @@ class BPLLMMenu(Menu):
 
         
         #save to some temporary file for debugging
-        with open("temp_instructions.txt", "w") as file:
-            file.write(ui_instructions)
+        if DEBUG_MODE:
+            with open("temp_instructions.txt", "w") as file:
+                file.write(ui_instructions)
         return ui_instructions
 
          
@@ -260,7 +263,7 @@ class BPProgramMenu(Menu):
                     params.append(str(key))
 
                 eventsForGUI[event_name] = params            #create the GUI file
-            generateDefultHtml.generate(eventsForGUI, self.GUIFile_path)
+            generateDefaultHtml.generate(eventsForGUI, self.GUIFile_path)
 
 
         file_name = self.generated_code_to_BP_engine_adapted(self.file_path_of_Bp_Program).split("/")[-1].split("\\")[-1]
