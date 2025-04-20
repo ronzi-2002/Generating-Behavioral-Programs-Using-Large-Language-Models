@@ -2,8 +2,9 @@ import subprocess
 import time
 import src.UI_code_generation.exctracting_events as exctracting_events
 import src.BP_code_generation.myOpenAiApi as myOpenAiApi
-import generateDefultHtml 
+import src.UI_code_generation.generateDefaultHtml as generateDefaultHtml 
 import threading
+DEBUG_MODE = False
 class MenuItem:
     def __init__(self, name, function):
         self.name = name
@@ -100,9 +101,10 @@ class BPLLMMenu(Menu):
         history = myOpenAiApi.additional_requirements_generation(file_path)
         # print("history: ", history)
         #export the history to a file
-        with open("History.txt", "w") as file:
-            for line in history:
-                file.write(str(line) + "\n")
+        if DEBUG_MODE:
+            with open("History.txt", "w") as file:
+                for line in history:
+                    file.write(str(line) + "\n")
         
     def generate_UI_code(self):
         #whould we generate the UI code for the last generated code?
@@ -178,8 +180,9 @@ class BPLLMMenu(Menu):
 
         
         #save to some temporary file for debugging
-        with open("temp_instructions.txt", "w") as file:
-            file.write(ui_instructions)
+        if DEBUG_MODE:
+            with open("temp_instructions.txt", "w") as file:
+                file.write(ui_instructions)
         return ui_instructions
 
          
@@ -260,7 +263,7 @@ class BPProgramMenu(Menu):
                     params.append(str(key))
 
                 eventsForGUI[event_name] = params            #create the GUI file
-            generateDefultHtml.generate(eventsForGUI, self.GUIFile_path)
+            generateDefaultHtml.generate(eventsForGUI, self.GUIFile_path)
 
 
         file_name = self.generated_code_to_BP_engine_adapted(self.file_path_of_Bp_Program).split("/")[-1].split("\\")[-1]
@@ -285,10 +288,12 @@ class BPProgramMenu(Menu):
         '''
         with open(generated_code_path, "r") as file:
             lines = file.readlines()
+        wasAdapted = False
         for index, line in enumerate(lines):
             if "sync({requestOne:" in line:
                 #replace the line
                 lines[index] = line.replace("sync({requestOne:", "sync({request:")
+                wasAdapted = True
             if "sync({requestAll:" in line:
                 # Extract the list of events
                 start_index = line.find("[")
@@ -296,7 +301,10 @@ class BPProgramMenu(Menu):
                 events_list = line[start_index:end_index]
                 # Replace the line with RequestAll
                 lines[index] = f"RequestAll{events_list};\n"
+                wasAdapted = True
         # Write the lines back to a new file
+        if not wasAdapted:
+            return generated_code_path
         adapted_file_path = generated_code_path.replace(".js", "_ABPE.js")#Adapted for BP engine
         with open(adapted_file_path, "w") as file:
             for line in lines:
@@ -315,10 +323,12 @@ class BPProgramMenu(Menu):
                 return
         if self.isTimeInvolved:
             speedFactor = input("You have time events in your file, do you want to speed up the time? (1 for normal speed, 60 for 60 times faster and so on): ")
-            process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -t -s -speedFactor {speedFactor}", shell=True) 
+            cmd = f'start cmd /K "java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name}"'
+            subprocess.Popen(cmd, shell=True)
         else:
             if gui_file_path == None:
-                process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} ", shell=True)
+                cmd = f'start cmd /K "java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name}"'
+                subprocess.Popen(cmd, shell=True)
             else:#We need to understand what events are used in the ui.
                 events = exctracting_events.extract_events(self.file_path_of_Bp_Program)
                 event_names = [event['EventName'] for event in events]
