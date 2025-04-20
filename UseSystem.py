@@ -288,10 +288,12 @@ class BPProgramMenu(Menu):
         '''
         with open(generated_code_path, "r") as file:
             lines = file.readlines()
+        wasAdapted = False
         for index, line in enumerate(lines):
             if "sync({requestOne:" in line:
                 #replace the line
                 lines[index] = line.replace("sync({requestOne:", "sync({request:")
+                wasAdapted = True
             if "sync({requestAll:" in line:
                 # Extract the list of events
                 start_index = line.find("[")
@@ -299,7 +301,10 @@ class BPProgramMenu(Menu):
                 events_list = line[start_index:end_index]
                 # Replace the line with RequestAll
                 lines[index] = f"RequestAll{events_list};\n"
+                wasAdapted = True
         # Write the lines back to a new file
+        if not wasAdapted:
+            return generated_code_path
         adapted_file_path = generated_code_path.replace(".js", "_ABPE.js")#Adapted for BP engine
         with open(adapted_file_path, "w") as file:
             for line in lines:
