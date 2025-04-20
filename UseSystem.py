@@ -2,7 +2,7 @@ import subprocess
 import time
 import src.UI_code_generation.exctracting_events as exctracting_events
 import src.BP_code_generation.myOpenAiApi as myOpenAiApi
-import UI_code_generation.generateDefaultHtml as generateDefaultHtml 
+import src.UI_code_generation.generateDefaultHtml as generateDefaultHtml 
 import threading
 DEBUG_MODE = False
 class MenuItem:
@@ -318,10 +318,12 @@ class BPProgramMenu(Menu):
                 return
         if self.isTimeInvolved:
             speedFactor = input("You have time events in your file, do you want to speed up the time? (1 for normal speed, 60 for 60 times faster and so on): ")
-            process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} -t -s -speedFactor {speedFactor}", shell=True) 
+            cmd = f'start cmd /K "java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name}"'
+            subprocess.Popen(cmd, shell=True)
         else:
             if gui_file_path == None:
-                process = subprocess.Popen(f"java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name} ", shell=True)
+                cmd = f'start cmd /K "java -jar src\\main_client_server_java\\target\\DesignlessProgramming-0.6-DEV.uber.jar -f {file_name}"'
+                subprocess.Popen(cmd, shell=True)
             else:#We need to understand what events are used in the ui.
                 events = exctracting_events.extract_events(self.file_path_of_Bp_Program)
                 event_names = [event['EventName'] for event in events]
