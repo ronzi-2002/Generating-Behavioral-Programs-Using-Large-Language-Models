@@ -63,7 +63,7 @@ public class Server {
                 // read script file
                 try {
 //                engine.eval(Files.newBufferedReader(Paths.get("C:\\Users\\Ron Ziskind\\IdeaProjects\\StateMapperForBpRon\\src\\main\\resources\\HandleExternalEvents.js"), StandardCharsets.UTF_8));
-                    engine.eval("function jsonize(event) {print (event);let obj = JSON.parse(event);return obj;}");
+                    engine.eval("function jsonize(event) {print (event);var obj = JSON.parse(event);return obj;}");
 
                     Invocable inv = (Invocable) engine;
                     // call function from script file
