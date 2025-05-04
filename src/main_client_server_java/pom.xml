@@ -30,6 +30,8 @@
             <artifactId>StateSpaceMapper</artifactId>
             <version>0.6.1</version>
         </dependency> -->
+        <!-- https://mvnrepository.com/artifact/org.openjdk.nashorn/nashorn-core -->
+
         <dependency>
             <groupId>com.github.bThink-BGU</groupId>
             <artifactId>BPjs-Context</artifactId>
@@ -49,6 +51,13 @@
             <groupId>org.java-websocket</groupId>
             <artifactId>Java-WebSocket</artifactId>
             <version>1.5.1</version>
+        </dependency>
+                <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>15.4</version>
+            <scope>runtime</scope>
+
         </dependency>
     </dependencies>
     <build>

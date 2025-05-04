@@ -188,7 +188,10 @@ function waitForAll() {
 
 bthread("Handle UI Delays", function () {
   let event = null;
-  let events = sync({waitFor: anyEventNameWithData("UI_Init")});
+  let eventsToBlock = EventSet("Not_UI_Init", function (e) {
+    return e.name !== "UI_Init";
+  });
+  let events = sync({waitFor: anyEventNameWithData("UI_Init"), block: eventsToBlock});
   //Events.data is a string, splited by commas we need a list
   bp.log.info("Sleeping after events: " + events.data);
   let eventNames = events.data.split(",");
