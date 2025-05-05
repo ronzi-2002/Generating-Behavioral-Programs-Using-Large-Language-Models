@@ -28,7 +28,7 @@ function pourHotWaterEvent(roomId) {
 ctx.bthread('Pour hot water three times when tap button is pressed', 'room.withTap', function (room) {
     while (true) {
         sync({waitFor: [tapButtonPressedEvent(room.id)]});
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 10; i++) {
             sync({request: [pourHotWaterEvent(room.id)]});
         }
     }
@@ -43,7 +43,7 @@ function pourColdWaterEvent(roomId) {
 ctx.bthread('Pour cold water three times when tap button is pressed', 'room.withTap', function (room) {
     while (true) {
         sync({waitFor: [tapButtonPressedEvent(room.id)]});
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 10; i++) {
             sync({request: [pourColdWaterEvent(room.id)]});
         }
     }

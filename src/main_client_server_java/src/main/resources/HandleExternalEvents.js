@@ -23,10 +23,14 @@ bthread('Handle external events', function () {
       else {
         let eventData = obj.data;
         if (eventData === undefined) {
-          sync({request: [Event(eventName)]});
+          bthread("requestExternalEvent", function () {
+            sync({request: [Event(eventName)]},-1);
+          });
         } else
           {
-            sync({request: [Event(eventName, eventData)]});
+            bthread("requestExternalEvent", function () {
+              sync({request: [Event(eventName, eventData)]},-1);
+            });
           }
 
         }

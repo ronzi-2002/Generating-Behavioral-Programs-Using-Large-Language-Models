@@ -56,9 +56,9 @@ public class Server {
                     return;
                 }
 
-//                BEvent bpEvent = jsonToBEvent(json);
-                // BEvent bpEvent = new BEvent("ExternalEvent", json);
-                // bProgram.enqueueExternalEvent(bpEvent);
+            //    BEvent bpEvent = jsonToBEvent(json);
+                BEvent bpEvent = new BEvent("ExternalEvent", json);
+                bProgram.enqueueExternalEvent(bpEvent);
                 
                 // read script file
                 try {
@@ -69,7 +69,7 @@ public class Server {
                     // call function from script file
                     Object result = inv.invokeFunction("jsonize", json.get("data"));
                     System.out.println(result);
-                    bProgram.enqueueExternalEvent(new BEvent(json.getString("name"), result));
+                    // bProgram.enqueueExternalEvent(new BEvent(json.getString("name"), result));
                 }
                 catch (Exception e)
                 {

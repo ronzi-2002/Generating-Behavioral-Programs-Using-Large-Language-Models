@@ -3,6 +3,7 @@ package il.ac.bgu.cs.bp.samplebpproject.UIs;
 import il.ac.bgu.cs.bp.bpjs.context.ContextBProgram;
 import il.ac.bgu.cs.bp.bpjs.execution.BProgramRunner;
 import il.ac.bgu.cs.bp.bpjs.model.BProgram;
+import il.ac.bgu.cs.bp.bpjs.model.eventselection.PrioritizedBSyncEventSelectionStrategy;
 import il.ac.bgu.cs.bp.samplebpproject.UIs.Server;
 import il.ac.bgu.cs.bp.samplebpproject.UIs.ServerListner;
 import il.ac.bgu.cs.bp.bpjs.model.BEvent;
@@ -90,6 +91,9 @@ public class main_with_external{
 
 
             final BProgram bprog = new ContextBProgram(filesList);
+            var prioirty = new PrioritizedBSyncEventSelectionStrategy();
+            prioirty.setDefaultPriority(100);
+            bprog.setEventSelectionStrategy(prioirty);
 
             bprog.setWaitForExternalEvents(true);//We allow external events, for reacting to the incoming events from the client to the server.
             BProgramRunner rnr = new BProgramRunner(bprog);
