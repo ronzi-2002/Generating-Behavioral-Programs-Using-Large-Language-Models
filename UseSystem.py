@@ -1,3 +1,4 @@
+import os
 import subprocess
 import time
 import src.UI_code_generation.exctracting_events as exctracting_events
@@ -247,23 +248,9 @@ class BPProgramMenu(Menu):
         elif  "DefaultGUI_"+file_name.replace(".js", ".html") in optionalFiles:
             self.GUIFile_path = str(os.getcwd())+"/src/main_client_server_java/src/main/UI_Resources/DefaultGUI_"+file_name.replace(".js", ".html")
         else:
-            #We need to create a GUI file for this file
             file_path = str(os.getcwd()) + "/src/main_client_server_java/src/main/resources/" + file_name
-
-            events = exctracting_events.extract_events(file_path)
-            waitedEvents, requestedEvents, requestedAndWaitedEvents = exctracting_events.get_division_by_status(events)
-            eventsForGUI= {}
-            for event in waitedEvents + requestedAndWaitedEvents:
-                
-                event_name = event['EventName']
-                params_keys = event['parameters'].keys()
-                #crete an array of the parameters
-                params = []
-                for key in params_keys:
-                    params.append(str(key))
-
-                eventsForGUI[event_name] = params            #create the GUI file
-            generateDefaultHtml.generate(eventsForGUI, self.GUIFile_path)
+            # self.createGui(bp_program_file_path=file_path,gui_path=self.GUIFile_path)
+            
 
 
         file_name = self.generated_code_to_BP_engine_adapted(self.file_path_of_Bp_Program).split("/")[-1].split("\\")[-1]
@@ -276,7 +263,23 @@ class BPProgramMenu(Menu):
         
         self.add_item("Generate Graph", lambda: self.generate_graph(file_name))
         self.add_item("Change File", lambda: BPProgramMenu)
-    
+    def createGui(self, bp_program_file_path, gui_path):
+        #We need to create a GUI file for this file
+
+            events = exctracting_events.extract_events(bp_program_file_path)
+            waitedEvents, requestedEvents, requestedAndWaitedEvents = exctracting_events.get_division_by_status(events)
+            eventsForGUI= {}
+            for event in waitedEvents + requestedAndWaitedEvents:
+                
+                event_name = event['EventName']
+                params_keys = event['parameters'].keys()
+                #crete an array of the parameters
+                params = []
+                for key in params_keys:
+                    params.append(str(key))
+
+                eventsForGUI[event_name] = params            #create the GUI file
+            self.GUIFile_path = generateDefaultHtml.generate(eventsForGUI, gui_path)
     def generated_code_to_BP_engine_adapted(self,generated_code_path):
         '''
         We need to make a static post processing to the generated code to make it compatible with the BP engine.
@@ -342,6 +345,12 @@ class BPProgramMenu(Menu):
 
         #if there is a GUI system, open 
     def run_BPProgramWithGUI(self, file_name):
+        #first we need to check if the file has a GUI file existing in the path given
+        #check if the file exists
+        if not os.path.isfile(self.GUIFile_path):
+            print("The GUI file does not exist, creating it...")
+            self.createGui(bp_program_file_path=self.file_path_of_Bp_Program,gui_path=self.GUIFile_path)
+            print("The GUI file has been generated successfully")
         #open the GUI file in the chrome browser
         self.run_BPProgram(file_name, True, self.GUIFile_path)
         import webbrowser
